@@ -84,9 +84,7 @@ func TestCheckDisabledStillReportsStats(t *testing.T) {
 
 func TestCheckCriticalClampedToWarning(t *testing.T) {
 	initTestConfig(t)
-	// A critical threshold above the warning threshold must not trip the
-	// hard stop before the soft stop: free space above the (smaller)
-	// warning threshold stays OK.
+	// Critical above warning is treated as equal to warning.
 	setThresholds(t, true, 5, 50)
 
 	svc := newService("/tmp", 0, fakeProbe(30*gb, 100*gb))
@@ -106,7 +104,7 @@ func TestCheckProbeErrorFailsOpen(t *testing.T) {
 	assert.Equal(t, StateUnknown, status.State)
 	require.ErrorIs(t, status.Err, probeErr)
 
-	// The gate deliberately fails open on unknown state.
+	// The gate lets archives through when free space is unknown.
 	assert.NoError(t, Gate(context.Background(), svc))
 }
 
@@ -124,6 +122,65 @@ func TestCheckCachesProbeResults(t *testing.T) {
 		require.NoError(t, err)
 	}
 	assert.Equal(t, 1, calls)
+}
+
+func TestCheckAppliesSettingsImmediately(t *testing.T) {
+	initTestConfig(t)
+
+	calls := 0
+	svc := newService("/tmp", time.Minute, func(string) (int64, int64, error) {
+		calls++
+		return 60 * gb, 100 * gb, nil
+	})
+	setThresholds(t, true, 50, 5)
+
+	status, err := svc.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateOK, status.State)
+
+	// Raising the warning threshold takes effect without a new probe.
+	setThresholds(t, true, 65, 5)
+	status, err = svc.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateWarning, status.State)
+	assert.Equal(t, 1, calls)
+
+	// Disabling the check also applies immediately.
+	setThresholds(t, false, 65, 5)
+	status, err = svc.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateDisabled, status.State)
+}
+
+func TestCheckProbeTimeout(t *testing.T) {
+	initTestConfig(t)
+	setThresholds(t, true, 50, 5)
+
+	blocked := make(chan struct{})
+	svc := newService("/tmp", 0, func(string) (int64, int64, error) {
+		<-blocked
+		return 0, 0, nil
+	})
+	svc.probeTimeout = 10 * time.Millisecond
+
+	// Never probed: unknown instead of a fake zero reading.
+	status, err := svc.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateUnknown, status.State)
+
+	// Once readings exist, a stuck probe serves the last known value.
+	svc2 := newService("/tmp", time.Hour, fakeProbe(60*gb, 100*gb))
+	_, err = svc2.Check(context.Background())
+	require.NoError(t, err)
+	svc2.cacheTTL = 0
+	svc2.probe = func(string) (int64, int64, error) { <-blocked; return 0, 0, nil }
+	svc2.probeTimeout = 10 * time.Millisecond
+
+	status, err = svc2.Check(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, StateOK, status.State)
+
+	close(blocked)
 }
 
 func TestGate(t *testing.T) {

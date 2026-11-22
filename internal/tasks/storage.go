@@ -38,10 +38,8 @@ func (w *StorageWatchdogWorker) Timeout(job *river.Job[StorageWatchdogArgs]) tim
 	return 1 * time.Minute
 }
 
-// StorageWatchdogWorker monitors temp-directory free space. It notifies once
-// per state crossing (not on every run) and stops running live captures at the
-// critical threshold so partial media is finalized instead of corrupted by a
-// full disk.
+// StorageWatchdogWorker watches temp-directory free space. It notifies once
+// per state change and stops live captures when space gets critical.
 type StorageWatchdogWorker struct {
 	river.WorkerDefaults[StorageWatchdogArgs]
 
@@ -71,12 +69,19 @@ func (w *StorageWatchdogWorker) Work(ctx context.Context, job *river.Job[Storage
 	w.lastSeen = status.State
 	w.mu.Unlock()
 
+	// Stop captures on every pass while space is critical so a failed
+	// cancel or a newly started capture is caught on the next run.
+	if status.State == storage.StateCritical {
+		if err := w.stopRunningLiveCaptures(ctx, logger); err != nil {
+			logger.Error().Err(err).Msg("error stopping live captures for critical storage state")
+		}
+	}
+
 	if status.State == previous {
 		return nil
 	}
 
-	notify, stopCaptures := storageWatchdogAction(previous, status.State)
-	if !notify {
+	if !storageWatchdogAction(previous, status.State) {
 		return nil
 	}
 
@@ -93,42 +98,30 @@ func (w *StorageWatchdogWorker) Work(ctx context.Context, job *river.Job[Storage
 		w.sendWarning(ctx, "temp directory storage has recovered; new archives can start", status)
 	}
 
-	if stopCaptures {
-		if err := w.stopRunningLiveCaptures(ctx, logger); err != nil {
-			// Live finalization races this cancel by design; a later pass
-			// retries while the state remains critical.
-			logger.Error().Err(err).Msg("error stopping live captures for critical storage state")
-		}
-	}
-
 	return nil
 }
 
-// storageWatchdogAction decides what a state crossing should do. Crossings to
-// warning or critical notify once and stop live captures only at critical;
-// returning to OK from a paused state notifies recovery.
-func storageWatchdogAction(previous, current storage.State) (notify bool, stopCaptures bool) {
+// storageWatchdogAction returns whether a state change should notify.
+func storageWatchdogAction(previous, current storage.State) bool {
 	switch current {
-	case storage.StateWarning:
-		return true, false
-	case storage.StateCritical:
-		return true, true
+	case storage.StateWarning, storage.StateCritical:
+		return true
 	case storage.StateOK:
-		return previous == storage.StateWarning || previous == storage.StateCritical, false
+		return previous == storage.StateWarning || previous == storage.StateCritical
 	}
-	return false, false
+	return false
 }
 
 // sendWarning dispatches through the generic system-warning trigger. It runs
-// detached so a slow webhook cannot consume the watchdog job's time budget.
+// in the background so slow webhooks don't stall the watchdog.
 func (w *StorageWatchdogWorker) sendWarning(ctx context.Context, message string, status storage.Status) {
 	notifSvc, err := NotificationServiceFromContext(ctx)
 	if err != nil {
 		return
 	}
 	go func() {
-		warnCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
-		defer cancel()
+		// No deadline here; each destination gets its own budget.
+		warnCtx := context.WithoutCancel(ctx)
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error().Interface("panic", r).Msg("panic in notification")
@@ -145,9 +138,8 @@ func (w *StorageWatchdogWorker) sendWarning(ctx context.Context, message string,
 	}()
 }
 
-// stopRunningLiveCaptures cancels running live video download jobs. The live
-// workers observe the remote cancellation, flush partial media, and enqueue
-// finalization themselves.
+// stopRunningLiveCaptures cancels running live video download jobs. The
+// live workers save the partial video and finish the archive themselves.
 func (w *StorageWatchdogWorker) stopRunningLiveCaptures(ctx context.Context, logger zerolog.Logger) error {
 	riverClient := river.ClientFromContext[pgx.Tx](ctx)
 	params := river.NewJobListParams().States(rivertype.JobStateRunning).

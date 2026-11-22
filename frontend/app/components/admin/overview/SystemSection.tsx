@@ -19,8 +19,9 @@ const SystemSection = ({ system, loading, error, onRetry }: SystemSectionProps) 
   const storageState = system?.storage_state ?? "unknown";
   const storageWarning = storageState === "warning";
   const storageCritical = storageState === "critical";
+  const storageUnknown = storageState === "unknown";
 
-  const tempStateColor = storageCritical ? "red" : storageWarning ? "orange" : "blue";
+  const tempStateColor = storageCritical ? "red" : storageWarning ? "orange" : storageUnknown ? "gray" : "blue";
 
   return (
     <Paper shadow="xs" withBorder p="xl">
@@ -60,9 +61,13 @@ const SystemSection = ({ system, loading, error, onRetry }: SystemSectionProps) 
             icon={<IconDatabase size={18} stroke={1.5} />}
             color={tempStateColor}
             label={t("system.tempStorage")}
-            value={formatBytes(system?.temp_directory_free_space ?? 0, 2)}
+            value={storageUnknown ? "—" : formatBytes(system?.temp_directory_free_space ?? 0, 2)}
             loading={loading}
-            description={t("system.tempStorageTotal", { value: formatBytes(system?.temp_directory_total_space ?? 0, 2) })}
+            description={
+              storageUnknown
+                ? t("system.tempStorageUnknown")
+                : t("system.tempStorageTotal", { value: formatBytes(system?.temp_directory_total_space ?? 0, 2) })
+            }
           />
           <StatCard icon={<IconCpu size={18} stroke={1.5} />} color="grape" label={t("system.cpuCores")} value={system?.cpu_cores ?? 0} loading={loading} />
           <StatCard icon={<IconDeviceDesktop size={18} stroke={1.5} />} color="cyan" label={t("system.totalMemory")} value={formatBytes(system?.memory_total ?? 0, 0)} loading={loading} />

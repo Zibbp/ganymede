@@ -469,9 +469,9 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 	}
 
-	// A full disk is already reported once per threshold crossing by the
-	// storage watchdog. Suppress the per-job error notification flood and stop
-	// retries that would fail identically until space is freed.
+	// Cancel full-disk failures instead of retrying into a full disk. Still
+	// send the error notification: the disk may not be the watched temp
+	// directory, and cancelling keeps the volume to one per job.
 	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) && isNoSpaceError(err) {
 		var args RiverJobArgs
 		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
@@ -491,6 +491,22 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 		if err := checkIfTasksAreDone(ctx, store.Client, args.Input); err != nil {
 			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to finalize archive status")
+		}
+		dbItems, err := getDatabaseItems(ctx, store.Client, args.Input.QueueId)
+		if err != nil {
+			return nil
+		}
+		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+			go func() {
+				notifCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+				defer cancel()
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().Interface("panic", r).Msg("panic in notification")
+					}
+				}()
+				notifSvc.SendError(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			}()
 		}
 		return &river.ErrorHandlerResult{SetCancelled: true}
 	}
@@ -643,9 +659,8 @@ func attemptedBy(job *rivertype.JobRow) string {
 	return job.AttemptedBy[index]
 }
 
-// isNoSpaceError reports whether a task failed because the filesystem ran out
-// of space. FFmpeg/yt-dlp surface ENOSPC as embedded stderr text, so match
-// both the syscall error and its message.
+// isNoSpaceError reports whether a task failed because the disk is full.
+// FFmpeg and yt-dlp report this as text, so check the error and its message.
 func isNoSpaceError(err error) bool {
 	if err == nil {
 		return false
@@ -653,7 +668,7 @@ func isNoSpaceError(err error) bool {
 	if errors.Is(err, unix.ENOSPC) {
 		return true
 	}
-	return strings.Contains(err.Error(), "No space left on device")
+	return strings.Contains(strings.ToLower(err.Error()), "no space left on device")
 }
 
 func shouldFinalizeArchiveError(ctx context.Context, job *rivertype.JobRow, err error) bool {

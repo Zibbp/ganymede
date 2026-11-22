@@ -69,8 +69,7 @@ func (s *AdminTest) GetSystemOverviewTest(t *testing.T) {
 	assert.Equal(t, int64(0), overview.VideosDirectoryUsedSpace)
 	assert.Greater(t, overview.VideosDirectoryTotalSpace, int64(0))
 	assert.GreaterOrEqual(t, overview.VideosDirectoryTotalSpace, overview.VideosDirectoryFreeSpace)
-	// The temp directory probe runs against the test TEMP_DIR; the reported
-	// state depends on the host filesystem's actual free space.
+	// Temp directory space depends on the host's real free space.
 	assert.Greater(t, overview.TempDirectoryFreeSpace, int64(0))
 	assert.Greater(t, overview.TempDirectoryTotalSpace, int64(0))
 	assert.Contains(t, []string{"ok", "warning", "critical", "disabled", "unknown"}, overview.StorageState)

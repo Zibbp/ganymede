@@ -149,8 +149,7 @@ func (s *Service) GetSystemOverview(ctx context.Context) (GetSystemOverviewRespo
 	}
 	resp.VideosDirectoryTotalSpace = totalSpace
 
-	// Get temp directory space and the archive-gate storage state. Probe
-	// failures surface as state "unknown" rather than failing the overview.
+	// Temp directory space and the storage state; "unknown" if it can't be read.
 	if s.StorageChecker != nil {
 		if status, _ := s.StorageChecker.Check(ctx); status.Err == nil {
 			resp.TempDirectoryFreeSpace = status.FreeBytes

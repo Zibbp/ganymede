@@ -12,13 +12,13 @@ import (
 	"github.com/zibbp/ganymede/tests"
 )
 
-// staticStorageChecker pins a storage state for gate tests.
+// staticStorageChecker returns a fixed status.
 type staticStorageChecker struct{ status storage.Status }
 
 func (c staticStorageChecker) Check(context.Context) (storage.Status, error) { return c.status, nil }
 
-// TestArchiveLowStorageGate verifies that new archives are rejected with
-// ErrTempDirLowSpace before any platform or database work happens.
+// TestArchiveLowStorageGate verifies new archives are rejected with
+// ErrTempDirLowSpace and no records are created.
 func TestArchiveLowStorageGate(t *testing.T) {
 	app, err := tests.Setup(t)
 	assert.NoError(t, err)
@@ -42,7 +42,7 @@ func TestArchiveLowStorageGate(t *testing.T) {
 	})
 
 	t.Run("livestream", func(t *testing.T) {
-		// The gate rejects before the channel is even fetched.
+		// The gate rejects before the channel is fetched.
 		_, err := app.ArchiveService.ArchiveLivestream(ctx, archive.ArchiveVideoInput{
 			ChannelId: uuid.New(),
 			Quality:   "best",
@@ -66,9 +66,8 @@ func TestArchiveLowStorageGate(t *testing.T) {
 	assert.Equal(t, vodCountBefore, vodCountAfter)
 	assert.Equal(t, queueCountBefore, queueCountAfter)
 
-	// A healthy temp directory unblocks archiving at the same entry points.
-	// Without platform credentials the video lookup itself fails, so only
-	// assert that the storage gate no longer rejects the request.
+	// A healthy temp directory unblocks archiving. The video lookup can fail
+	// on its own without platform credentials, so only check the gate.
 	app.ArchiveService.StorageChecker = staticStorageChecker{storage.Status{State: storage.StateOK}}
 	if app.PlatformTwitch != nil {
 		_, err = app.ArchiveService.ArchiveVideo(ctx, archive.ArchiveVideoInput{

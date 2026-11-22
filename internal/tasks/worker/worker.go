@@ -187,8 +187,7 @@ func getPeriodicTasks() ([]periodicTask, error) {
 			},
 		),
 
-		// Monitor temp-directory free space; pause new archives, warn once per
-		// threshold crossing, and stop live captures at the critical threshold.
+		// Watch temp-directory free space; warn when it gets low.
 		newPeriodicTask(tasks.TaskStorageWatchdog, river.PeriodicInterval(time.Minute), "1m", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks.StorageWatchdogArgs{}, periodicInsertOpts(time.Minute)

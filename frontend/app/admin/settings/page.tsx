@@ -65,6 +65,27 @@ const AdminSettingsPage = () => {
         proxy_enabled: data?.livestream.proxy_enabled ?? true,
         proxy_whitelist: data?.livestream.proxy_whitelist || [],
       }
+    },
+    validate: (values) => {
+      const errors: Record<string, string> = {};
+      // The backend rejects fractional or empty values with a 400.
+      const warning = values.archive.temp_dir_warning_threshold_gb as number | "";
+      const critical = values.archive.temp_dir_critical_threshold_gb as number | "";
+      if (warning === "" || Number.isNaN(Number(warning))) {
+        errors["archive.temp_dir_warning_threshold_gb"] = t('archiveSettings.tempDirThresholdRequired');
+      } else if (!Number.isInteger(warning)) {
+        errors["archive.temp_dir_warning_threshold_gb"] = t('archiveSettings.tempDirThresholdWholeNumber');
+      } else if (warning < 1) {
+        errors["archive.temp_dir_warning_threshold_gb"] = t('archiveSettings.tempDirThresholdMin', { min: 1 });
+      }
+      if (critical === "" || Number.isNaN(Number(critical))) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdRequired');
+      } else if (!Number.isInteger(critical)) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdWholeNumber');
+      } else if (critical < 0) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdMin', { min: 0 });
+      }
+      return errors;
     }
   })
 

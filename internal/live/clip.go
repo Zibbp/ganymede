@@ -97,6 +97,8 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			continue
 		}
 
+		storageDeferred := false
+
 		// Check if video is already in DB
 		for _, clip := range clips {
 			logger.Debug().Str("clip_id", clip.ID).Msg("checking if clip should be archived")
@@ -117,6 +119,7 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 				_, err = s.ArchiveService.ArchiveClip(ctx, input)
 				if errors.Is(err, archive.ErrTempDirLowSpace) {
 					logger.Warn().Err(err).Str("clip_id", clip.ID).Msg("temp directory low on space; skipping new clip archive")
+					storageDeferred = true
 					continue
 				}
 				if err != nil {
@@ -127,6 +130,12 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 			} else {
 				logger.Debug().Str("clip_id", clip.ID).Msgf("clip already archived")
 			}
+		}
+
+		// Leave the last checked time so deferred clips are retried on the
+		// next check instead of waiting a full interval.
+		if storageDeferred {
+			continue
 		}
 
 		// Set clip last checked time on channel

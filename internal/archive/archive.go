@@ -62,8 +62,7 @@ func NewService(store *database.Database, channelService *channel.Service, vodSe
 // createArchiveRecordsAndEnqueue atomically creates the VOD and queue state,
 // applies disabled-chat options, and inserts the first River job.
 func (s *Service) createArchiveRecordsAndEnqueue(ctx context.Context, vodDTO vod.Vod, channelID uuid.UUID, queueDTO queue.Queue) (*ArchiveResponse, error) {
-	// New archives are paused while the temp directory is low on space;
-	// in-flight archives continue through their successor enqueues.
+	// Only new archives are blocked here; running archives keep processing.
 	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
 		return nil, err
 	}
@@ -215,8 +214,6 @@ type ArchiveVideoInput struct {
 func (s *Service) ArchiveVideo(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
 	// log.Debug().Msgf("Archiving video %s quality: %s chat: %t render chat: %t", videoId, quality, chat, renderChat)
 
-	// Reject new archives before any platform or database work when the temp
-	// directory is low on space.
 	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
 		return nil, err
 	}
@@ -384,8 +381,6 @@ type ArchiveClipInput struct {
 // ArchiveClip archives a clip from a platform
 func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*ArchiveResponse, error) {
 
-	// Reject new archives before any platform or database work when the temp
-	// directory is low on space.
 	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
 		return nil, err
 	}
@@ -541,8 +536,6 @@ func (s *Service) ArchiveClip(ctx context.Context, input ArchiveClipInput) (*Arc
 }
 
 func (s *Service) ArchiveLivestream(ctx context.Context, input ArchiveVideoInput) (*ArchiveResponse, error) {
-	// Reject new archives before any platform or database work when the temp
-	// directory is low on space.
 	if err := storage.Gate(ctx, s.StorageChecker); err != nil {
 		return nil, err
 	}

@@ -29,6 +29,8 @@ var (
 const (
 	notificationMaxAttempts = 3
 	notificationRetryDelay  = 2 * time.Second
+	// Time budget for delivering to a single destination.
+	notificationDispatchTimeout = 30 * time.Second
 )
 
 // redactURL masks the path and query of a URL to avoid leaking secrets (e.g. webhook tokens).
@@ -366,9 +368,8 @@ func (s *Service) SendLive(ctx context.Context, channelItem *ent.Channel, vodIte
 	}
 }
 
-// SystemWarning is a generic system-level warning delivered through the
-// trigger_system_warning notifications. Message renders into {{warning_message}};
-// Variables become additional template placeholders.
+// SystemWarning is a system-level warning sent through the system warning
+// trigger. Message fills {{warning_message}}; Variables add more placeholders.
 type SystemWarning struct {
 	Message   string
 	Variables map[string]interface{}
@@ -395,8 +396,13 @@ func (s *Service) SendSystemWarning(ctx context.Context, warning SystemWarning) 
 	}
 
 	for _, n := range notifications {
+		// Each destination gets its own time budget so one slow
+		// destination cannot block the others.
+		destCtx, cancel := context.WithTimeout(ctx, notificationDispatchTimeout)
 		body := renderTemplate(n.SystemWarningTemplate, variableMap)
-		if err := s.send(ctx, n, body, variableMap); err != nil {
+		err := s.send(destCtx, n, body, variableMap)
+		cancel()
+		if err != nil {
 			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending system warning notification")
 		}
 	}
@@ -422,6 +428,7 @@ func (s *Service) SendTestNotification(ctx context.Context, n *ent.Notification,
 		variableMap["warning_message"] = "This is a test system warning."
 		variableMap["storage_state"] = "warning"
 		variableMap["temp_directory_free_space"] = "42.0GiB"
+		variableMap["temp_directory_total_space"] = "100.0GiB"
 		tmpl = n.SystemWarningTemplate
 	default:
 		return fmt.Errorf("unknown test notification event type: %s", eventType)
