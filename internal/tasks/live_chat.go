@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -279,7 +280,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 // anchors to the capture start (the Twitch fallback when no VOD is found).
 func convertKickLiveChat(ctx context.Context, store *database.Database, dbItems *GetDatabaseItemsResponse) error {
 	kickChannelID, err := platform.ParseKickChannelExtID(dbItems.Channel.ExtID)
-	if err != nil {
+	if err != nil || kickChannelID < 0 || kickChannelID > math.MaxInt32 {
 		kickChannelID = 0
 	}
 	videoDurationSec, err := resolveLiveChatVideoDurationSec(ctx, store, dbItems)
