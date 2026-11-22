@@ -9,6 +9,7 @@ import { Video as VideoType, VideoType as GanymedeVideoType } from '@/app/hooks/
 import classes from "./Player.module.css"
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMounted } from '@/app/hooks/useMounted';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
 import { useLocale, useTranslations } from 'next-intl';
@@ -135,11 +136,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const hasStartedPlayback = useRef(false);
   const hasInitializedPlaybackTime = useRef(false);
   const pendingResumeTime = useRef<number | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const updatePlaybackProgressMutation = useUpdatePlaybackProgressForVideo()
   const setPlaybackProgressMutation = useSetPlaybackProgressForVideo()

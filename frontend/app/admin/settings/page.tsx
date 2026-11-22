@@ -5,7 +5,7 @@ import { Config, ProxyListItem, ProxyType, useEditConfig, useGetConfig } from "@
 import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, MultiSelect, NumberInput, Select, Text, Textarea, TextInput, Title } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import classes from "./AdminSettingsPage.module.css"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels"
@@ -22,7 +22,6 @@ const AdminSettingsPage = () => {
   const t = useTranslations('AdminSettingsPage');
   usePageTitle(t('title'))
   const [storageTemplateOpened, { toggle: toggleStorageTemplate }] = useDisclosure(false);
-  const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);
   const axiosPrivate = useAxiosPrivate()
 
   const editConfigMutate = useEditConfig()
@@ -88,16 +87,11 @@ const AdminSettingsPage = () => {
 
   const { data: channels } = useFetchChannels();
 
-  useEffect(() => {
-    if (!channels) return;
-
-    const transformedChannels: SelectOption[] = channels.map((channel: Channel) => ({
-      label: channel.name,
-      value: channel.name,
-    }));
-
-    setChannelSelect(transformedChannels);
-  }, [channels]);
+  // Derived from the channel query; no effect needed.
+  const channelSelect: SelectOption[] = (channels ?? []).map((channel: Channel) => ({
+    label: channel.name,
+    value: channel.name,
+  }));
 
   const handleSubmitForm = async () => {
     try {

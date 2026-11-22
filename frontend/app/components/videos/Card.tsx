@@ -3,7 +3,7 @@ import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { Video } from "@/app/hooks/useVideos";
 import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox, Skeleton } from "@mantine/core";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -49,6 +49,7 @@ const VideoCard = ({
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
+  const [prevThumbnailPath, setPrevThumbnailPath] = useState(video.web_thumbnail_path);
 
   // Handle thumbnail loading error
   const handleThumbnailError = () => {
@@ -68,9 +69,11 @@ const VideoCard = ({
   const playbackProgress = playbackData ? (playbackData.time / video.duration) * 100 : 0;
   const playbackIsWatched = playbackData?.status === PlaybackStatus.Finished;
 
-  useEffect(() => {
+  // Reset the thumbnail skeleton when a new thumbnail path arrives.
+  if (video.web_thumbnail_path !== prevThumbnailPath) {
+    setPrevThumbnailPath(video.web_thumbnail_path);
     setThumbnailLoaded(false);
-  }, [video.web_thumbnail_path])
+  }
 
   return (
     <Card radius="md" padding={5} className={classes.card}>

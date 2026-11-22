@@ -1,7 +1,7 @@
 "use client"
 import { Card, Center, Container, Title, Text, TextInput, Divider, Select, Group, Switch, Button, rem } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Channel, useFetchChannels } from "../hooks/useChannels";
 import { showNotification } from "@mantine/notifications";
 import { useArchiveVideo, VideoQuality } from "../hooks/useArchive";
@@ -58,30 +58,23 @@ const ArchivePage = () => {
   const [archiveChat, setArchiveChat] = useInputState(true);
   const [renderChat, setRenderChat] = useInputState(true);
   const [archiveQuality, setArchiveQuality] = useInputState<VideoQuality>(VideoQuality.Best);
-  const [channelData, setChannelData] = useState<SelectOption[]>([]);
   const [channelId, setChannelId] = useState("");
 
   const axiosPrivate = useAxiosPrivate();
   const useArchiveVideoMutate = useArchiveVideo();
   const { data: channels, isPending: channelsIsPending } = useFetchChannels();
 
+  // Derived from the channel query; no effect needed.
+  const channelData: SelectOption[] = (channels ?? []).map((channel: Channel) => ({
+    label: channel.name,
+    value: channel.id,
+  }));
+
   // Quality options using the enum
   const qualityOptions: SelectOption[] = Object.entries(VideoQuality).map(([key, value]) => ({
     label: key.replace('quality', ''),
     value: value
   }));
-
-  // Effect to transform channel data
-  useEffect(() => {
-    if (!channels) return;
-
-    const transformedChannels: SelectOption[] = channels.map((channel: Channel) => ({
-      label: channel.name,
-      value: channel.id,
-    }));
-
-    setChannelData(transformedChannels);
-  }, [channels]);
 
   const archiveVideo = async () => {
     try {

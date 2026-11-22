@@ -252,7 +252,8 @@ const VideoNotes = ({ video, playerRef, draft, onDraftChange, docked = false, on
                 );
               },
               img: ({ src, alt, title }) => {
-                if (!src) return null;
+                // Markdown image sources are URLs; ignore non-string values.
+                if (typeof src !== 'string' || !src) return null;
                 if (isExternalImageSrc(src)) {
                   return (
                     <a
@@ -266,6 +267,10 @@ const VideoNotes = ({ video, playerRef, draft, onDraftChange, docked = false, on
                   );
                 }
                 return (
+                  // Markdown images come from arbitrary user-provided hosts, so
+                  // next/image (which requires allow-listed remotePatterns)
+                  // cannot be used here.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={src}
                     alt={alt}

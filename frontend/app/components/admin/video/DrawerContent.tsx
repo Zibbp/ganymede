@@ -6,7 +6,7 @@ import { Select, Button, NumberInput, TextInput, Checkbox, Flex, Textarea } from
 import { useForm, schemaResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 
 type Props = {
@@ -120,18 +120,12 @@ const AdminVideoDrawerContent = ({ video, mode, handleClose }: Props) => {
   }
 
   const { data: channels } = useFetchChannels();
-  const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);
 
-  useEffect(() => {
-    if (!channels) return;
-
-    const transformedChannels: SelectOption[] = channels.map((channel: Channel) => ({
-      label: channel.name,
-      value: channel.id,
-    }));
-
-    setChannelSelect(transformedChannels);
-  }, [channels]);
+  // Derived from the channel query; no effect needed.
+  const channelSelect: SelectOption[] = (channels ?? []).map((channel: Channel) => ({
+    label: channel.name,
+    value: channel.id,
+  }));
 
   const selectorVideoTypes = Object.values(VideoType).map((type) => ({
     value: type,
