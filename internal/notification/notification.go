@@ -73,10 +73,12 @@ func (s *Service) CreateNotification(ctx context.Context, n *ent.Notification) (
 		SetTriggerLiveSuccess(n.TriggerLiveSuccess).
 		SetTriggerError(n.TriggerError).
 		SetTriggerIsLive(n.TriggerIsLive).
+		SetTriggerSystemWarning(n.TriggerSystemWarning).
 		SetVideoSuccessTemplate(n.VideoSuccessTemplate).
 		SetLiveSuccessTemplate(n.LiveSuccessTemplate).
 		SetErrorTemplate(n.ErrorTemplate).
 		SetIsLiveTemplate(n.IsLiveTemplate).
+		SetSystemWarningTemplate(n.SystemWarningTemplate).
 		SetAppriseUrls(n.AppriseUrls).
 		SetAppriseTitle(n.AppriseTitle).
 		SetAppriseTag(n.AppriseTag)
@@ -115,10 +117,12 @@ func (s *Service) UpdateNotification(ctx context.Context, id uuid.UUID, n *ent.N
 		SetTriggerLiveSuccess(n.TriggerLiveSuccess).
 		SetTriggerError(n.TriggerError).
 		SetTriggerIsLive(n.TriggerIsLive).
+		SetTriggerSystemWarning(n.TriggerSystemWarning).
 		SetVideoSuccessTemplate(n.VideoSuccessTemplate).
 		SetLiveSuccessTemplate(n.LiveSuccessTemplate).
 		SetErrorTemplate(n.ErrorTemplate).
 		SetIsLiveTemplate(n.IsLiveTemplate).
+		SetSystemWarningTemplate(n.SystemWarningTemplate).
 		SetAppriseUrls(n.AppriseUrls).
 		SetAppriseTitle(n.AppriseTitle).
 		SetAppriseTag(n.AppriseTag)
@@ -362,6 +366,42 @@ func (s *Service) SendLive(ctx context.Context, channelItem *ent.Channel, vodIte
 	}
 }
 
+// SystemWarning is a generic system-level warning delivered through the
+// trigger_system_warning notifications. Message renders into {{warning_message}};
+// Variables become additional template placeholders.
+type SystemWarning struct {
+	Message   string
+	Variables map[string]interface{}
+}
+
+// SendSystemWarning sends notifications to all enabled configs with
+// trigger_system_warning.
+func (s *Service) SendSystemWarning(ctx context.Context, warning SystemWarning) {
+	notifications, err := s.Store.Client.Notification.Query().
+		Where(
+			entNotification.EnabledEQ(true),
+			entNotification.TriggerSystemWarningEQ(true),
+		).All(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("error querying system warning notifications")
+		return
+	}
+
+	variableMap := map[string]interface{}{
+		"warning_message": warning.Message,
+	}
+	for k, v := range warning.Variables {
+		variableMap[k] = v
+	}
+
+	for _, n := range notifications {
+		body := renderTemplate(n.SystemWarningTemplate, variableMap)
+		if err := s.send(ctx, n, body, variableMap); err != nil {
+			log.Error().Err(err).Str("notification_id", n.ID.String()).Str("name", n.Name).Msg("error sending system warning notification")
+		}
+	}
+}
+
 // SendTestNotification sends a test notification using the config's own templates with dummy data.
 func (s *Service) SendTestNotification(ctx context.Context, n *ent.Notification, eventType string) error {
 	variableMap := getTestVariableMap()
@@ -378,6 +418,11 @@ func (s *Service) SendTestNotification(ctx context.Context, n *ent.Notification,
 	case "is_live":
 		variableMap["category"] = "Demo Game"
 		tmpl = n.IsLiveTemplate
+	case "system_warning":
+		variableMap["warning_message"] = "This is a test system warning."
+		variableMap["storage_state"] = "warning"
+		variableMap["temp_directory_free_space"] = "42.0GiB"
+		tmpl = n.SystemWarningTemplate
 	default:
 		return fmt.Errorf("unknown test notification event type: %s", eventType)
 	}

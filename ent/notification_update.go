@@ -140,6 +140,20 @@ func (_u *NotificationUpdate) SetNillableTriggerIsLive(v *bool) *NotificationUpd
 	return _u
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (_u *NotificationUpdate) SetTriggerSystemWarning(v bool) *NotificationUpdate {
+	_u.mutation.SetTriggerSystemWarning(v)
+	return _u
+}
+
+// SetNillableTriggerSystemWarning sets the "trigger_system_warning" field if the given value is not nil.
+func (_u *NotificationUpdate) SetNillableTriggerSystemWarning(v *bool) *NotificationUpdate {
+	if v != nil {
+		_u.SetTriggerSystemWarning(*v)
+	}
+	return _u
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (_u *NotificationUpdate) SetVideoSuccessTemplate(v string) *NotificationUpdate {
 	_u.mutation.SetVideoSuccessTemplate(v)
@@ -192,6 +206,20 @@ func (_u *NotificationUpdate) SetIsLiveTemplate(v string) *NotificationUpdate {
 func (_u *NotificationUpdate) SetNillableIsLiveTemplate(v *string) *NotificationUpdate {
 	if v != nil {
 		_u.SetIsLiveTemplate(*v)
+	}
+	return _u
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (_u *NotificationUpdate) SetSystemWarningTemplate(v string) *NotificationUpdate {
+	_u.mutation.SetSystemWarningTemplate(v)
+	return _u
+}
+
+// SetNillableSystemWarningTemplate sets the "system_warning_template" field if the given value is not nil.
+func (_u *NotificationUpdate) SetNillableSystemWarningTemplate(v *string) *NotificationUpdate {
+	if v != nil {
+		_u.SetSystemWarningTemplate(*v)
 	}
 	return _u
 }
@@ -368,6 +396,11 @@ func (_u *NotificationUpdate) check() error {
 			return &ValidationError{Name: "is_live_template", err: fmt.Errorf(`ent: validator failed for field "Notification.is_live_template": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SystemWarningTemplate(); ok {
+		if err := notification.SystemWarningTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "system_warning_template", err: fmt.Errorf(`ent: validator failed for field "Notification.system_warning_template": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.AppriseUrls(); ok {
 		if err := notification.AppriseUrlsValidator(v); err != nil {
 			return &ValidationError{Name: "apprise_urls", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_urls": %w`, err)}
@@ -432,6 +465,9 @@ func (_u *NotificationUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if value, ok := _u.mutation.TriggerIsLive(); ok {
 		_spec.SetField(notification.FieldTriggerIsLive, field.TypeBool, value)
 	}
+	if value, ok := _u.mutation.TriggerSystemWarning(); ok {
+		_spec.SetField(notification.FieldTriggerSystemWarning, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.VideoSuccessTemplate(); ok {
 		_spec.SetField(notification.FieldVideoSuccessTemplate, field.TypeString, value)
 	}
@@ -443,6 +479,9 @@ func (_u *NotificationUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.IsLiveTemplate(); ok {
 		_spec.SetField(notification.FieldIsLiveTemplate, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SystemWarningTemplate(); ok {
+		_spec.SetField(notification.FieldSystemWarningTemplate, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.AppriseUrls(); ok {
 		_spec.SetField(notification.FieldAppriseUrls, field.TypeString, value)
@@ -603,6 +642,20 @@ func (_u *NotificationUpdateOne) SetNillableTriggerIsLive(v *bool) *Notification
 	return _u
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (_u *NotificationUpdateOne) SetTriggerSystemWarning(v bool) *NotificationUpdateOne {
+	_u.mutation.SetTriggerSystemWarning(v)
+	return _u
+}
+
+// SetNillableTriggerSystemWarning sets the "trigger_system_warning" field if the given value is not nil.
+func (_u *NotificationUpdateOne) SetNillableTriggerSystemWarning(v *bool) *NotificationUpdateOne {
+	if v != nil {
+		_u.SetTriggerSystemWarning(*v)
+	}
+	return _u
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (_u *NotificationUpdateOne) SetVideoSuccessTemplate(v string) *NotificationUpdateOne {
 	_u.mutation.SetVideoSuccessTemplate(v)
@@ -655,6 +708,20 @@ func (_u *NotificationUpdateOne) SetIsLiveTemplate(v string) *NotificationUpdate
 func (_u *NotificationUpdateOne) SetNillableIsLiveTemplate(v *string) *NotificationUpdateOne {
 	if v != nil {
 		_u.SetIsLiveTemplate(*v)
+	}
+	return _u
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (_u *NotificationUpdateOne) SetSystemWarningTemplate(v string) *NotificationUpdateOne {
+	_u.mutation.SetSystemWarningTemplate(v)
+	return _u
+}
+
+// SetNillableSystemWarningTemplate sets the "system_warning_template" field if the given value is not nil.
+func (_u *NotificationUpdateOne) SetNillableSystemWarningTemplate(v *string) *NotificationUpdateOne {
+	if v != nil {
+		_u.SetSystemWarningTemplate(*v)
 	}
 	return _u
 }
@@ -844,6 +911,11 @@ func (_u *NotificationUpdateOne) check() error {
 			return &ValidationError{Name: "is_live_template", err: fmt.Errorf(`ent: validator failed for field "Notification.is_live_template": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SystemWarningTemplate(); ok {
+		if err := notification.SystemWarningTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "system_warning_template", err: fmt.Errorf(`ent: validator failed for field "Notification.system_warning_template": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.AppriseUrls(); ok {
 		if err := notification.AppriseUrlsValidator(v); err != nil {
 			return &ValidationError{Name: "apprise_urls", err: fmt.Errorf(`ent: validator failed for field "Notification.apprise_urls": %w`, err)}
@@ -925,6 +997,9 @@ func (_u *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificati
 	if value, ok := _u.mutation.TriggerIsLive(); ok {
 		_spec.SetField(notification.FieldTriggerIsLive, field.TypeBool, value)
 	}
+	if value, ok := _u.mutation.TriggerSystemWarning(); ok {
+		_spec.SetField(notification.FieldTriggerSystemWarning, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.VideoSuccessTemplate(); ok {
 		_spec.SetField(notification.FieldVideoSuccessTemplate, field.TypeString, value)
 	}
@@ -936,6 +1011,9 @@ func (_u *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificati
 	}
 	if value, ok := _u.mutation.IsLiveTemplate(); ok {
 		_spec.SetField(notification.FieldIsLiveTemplate, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SystemWarningTemplate(); ok {
+		_spec.SetField(notification.FieldSystemWarningTemplate, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.AppriseUrls(); ok {
 		_spec.SetField(notification.FieldAppriseUrls, field.TypeString, value)

@@ -101,6 +101,12 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	assert.NoError(t, os.Setenv("CONFIG_DIR", configDir))
 	t.Log("CONFIG_DIR", configDir)
 
+	// Pre-seed config.json with the storage check disabled: test hosts may
+	// have less temp-directory free space than the default thresholds, which
+	// would otherwise pause archiving across the whole suite. Individual
+	// tests opt back in explicitly.
+	assert.NoError(t, os.WriteFile(filepath.Join(configDir, "config.json"), []byte(`{"archive":{"storage_check_enabled":false}}`), 0o644))
+
 	logsDir, err := os.MkdirTemp(testsTmpDir, "ganymede-tests")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Setenv("LOGS_DIR", logsDir))
@@ -167,6 +173,9 @@ func setup(t *testing.T, startWorker bool) (*server.Application, error) {
 	// Set config to defaults
 	cfg := config.Get()
 	cfg.SetDefaults()
+	// Keep the storage check disabled for the suite (see setupEnvironment);
+	// low-space behavior is tested explicitly.
+	cfg.Archive.StorageCheckEnabled = false
 	assert.NoError(t, config.UpdateConfig(cfg))
 
 	var workerClient *tasks_worker.RiverWorkerClient

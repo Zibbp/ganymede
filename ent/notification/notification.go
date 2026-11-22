@@ -31,6 +31,8 @@ const (
 	FieldTriggerError = "trigger_error"
 	// FieldTriggerIsLive holds the string denoting the trigger_is_live field in the database.
 	FieldTriggerIsLive = "trigger_is_live"
+	// FieldTriggerSystemWarning holds the string denoting the trigger_system_warning field in the database.
+	FieldTriggerSystemWarning = "trigger_system_warning"
 	// FieldVideoSuccessTemplate holds the string denoting the video_success_template field in the database.
 	FieldVideoSuccessTemplate = "video_success_template"
 	// FieldLiveSuccessTemplate holds the string denoting the live_success_template field in the database.
@@ -39,6 +41,8 @@ const (
 	FieldErrorTemplate = "error_template"
 	// FieldIsLiveTemplate holds the string denoting the is_live_template field in the database.
 	FieldIsLiveTemplate = "is_live_template"
+	// FieldSystemWarningTemplate holds the string denoting the system_warning_template field in the database.
+	FieldSystemWarningTemplate = "system_warning_template"
 	// FieldAppriseUrls holds the string denoting the apprise_urls field in the database.
 	FieldAppriseUrls = "apprise_urls"
 	// FieldAppriseTitle holds the string denoting the apprise_title field in the database.
@@ -68,10 +72,12 @@ var Columns = []string{
 	FieldTriggerLiveSuccess,
 	FieldTriggerError,
 	FieldTriggerIsLive,
+	FieldTriggerSystemWarning,
 	FieldVideoSuccessTemplate,
 	FieldLiveSuccessTemplate,
 	FieldErrorTemplate,
 	FieldIsLiveTemplate,
+	FieldSystemWarningTemplate,
 	FieldAppriseUrls,
 	FieldAppriseTitle,
 	FieldAppriseType,
@@ -106,6 +112,8 @@ var (
 	DefaultTriggerError bool
 	// DefaultTriggerIsLive holds the default value on creation for the "trigger_is_live" field.
 	DefaultTriggerIsLive bool
+	// DefaultTriggerSystemWarning holds the default value on creation for the "trigger_system_warning" field.
+	DefaultTriggerSystemWarning bool
 	// DefaultVideoSuccessTemplate holds the default value on creation for the "video_success_template" field.
 	DefaultVideoSuccessTemplate string
 	// VideoSuccessTemplateValidator is a validator for the "video_success_template" field. It is called by the builders before save.
@@ -122,6 +130,10 @@ var (
 	DefaultIsLiveTemplate string
 	// IsLiveTemplateValidator is a validator for the "is_live_template" field. It is called by the builders before save.
 	IsLiveTemplateValidator func(string) error
+	// DefaultSystemWarningTemplate holds the default value on creation for the "system_warning_template" field.
+	DefaultSystemWarningTemplate string
+	// SystemWarningTemplateValidator is a validator for the "system_warning_template" field. It is called by the builders before save.
+	SystemWarningTemplateValidator func(string) error
 	// DefaultAppriseUrls holds the default value on creation for the "apprise_urls" field.
 	DefaultAppriseUrls string
 	// AppriseUrlsValidator is a validator for the "apprise_urls" field. It is called by the builders before save.
@@ -270,6 +282,11 @@ func ByTriggerIsLive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTriggerIsLive, opts...).ToFunc()
 }
 
+// ByTriggerSystemWarning orders the results by the trigger_system_warning field.
+func ByTriggerSystemWarning(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTriggerSystemWarning, opts...).ToFunc()
+}
+
 // ByVideoSuccessTemplate orders the results by the video_success_template field.
 func ByVideoSuccessTemplate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVideoSuccessTemplate, opts...).ToFunc()
@@ -288,6 +305,11 @@ func ByErrorTemplate(opts ...sql.OrderTermOption) OrderOption {
 // ByIsLiveTemplate orders the results by the is_live_template field.
 func ByIsLiveTemplate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsLiveTemplate, opts...).ToFunc()
+}
+
+// BySystemWarningTemplate orders the results by the system_warning_template field.
+func BySystemWarningTemplate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSystemWarningTemplate, opts...).ToFunc()
 }
 
 // ByAppriseUrls orders the results by the apprise_urls field.

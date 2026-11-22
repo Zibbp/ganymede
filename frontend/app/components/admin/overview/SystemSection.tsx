@@ -1,5 +1,5 @@
 import { Paper, Title, Text, SimpleGrid, Alert, Button, Anchor, Group } from "@mantine/core";
-import { IconCpu, IconDeviceDesktop, IconDatabase, IconUsers } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCpu, IconDeviceDesktop, IconDatabase, IconUsers } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { GanymedeSystemOverview } from "@/app/hooks/useAdmin";
@@ -16,6 +16,12 @@ interface SystemSectionProps {
 const SystemSection = ({ system, loading, error, onRetry }: SystemSectionProps) => {
   const t = useTranslations("AdminOverviewPage");
 
+  const storageState = system?.storage_state ?? "unknown";
+  const storageWarning = storageState === "warning";
+  const storageCritical = storageState === "critical";
+
+  const tempStateColor = storageCritical ? "red" : storageWarning ? "orange" : "blue";
+
   return (
     <Paper shadow="xs" withBorder p="xl">
       <Group justify="space-between" align="center">
@@ -24,6 +30,16 @@ const SystemSection = ({ system, loading, error, onRetry }: SystemSectionProps) 
           {t("system.viewInfo")}
         </Anchor>
       </Group>
+      {(storageWarning || storageCritical) && (
+        <Alert
+          mt="md"
+          color={storageCritical ? "red" : "orange"}
+          icon={<IconAlertTriangle size={18} />}
+          title={storageCritical ? t("system.storageCriticalTitle") : t("system.storageWarningTitle")}
+        >
+          {storageCritical ? t("system.storageCriticalDescription") : t("system.storageWarningDescription")}
+        </Alert>
+      )}
       {error ? (
         <Alert color="red" mt="md" title={t("error")}>
           <Button variant="subtle" size="xs" onClick={onRetry}>
@@ -31,7 +47,7 @@ const SystemSection = ({ system, loading, error, onRetry }: SystemSectionProps) 
           </Button>
         </Alert>
       ) : (
-        <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} pt="md">
+        <SimpleGrid cols={{ base: 1, xs: 2, md: 5 }} pt="md">
           <StatCard
             icon={<IconDatabase size={18} stroke={1.5} />}
             color="blue"
@@ -39,6 +55,14 @@ const SystemSection = ({ system, loading, error, onRetry }: SystemSectionProps) 
             value={formatBytes(system?.videos_directory_used_space ?? 0, 2)}
             loading={loading}
             description={t("system.freeStorage", { value: formatBytes(system?.videos_directory_free_space ?? 0, 2) })}
+          />
+          <StatCard
+            icon={<IconDatabase size={18} stroke={1.5} />}
+            color={tempStateColor}
+            label={t("system.tempStorage")}
+            value={formatBytes(system?.temp_directory_free_space ?? 0, 2)}
+            loading={loading}
+            description={t("system.tempStorageTotal", { value: formatBytes(system?.temp_directory_total_space ?? 0, 2) })}
           />
           <StatCard icon={<IconCpu size={18} stroke={1.5} />} color="grape" label={t("system.cpuCores")} value={system?.cpu_cores ?? 0} loading={loading} />
           <StatCard icon={<IconDeviceDesktop size={18} stroke={1.5} />} color="cyan" label={t("system.totalMemory")} value={formatBytes(system?.memory_total ?? 0, 0)} loading={loading} />

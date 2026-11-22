@@ -27,6 +27,7 @@ import (
 	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
+	"golang.org/x/sys/unix"
 
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -468,6 +469,32 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 	}
 
+	// A full disk is already reported once per threshold crossing by the
+	// storage watchdog. Suppress the per-job error notification flood and stop
+	// retries that would fail identically until space is freed.
+	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) && isNoSpaceError(err) {
+		var args RiverJobArgs
+		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+			return nil
+		}
+		store, storeErr := StoreFromContext(ctx)
+		if storeErr != nil {
+			return nil
+		}
+		log.Warn().Int64("job_id", job.ID).Str("kind", job.Kind).Str("queue_id", args.Input.QueueId.String()).Msg("archive task failed because the disk is full; cancelling instead of retrying")
+		if err := setQueueStatus(ctx, store.Client, QueueStatusInput{
+			Status:  utils.Failed,
+			QueueId: args.Input.QueueId,
+			Task:    utils.GetTaskName(job.Kind),
+		}); err != nil {
+			return nil
+		}
+		if err := checkIfTasksAreDone(ctx, store.Client, args.Input); err != nil {
+			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to finalize archive status")
+		}
+		return &river.ErrorHandlerResult{SetCancelled: true}
+	}
+
 	// River invokes the error handler after every failed attempt. Keep queue
 	// failure state and notifications for terminal errors only. A remote cancel
 	// of a live capture is terminal in River, but the worker deliberately
@@ -614,6 +641,19 @@ func attemptedBy(job *rivertype.JobRow) string {
 		return ""
 	}
 	return job.AttemptedBy[index]
+}
+
+// isNoSpaceError reports whether a task failed because the filesystem ran out
+// of space. FFmpeg/yt-dlp surface ENOSPC as embedded stderr text, so match
+// both the syscall error and its message.
+func isNoSpaceError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, unix.ENOSPC) {
+		return true
+	}
+	return strings.Contains(err.Error(), "No space left on device")
 }
 
 func shouldFinalizeArchiveError(ctx context.Context, job *rivertype.JobRow, err error) bool {

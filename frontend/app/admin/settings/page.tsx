@@ -50,7 +50,10 @@ const AdminSettingsPage = () => {
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
         generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
-        generate_nfo_files: data?.archive.generate_nfo_files ?? true
+        generate_nfo_files: data?.archive.generate_nfo_files ?? true,
+        storage_check_enabled: data?.archive.storage_check_enabled ?? true,
+        temp_dir_warning_threshold_gb: data?.archive.temp_dir_warning_threshold_gb ?? 50,
+        temp_dir_critical_threshold_gb: data?.archive.temp_dir_critical_threshold_gb ?? 5
       },
       storage_templates: {
         folder_template: data?.storage_templates.folder_template || "",
@@ -189,6 +192,35 @@ const AdminSettingsPage = () => {
               key={form.key('archive.generate_nfo_files')}
               {...form.getInputProps('archive.generate_nfo_files', { type: "checkbox" })}
               mr={15}
+            />
+
+            <Checkbox
+              mt={15}
+              label={t('archiveSettings.storageCheckEnabledLabel')}
+              description={t('archiveSettings.storageCheckEnabledDescription')}
+              key={form.key('archive.storage_check_enabled')}
+              {...form.getInputProps('archive.storage_check_enabled', { type: "checkbox" })}
+              mr={15}
+            />
+
+            <NumberInput
+              mt={10}
+              label={t('archiveSettings.tempDirWarningThresholdLabel')}
+              description={t('archiveSettings.tempDirWarningThresholdDescription')}
+              placeholder="50"
+              key={form.key('archive.temp_dir_warning_threshold_gb')}
+              {...form.getInputProps('archive.temp_dir_warning_threshold_gb')}
+              min={1}
+            />
+
+            <NumberInput
+              mt={10}
+              label={t('archiveSettings.tempDirCriticalThresholdLabel')}
+              description={t('archiveSettings.tempDirCriticalThresholdDescription')}
+              placeholder="5"
+              key={form.key('archive.temp_dir_critical_threshold_gb')}
+              {...form.getInputProps('archive.temp_dir_critical_threshold_gb')}
+              min={0}
             />
 
             <Button

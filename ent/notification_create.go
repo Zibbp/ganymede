@@ -112,6 +112,20 @@ func (_c *NotificationCreate) SetNillableTriggerIsLive(v *bool) *NotificationCre
 	return _c
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (_c *NotificationCreate) SetTriggerSystemWarning(v bool) *NotificationCreate {
+	_c.mutation.SetTriggerSystemWarning(v)
+	return _c
+}
+
+// SetNillableTriggerSystemWarning sets the "trigger_system_warning" field if the given value is not nil.
+func (_c *NotificationCreate) SetNillableTriggerSystemWarning(v *bool) *NotificationCreate {
+	if v != nil {
+		_c.SetTriggerSystemWarning(*v)
+	}
+	return _c
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (_c *NotificationCreate) SetVideoSuccessTemplate(v string) *NotificationCreate {
 	_c.mutation.SetVideoSuccessTemplate(v)
@@ -164,6 +178,20 @@ func (_c *NotificationCreate) SetIsLiveTemplate(v string) *NotificationCreate {
 func (_c *NotificationCreate) SetNillableIsLiveTemplate(v *string) *NotificationCreate {
 	if v != nil {
 		_c.SetIsLiveTemplate(*v)
+	}
+	return _c
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (_c *NotificationCreate) SetSystemWarningTemplate(v string) *NotificationCreate {
+	_c.mutation.SetSystemWarningTemplate(v)
+	return _c
+}
+
+// SetNillableSystemWarningTemplate sets the "system_warning_template" field if the given value is not nil.
+func (_c *NotificationCreate) SetNillableSystemWarningTemplate(v *string) *NotificationCreate {
+	if v != nil {
+		_c.SetSystemWarningTemplate(*v)
 	}
 	return _c
 }
@@ -335,6 +363,10 @@ func (_c *NotificationCreate) defaults() {
 		v := notification.DefaultTriggerIsLive
 		_c.mutation.SetTriggerIsLive(v)
 	}
+	if _, ok := _c.mutation.TriggerSystemWarning(); !ok {
+		v := notification.DefaultTriggerSystemWarning
+		_c.mutation.SetTriggerSystemWarning(v)
+	}
 	if _, ok := _c.mutation.VideoSuccessTemplate(); !ok {
 		v := notification.DefaultVideoSuccessTemplate
 		_c.mutation.SetVideoSuccessTemplate(v)
@@ -350,6 +382,10 @@ func (_c *NotificationCreate) defaults() {
 	if _, ok := _c.mutation.IsLiveTemplate(); !ok {
 		v := notification.DefaultIsLiveTemplate
 		_c.mutation.SetIsLiveTemplate(v)
+	}
+	if _, ok := _c.mutation.SystemWarningTemplate(); !ok {
+		v := notification.DefaultSystemWarningTemplate
+		_c.mutation.SetSystemWarningTemplate(v)
 	}
 	if _, ok := _c.mutation.AppriseUrls(); !ok {
 		v := notification.DefaultAppriseUrls
@@ -426,6 +462,9 @@ func (_c *NotificationCreate) check() error {
 	if _, ok := _c.mutation.TriggerIsLive(); !ok {
 		return &ValidationError{Name: "trigger_is_live", err: errors.New(`ent: missing required field "Notification.trigger_is_live"`)}
 	}
+	if _, ok := _c.mutation.TriggerSystemWarning(); !ok {
+		return &ValidationError{Name: "trigger_system_warning", err: errors.New(`ent: missing required field "Notification.trigger_system_warning"`)}
+	}
 	if _, ok := _c.mutation.VideoSuccessTemplate(); !ok {
 		return &ValidationError{Name: "video_success_template", err: errors.New(`ent: missing required field "Notification.video_success_template"`)}
 	}
@@ -456,6 +495,14 @@ func (_c *NotificationCreate) check() error {
 	if v, ok := _c.mutation.IsLiveTemplate(); ok {
 		if err := notification.IsLiveTemplateValidator(v); err != nil {
 			return &ValidationError{Name: "is_live_template", err: fmt.Errorf(`ent: validator failed for field "Notification.is_live_template": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.SystemWarningTemplate(); !ok {
+		return &ValidationError{Name: "system_warning_template", err: errors.New(`ent: missing required field "Notification.system_warning_template"`)}
+	}
+	if v, ok := _c.mutation.SystemWarningTemplate(); ok {
+		if err := notification.SystemWarningTemplateValidator(v); err != nil {
+			return &ValidationError{Name: "system_warning_template", err: fmt.Errorf(`ent: validator failed for field "Notification.system_warning_template": %w`, err)}
 		}
 	}
 	if v, ok := _c.mutation.AppriseUrls(); ok {
@@ -563,6 +610,10 @@ func (_c *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 		_spec.SetField(notification.FieldTriggerIsLive, field.TypeBool, value)
 		_node.TriggerIsLive = value
 	}
+	if value, ok := _c.mutation.TriggerSystemWarning(); ok {
+		_spec.SetField(notification.FieldTriggerSystemWarning, field.TypeBool, value)
+		_node.TriggerSystemWarning = value
+	}
 	if value, ok := _c.mutation.VideoSuccessTemplate(); ok {
 		_spec.SetField(notification.FieldVideoSuccessTemplate, field.TypeString, value)
 		_node.VideoSuccessTemplate = value
@@ -578,6 +629,10 @@ func (_c *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.IsLiveTemplate(); ok {
 		_spec.SetField(notification.FieldIsLiveTemplate, field.TypeString, value)
 		_node.IsLiveTemplate = value
+	}
+	if value, ok := _c.mutation.SystemWarningTemplate(); ok {
+		_spec.SetField(notification.FieldSystemWarningTemplate, field.TypeString, value)
+		_node.SystemWarningTemplate = value
 	}
 	if value, ok := _c.mutation.AppriseUrls(); ok {
 		_spec.SetField(notification.FieldAppriseUrls, field.TypeString, value)
@@ -755,6 +810,18 @@ func (u *NotificationUpsert) UpdateTriggerIsLive() *NotificationUpsert {
 	return u
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (u *NotificationUpsert) SetTriggerSystemWarning(v bool) *NotificationUpsert {
+	u.Set(notification.FieldTriggerSystemWarning, v)
+	return u
+}
+
+// UpdateTriggerSystemWarning sets the "trigger_system_warning" field to the value that was provided on create.
+func (u *NotificationUpsert) UpdateTriggerSystemWarning() *NotificationUpsert {
+	u.SetExcluded(notification.FieldTriggerSystemWarning)
+	return u
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (u *NotificationUpsert) SetVideoSuccessTemplate(v string) *NotificationUpsert {
 	u.Set(notification.FieldVideoSuccessTemplate, v)
@@ -800,6 +867,18 @@ func (u *NotificationUpsert) SetIsLiveTemplate(v string) *NotificationUpsert {
 // UpdateIsLiveTemplate sets the "is_live_template" field to the value that was provided on create.
 func (u *NotificationUpsert) UpdateIsLiveTemplate() *NotificationUpsert {
 	u.SetExcluded(notification.FieldIsLiveTemplate)
+	return u
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (u *NotificationUpsert) SetSystemWarningTemplate(v string) *NotificationUpsert {
+	u.Set(notification.FieldSystemWarningTemplate, v)
+	return u
+}
+
+// UpdateSystemWarningTemplate sets the "system_warning_template" field to the value that was provided on create.
+func (u *NotificationUpsert) UpdateSystemWarningTemplate() *NotificationUpsert {
+	u.SetExcluded(notification.FieldSystemWarningTemplate)
 	return u
 }
 
@@ -1056,6 +1135,20 @@ func (u *NotificationUpsertOne) UpdateTriggerIsLive() *NotificationUpsertOne {
 	})
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (u *NotificationUpsertOne) SetTriggerSystemWarning(v bool) *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.SetTriggerSystemWarning(v)
+	})
+}
+
+// UpdateTriggerSystemWarning sets the "trigger_system_warning" field to the value that was provided on create.
+func (u *NotificationUpsertOne) UpdateTriggerSystemWarning() *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.UpdateTriggerSystemWarning()
+	})
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (u *NotificationUpsertOne) SetVideoSuccessTemplate(v string) *NotificationUpsertOne {
 	return u.Update(func(s *NotificationUpsert) {
@@ -1109,6 +1202,20 @@ func (u *NotificationUpsertOne) SetIsLiveTemplate(v string) *NotificationUpsertO
 func (u *NotificationUpsertOne) UpdateIsLiveTemplate() *NotificationUpsertOne {
 	return u.Update(func(s *NotificationUpsert) {
 		s.UpdateIsLiveTemplate()
+	})
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (u *NotificationUpsertOne) SetSystemWarningTemplate(v string) *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.SetSystemWarningTemplate(v)
+	})
+}
+
+// UpdateSystemWarningTemplate sets the "system_warning_template" field to the value that was provided on create.
+func (u *NotificationUpsertOne) UpdateSystemWarningTemplate() *NotificationUpsertOne {
+	return u.Update(func(s *NotificationUpsert) {
+		s.UpdateSystemWarningTemplate()
 	})
 }
 
@@ -1547,6 +1654,20 @@ func (u *NotificationUpsertBulk) UpdateTriggerIsLive() *NotificationUpsertBulk {
 	})
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (u *NotificationUpsertBulk) SetTriggerSystemWarning(v bool) *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.SetTriggerSystemWarning(v)
+	})
+}
+
+// UpdateTriggerSystemWarning sets the "trigger_system_warning" field to the value that was provided on create.
+func (u *NotificationUpsertBulk) UpdateTriggerSystemWarning() *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.UpdateTriggerSystemWarning()
+	})
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (u *NotificationUpsertBulk) SetVideoSuccessTemplate(v string) *NotificationUpsertBulk {
 	return u.Update(func(s *NotificationUpsert) {
@@ -1600,6 +1721,20 @@ func (u *NotificationUpsertBulk) SetIsLiveTemplate(v string) *NotificationUpsert
 func (u *NotificationUpsertBulk) UpdateIsLiveTemplate() *NotificationUpsertBulk {
 	return u.Update(func(s *NotificationUpsert) {
 		s.UpdateIsLiveTemplate()
+	})
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (u *NotificationUpsertBulk) SetSystemWarningTemplate(v string) *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.SetSystemWarningTemplate(v)
+	})
+}
+
+// UpdateSystemWarningTemplate sets the "system_warning_template" field to the value that was provided on create.
+func (u *NotificationUpsertBulk) UpdateSystemWarningTemplate() *NotificationUpsertBulk {
+	return u.Update(func(s *NotificationUpsert) {
+		s.UpdateSystemWarningTemplate()
 	})
 }
 

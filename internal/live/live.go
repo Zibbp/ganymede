@@ -501,6 +501,10 @@ OUTER:
 					log.Debug().Str("stream_id", stream.ID).Msg("stream already has an active archive")
 					continue OUTER
 				}
+				if errors.Is(err, archive.ErrTempDirLowSpace) {
+					log.Warn().Err(err).Str("channel", lwc.Edges.Channel.Name).Msg("temp directory low on space; skipping new live archive")
+					continue OUTER
+				}
 				if err != nil {
 					log.Error().Err(err).Msg("error archiving twitch livestream")
 					continue

@@ -24,6 +24,12 @@ type Config struct {
 		SaveAsHls                bool `json:"save_as_hls"`                // Save as HLS rather than MP4.
 		GenerateSpriteThumbnails bool `json:"generate_sprite_thumbnails"` // Generate sprite thumbnails for scrubbing.
 		GenerateNFOFiles         bool `json:"generate_nfo_files"`         // Generate Kodi-compatible NFO sidecars for archived videos.
+		StorageCheckEnabled      bool `json:"storage_check_enabled"`      // Pause new archives when the temp directory is low on space.
+		// New archives are paused at or below the warning threshold so
+		// in-flight work can drain. Live captures are stopped at or below
+		// the critical threshold to avoid corrupting them on a full disk.
+		TempDirWarningThresholdGB  int `json:"temp_dir_warning_threshold_gb"`  // Soft stop threshold in GB.
+		TempDirCriticalThresholdGB int `json:"temp_dir_critical_threshold_gb"` // Hard stop threshold in GB.
 	} `json:"archive"`
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
@@ -206,6 +212,9 @@ func (c *Config) SetDefaults() {
 	c.Archive.SaveAsHls = false
 	c.Archive.GenerateSpriteThumbnails = true
 	c.Archive.GenerateNFOFiles = true
+	c.Archive.StorageCheckEnabled = true
+	c.Archive.TempDirWarningThresholdGB = 50
+	c.Archive.TempDirCriticalThresholdGB = 5
 
 	// storage templates
 	c.StorageTemplates.FolderTemplate = "{{date}}-{{id}}-{{type}}-{{uuid}}"
