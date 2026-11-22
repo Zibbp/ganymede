@@ -492,7 +492,10 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		if err := checkIfTasksAreDone(ctx, store.Client, args.Input); err != nil {
 			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to finalize archive status")
 		}
-		dbItems, err := getDatabaseItems(ctx, store.Client, args.Input.QueueId)
+		// Bounded so a stalled query cannot delay the job cancellation.
+		lookupCtx, cancelLookup := context.WithTimeout(ctx, 30*time.Second)
+		dbItems, err := getDatabaseItems(lookupCtx, store.Client, args.Input.QueueId)
+		cancelLookup()
 		if err != nil {
 			// Still cancel; a failed lookup must not restore retries.
 			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to get archive items for full-disk notification")

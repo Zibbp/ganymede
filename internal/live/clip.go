@@ -29,6 +29,15 @@ func clipsWindowStart(now time.Time, intervalDays int, ignoreLastChecked bool, l
 	return lastChecked
 }
 
+// clipsDeferralAnchor returns the window start to persist when a first
+// check is deferred by low storage. The retry then covers the same window.
+func clipsDeferralAnchor(lastChecked, startedAt time.Time) (time.Time, bool) {
+	if !lastChecked.IsZero() || startedAt.IsZero() {
+		return time.Time{}, false
+	}
+	return startedAt, true
+}
+
 // CheckWatchedChannelClips checks watched channels for clips to arhive
 func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.Logger) error {
 	// Get channels from DB
@@ -144,6 +153,13 @@ func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.L
 		// Leave the last checked time so deferred clips are retried on the
 		// next check instead of waiting a full interval.
 		if storageDeferred {
+			// On a first check there is no timestamp to keep, so store this
+			// window's start; the retry then covers the same clips.
+			if anchor, ok := clipsDeferralAnchor(watchedChannel.ClipsLastChecked, startedAt); ok {
+				if err := s.Store.Client.Live.Update().Where(live.ID(watchedChannel.ID)).SetClipsLastChecked(anchor).Exec(ctx); err != nil {
+					logger.Error().Err(err).Str("channel", watchedChannel.Edges.Channel.Name).Msg("error storing clip retry anchor")
+				}
+			}
 			continue
 		}
 

@@ -38,3 +38,28 @@ func TestClipsWindowStart(t *testing.T) {
 		assert.Equal(t, lastChecked, clipsWindowStart(now, 7, false, lastChecked))
 	})
 }
+
+func TestClipsDeferralAnchor(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 11, 22, 12, 0, 0, 0, time.UTC)
+
+	t.Run("first check anchors the retry to the window start", func(t *testing.T) {
+		startedAt := now.AddDate(0, 0, -7)
+		anchor, ok := clipsDeferralAnchor(time.Time{}, startedAt)
+		assert.True(t, ok)
+		assert.Equal(t, startedAt, anchor)
+		// The retry window then covers the whole deferred window.
+		assert.Equal(t, startedAt, clipsWindowStart(now, 7, false, anchor))
+	})
+
+	t.Run("already checked keeps its timestamp", func(t *testing.T) {
+		_, ok := clipsDeferralAnchor(now.AddDate(0, 0, -3), now.AddDate(0, 0, -7))
+		assert.False(t, ok)
+	})
+
+	t.Run("zero interval has no anchor", func(t *testing.T) {
+		_, ok := clipsDeferralAnchor(time.Time{}, time.Time{})
+		assert.False(t, ok)
+	})
+}

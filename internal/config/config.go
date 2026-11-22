@@ -21,12 +21,12 @@ type Config struct {
 		YtDlpVideo   string `json:"yt_dlp_video"`  // yt-dlp arguments for video downloads.
 	} `json:"parameters"`
 	Archive struct {
-		SaveAsHls                  bool `json:"save_as_hls"`                    // Save as HLS rather than MP4.
-		GenerateSpriteThumbnails   bool `json:"generate_sprite_thumbnails"`     // Generate sprite thumbnails for scrubbing.
-		GenerateNFOFiles           bool `json:"generate_nfo_files"`             // Generate Kodi-compatible NFO sidecars for archived videos.
-		StorageCheckEnabled        bool `json:"storage_check_enabled"`          // Pause new archives when the temp directory is low on space.
-		TempDirWarningThresholdGB  int  `json:"temp_dir_warning_threshold_gb"`  // Pause new archives below this much free space (GB).
-		TempDirCriticalThresholdGB int  `json:"temp_dir_critical_threshold_gb"` // Stop live captures below this much free space (GB).
+		SaveAsHls                  bool `json:"save_as_hls"`                                     // Save as HLS rather than MP4.
+		GenerateSpriteThumbnails   bool `json:"generate_sprite_thumbnails"`                      // Generate sprite thumbnails for scrubbing.
+		GenerateNFOFiles           bool `json:"generate_nfo_files"`                              // Generate Kodi-compatible NFO sidecars for archived videos.
+		StorageCheckEnabled        bool `json:"storage_check_enabled"`                           // Pause new archives when the temp directory is low on space.
+		TempDirWarningThresholdGB  int  `json:"temp_dir_warning_threshold_gb" validate:"gte=0"`  // Pause new archives below this much free space (GB).
+		TempDirCriticalThresholdGB int  `json:"temp_dir_critical_threshold_gb" validate:"gte=0"` // Stop live captures below this much free space (GB).
 	} `json:"archive"`
 	StorageTemplates StorageTemplate `json:"storage_templates"` // Storage folder/file templates.
 	Livestream       struct {
