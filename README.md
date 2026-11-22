@@ -194,6 +194,48 @@ In the Compose example, `GANYMEDE_PORT` sets the host port for the web interface
 
 ## Development
 
+There are two supported development paths: host-native development with [mise](https://mise.jdx.dev/) and Docker Compose, or the all-in-one devcontainer for VS Code/Codespaces.
+
+### Local development (mise + Docker Compose)
+
+Toolchains (Go 1.27, Node 26, air, golangci-lint) run natively on your machine via mise. PostgreSQL 18 and the pinned media toolchain (FFmpeg, ffprobe, yt-dlp, TwitchDownloaderCLI) run in Docker Compose:
+
+```bash
+mise trust && mise install
+mise run setup    # seeds .env from .env.dev.example and installs frontend dependencies
+mise run db       # PostgreSQL 18 on 127.0.0.1:5432
+mise run server   # API server with live reload on :4000
+mise run web      # Next.js dev server
+```
+
+| Task                  | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| `mise run setup`      | First-time setup: seed `.env`, install frontend dependencies        |
+| `mise run db`         | Start dev PostgreSQL 18 (127.0.0.1:5432)                          |
+| `mise run server`     | API server with live reload, native on the host                   |
+| `mise run web`        | Next.js dev server                                                 |
+| `mise run worker`     | Worker with live reload, inside the pinned media image             |
+| `mise run media -- <cmd>` | One-off command inside the media image, e.g. `ffmpeg -version` |
+| `mise run lint`       | golangci-lint (same major as CI)                                   |
+| `mise run test`       | Full test suite in Docker, the same `tests` stage CI builds        |
+| `mise run ent` / `mise run swagger` | Ent / Swagger codegen                              |
+| `mise run db:tui`     | River queue TUI against the dev database                           |
+
+ffmpeg, ffprobe, yt-dlp, and TwitchDownloaderCLI are **not** installed on the host — run them inside the pinned media image, for example `mise run media -- ffmpeg -version`. The worker runs there too: `mise run worker` starts it with live reload against the same database and `dev/` directories.
+
+Committed Compose files bind services to `127.0.0.1` only. For machine-specific overrides (LAN port publishing, different ports), use an untracked `compose.local.yml` — it is gitignored, and merging it requires Docker Compose >= 2.24.4 for `!override` support:
+
+```yaml
+# compose.local.yml (untracked)
+services:
+  db:
+    ports: !override ["0.0.0.0:5432:5432"] # expose the dev DB on the LAN
+```
+
+Personal mise overrides (tool versions, env) belong in an untracked `mise.local.toml`.
+
+### Devcontainer
+
 A [devcontainer](https://containers.dev/) is included for development. This container includes all the necessary tools to develop Ganymede. Once setup, the [Makefile](/Makefile) can be used to run the development environment.
 
 - `make dev_server` - Starts the server.
