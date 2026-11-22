@@ -221,7 +221,7 @@ mise run web      # Next.js dev server
 | `mise run ent` / `mise run swagger` | Ent / Swagger codegen                              |
 | `mise run db:tui`     | River queue TUI against the dev database                           |
 
-ffmpeg, ffprobe, yt-dlp, and TwitchDownloaderCLI are **not** installed on the host — run them inside the pinned media image, for example `mise run media -- ffmpeg -version`. The worker runs there too: `mise run worker` starts it with live reload against the same database and `dev/` directories.
+ffmpeg, ffprobe, yt-dlp, and TwitchDownloaderCLI are **not** installed on the host — run them inside the pinned media image, for example `mise run media -- ffmpeg -version`. The worker runs there too: `mise run worker` starts it with live reload against the same database and `dev/` directories. `mise run setup` creates `dev/` as your user; if you start the worker first and the host server then cannot write to `dev/`, reclaim it with `sudo chown -R "$(id -u):$(id -g)" dev`.
 
 Committed Compose files bind services to `127.0.0.1` only. For machine-specific overrides (LAN port publishing, different ports), use an untracked `compose.local.yml` — it is gitignored, and merging it requires Docker Compose >= 2.24.4 for `!override` support:
 

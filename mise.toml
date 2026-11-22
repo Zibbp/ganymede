@@ -35,6 +35,7 @@ DB_SSL = "disable"
 description = "First-time setup: seed .env and install frontend dependencies"
 run = [
   "test -f .env || cp .env.dev.example .env",
+  "mkdir -p dev/videos dev/temp dev/logs dev/config",
   "npm --prefix frontend install --force",
   "grep -q '^TWITCH_CLIENT_ID=.' .env && grep -q '^TWITCH_CLIENT_SECRET=.' .env || echo 'WARNING: TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET are empty in .env; the server will refuse to start until you set them (https://dev.twitch.tv/console/apps/create)'",
 ]
