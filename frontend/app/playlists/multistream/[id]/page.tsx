@@ -149,8 +149,9 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
   const endDateMs = layout?.endDateMs ?? null;
 
   // Tile view state, playback offsets and grid size are user-mutated; reset
-  // them when the playlist data arrives or changes.
-  const [prevPlaylist, setPrevPlaylist] = useState(data);
+  // them when the playlist data arrives or changes. The marker starts
+  // undefined so a first render with cached query data also initializes.
+  const [prevPlaylist, setPrevPlaylist] = useState<Playlist | undefined>(undefined);
   if (data !== prevPlaylist) {
     setPrevPlaylist(data);
     setStreamerViewState(layout?.defaultViewState ?? {});
