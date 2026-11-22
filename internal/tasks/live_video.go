@@ -70,18 +70,34 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	// cancellation lands first and the receiver below has already exited.
 	startChatDownload := make(chan bool, 1)
 
+	// Kick has no platform VOD to correct the chat anchor afterwards, so this run
+	// owns ChatStart: first the capture start, then the stream's program time of
+	// the first captured segment.
+	ownsKickChatAnchor := dbItems.Channel.Platform == utils.PlatformKick && dbItems.Queue.ArchiveChat && dbItems.Queue.ChatStart.IsZero()
+	captureStart := make(chan time.Time, 1)
+	var onCaptureStart func(time.Time)
+	if ownsKickChatAnchor {
+		onCaptureStart = func(t time.Time) {
+			select {
+			case captureStart <- t:
+			default:
+			}
+		}
+	}
+	setKickChatAnchor := func(ctx context.Context, t time.Time) {
+		if _, err := store.Client.Queue.UpdateOneID(dbItems.Queue.ID).SetChatStart(t).Save(ctx); err != nil {
+			log.Warn().Err(err).Str("queue_id", dbItems.Queue.ID.String()).Msg("failed to record kick chat anchor")
+		}
+	}
+
 	go func(workCtx context.Context) {
 		for {
 			select {
 			case <-startChatDownload:
 				// start chat download if requested
 				if dbItems.Queue.ArchiveChat {
-					// Kick has no platform VOD to correct the chat anchor later, so
-					// anchor to the capture start instead of the chat job pickup.
-					if dbItems.Channel.Platform == utils.PlatformKick && dbItems.Queue.ChatStart.IsZero() {
-						if _, err := store.Client.Queue.UpdateOneID(dbItems.Queue.ID).SetChatStart(time.Now()).Save(workCtx); err != nil {
-							log.Warn().Err(err).Str("queue_id", dbItems.Queue.ID.String()).Msg("failed to record kick capture start time")
-						}
+					if ownsKickChatAnchor {
+						setKickChatAnchor(workCtx, time.Now())
 					}
 					log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
 					client := river.ClientFromContext[pgx.Tx](workCtx)
@@ -93,6 +109,13 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 						log.Error().Err(insertErr).Msg("failed to start chat download")
 					}
 				}
+			case t := <-captureStart:
+				if kickChatAnchorPlausible(t, time.Now()) {
+					log.Debug().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", t).Msg("anchoring kick chat to first captured segment")
+					setKickChatAnchor(workCtx, t)
+				} else {
+					log.Warn().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", t).Msg("ignoring implausible kick segment program time")
+				}
 			case <-workCtx.Done():
 				return
 			}
@@ -103,7 +126,7 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	// Note: even when download fails unexpectedly, continue with finalization steps
 	// (cancel live chat, mark channel not live, enqueue post-process) so partial archive
 	// can still be completed/moved instead of being left in a stuck state.
-	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload, onCaptureStart)
 	logLiveCaptureOutcome(dbItems, job.Args.Input.QueueId, downloadErr)
 	remotelyCancelled := false
 	if downloadErr != nil {
@@ -216,4 +239,10 @@ func logLiveCaptureOutcome(dbItems *GetDatabaseItemsResponse, queueID uuid.UUID,
 	default:
 		logger.Error().Err(downloadErr).Msg("live video download failed; capture output on disk")
 	}
+}
+
+// kickChatAnchorPlausible rejects segment program times that a skewed or
+// misbehaving upstream clock would put far from the moment of capture.
+func kickChatAnchorPlausible(programTime, now time.Time) bool {
+	return !programTime.IsZero() && !programTime.After(now.Add(30*time.Second)) && !programTime.Before(now.Add(-2*time.Minute))
 }

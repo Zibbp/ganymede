@@ -837,3 +837,64 @@ func TestLiveHLSProxyBoundsChunkedPlaylist(t *testing.T) {
 		t.Fatalf("oversized chunked playlist: %+v, attempts=%d", result, attempts.Load())
 	}
 }
+
+func TestLiveHLSProxyReportsFirstMediaProgramTime(t *testing.T) {
+	t.Parallel()
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/live.m3u8":
+			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:7\n"+
+				"#EXT-X-PROGRAM-DATE-TIME:2026-11-22T20:00:00.000Z\n#EXTINF:2.000,\nseg7.ts\n"+
+				"#EXTINF:2.000,\nseg8.ts\n")
+		default:
+			_, _ = io.WriteString(w, "media")
+		}
+	}))
+	defer upstream.Close()
+
+	p := testLiveHLSProxy(t)
+	got := make(chan time.Time, 2)
+	p.setFirstMediaHook(func(t time.Time) { got <- t })
+
+	playlist := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, upstream.URL+"/live.m3u8", upstream.URL+"/live.m3u8", "playlist")))
+	if playlist.err != nil || playlist.status != http.StatusOK {
+		t.Fatalf("playlist: status=%d err=%v", playlist.status, playlist.err)
+	}
+	for _, seg := range []string{"seg8.ts", "seg7.ts"} {
+		res := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, upstream.URL+"/live.m3u8", seg, "media")))
+		if res.err != nil || res.status != http.StatusOK {
+			t.Fatalf("%s: status=%d err=%v", seg, res.status, res.err)
+		}
+	}
+
+	want := time.Date(2026, 11, 22, 20, 0, 2, 0, time.UTC)
+	select {
+	case first := <-got:
+		if !first.Equal(want) {
+			t.Fatalf("first media program time = %s, want %s", first, want)
+		}
+	default:
+		t.Fatal("first media hook was not called")
+	}
+	select {
+	case extra := <-got:
+		t.Fatalf("hook called more than once (%s)", extra)
+	default:
+	}
+}
+
+func TestParseHLSProgramDateTime(t *testing.T) {
+	t.Parallel()
+	for _, value := range []string{"2026-11-22T20:00:00.123Z", "2026-11-22T21:00:00.123+0100", "2026-11-22T21:00:00.123+01:00"} {
+		got, err := parseHLSProgramDateTime(value)
+		if err != nil {
+			t.Fatalf("%s: %v", value, err)
+		}
+		if want := time.Date(2026, 11, 22, 20, 0, 0, 123e6, time.UTC); !got.Equal(want) {
+			t.Fatalf("%s: got %s want %s", value, got, want)
+		}
+	}
+	if _, err := parseHLSProgramDateTime("garbage"); err == nil {
+		t.Fatal("expected error for invalid value")
+	}
+}
