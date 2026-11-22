@@ -91,13 +91,16 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	}
 
 	go func(workCtx context.Context) {
+		var kickAnchor kickChatAnchor
 		for {
 			select {
 			case <-startChatDownload:
 				// start chat download if requested
 				if dbItems.Queue.ArchiveChat {
 					if ownsKickChatAnchor {
-						setKickChatAnchor(workCtx, time.Now())
+						if t, ok := kickAnchor.captureStarted(time.Now()); ok {
+							setKickChatAnchor(workCtx, t)
+						}
 					}
 					log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
 					client := river.ClientFromContext[pgx.Tx](workCtx)
@@ -109,12 +112,12 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 						log.Error().Err(insertErr).Msg("failed to start chat download")
 					}
 				}
-			case t := <-captureStart:
-				if kickChatAnchorPlausible(t, time.Now()) {
+			case programTime := <-captureStart:
+				if t, ok := kickAnchor.segmentCaptured(programTime, time.Now()); ok {
 					log.Debug().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", t).Msg("anchoring kick chat to first captured segment")
 					setKickChatAnchor(workCtx, t)
 				} else {
-					log.Warn().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", t).Msg("ignoring implausible kick segment program time")
+					log.Warn().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", programTime).Msg("ignoring implausible kick segment program time")
 				}
 			case <-workCtx.Done():
 				return
@@ -245,4 +248,26 @@ func logLiveCaptureOutcome(dbItems *GetDatabaseItemsResponse, queueID uuid.UUID,
 // misbehaving upstream clock would put far from the moment of capture.
 func kickChatAnchorPlausible(programTime, now time.Time) bool {
 	return !programTime.IsZero() && !programTime.After(now.Add(30*time.Second)) && !programTime.Before(now.Add(-2*time.Minute))
+}
+
+// kickChatAnchor orders the two anchor signals, which can arrive in either
+// order: a plausible segment program time always wins over the capture-start
+// fallback.
+type kickChatAnchor struct {
+	fromStream bool
+}
+
+func (a *kickChatAnchor) captureStarted(now time.Time) (time.Time, bool) {
+	if a.fromStream {
+		return time.Time{}, false
+	}
+	return now, true
+}
+
+func (a *kickChatAnchor) segmentCaptured(programTime, now time.Time) (time.Time, bool) {
+	if !kickChatAnchorPlausible(programTime, now) {
+		return time.Time{}, false
+	}
+	a.fromStream = true
+	return programTime, true
 }
