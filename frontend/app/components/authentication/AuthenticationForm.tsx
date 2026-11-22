@@ -54,6 +54,16 @@ export function AuthenticationForm({ type }: Props) {
     validate: schemaResolver(schema),
   });
 
+  // Hard navigation to the backend OAuth entry point. NEXT_PUBLIC_API_URL may be
+  // unset (same-origin deployment), so resolve against the current origin to
+  // always produce an absolute URL.
+  const handleSSOLogin = () => {
+    window.location.href = new URL(
+      `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/auth/oauth/login`,
+      window.location.origin
+    ).toString();
+  }
+
   // If force SSO is enabled redirect immediately
   useEffect(() => {
     if (env('NEXT_PUBLIC_FORCE_SSO_AUTH') == "true") {
@@ -90,10 +100,6 @@ export function AuthenticationForm({ type }: Props) {
         setLoading(false)
       }
     }
-  }
-
-  const handleSSOLogin = async () => {
-    window.location.href = `${(env('NEXT_PUBLIC_API_URL') ?? '')}/api/v1/auth/oauth/login`
   }
 
   return (

@@ -2,7 +2,7 @@
 import { ActionIcon, Container, Group, TextInput, Title, Box, Drawer, Modal, Tooltip, Text } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
@@ -26,9 +26,8 @@ const AdminUsersPage = () => {
   const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
-  const [records, setRecords] = useState<User[]>([]);
-  const [initialRecords, setInitialRecords] = useState(false);
+  // Per-page preference is owned by the persisted settings store.
+  const perPage = settingsAdminItemsPerPage;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<User>>({
     columnAccessor: "name",
     direction: "asc",
@@ -43,12 +42,9 @@ const AdminUsersPage = () => {
   const axiosPrivate = useAxiosPrivate()
   const { data: users, isPending, isError } = useGetUsers(axiosPrivate)
 
-  useEffect(() => {
-    setPerPage(settingsAdminItemsPerPage);
-  }, [settingsAdminItemsPerPage]);
-
-  useEffect(() => {
-    if (!users || users.length == 0) return;
+  // Records are derived from the query data and table controls.
+  const records = useMemo(() => {
+    if (!users || users.length == 0) return [];
 
     let filteredData = [...users] as User[];
 
@@ -69,12 +65,8 @@ const AdminUsersPage = () => {
     // Apply pagination
     const from = (page - 1) * perPage;
     const to = from + perPage;
-    setRecords(filteredData.slice(from, to));
-
-    if (!initialRecords) {
-      setInitialRecords(true);
-    }
-  }, [users, page, perPage, sortStatus, debouncedQuery, initialRecords]);
+    return filteredData.slice(from, to);
+  }, [users, page, perPage, sortStatus, debouncedQuery]);
 
   const openDrawer = (user: User) => {
     setActiveUser(user);
@@ -182,7 +174,6 @@ const AdminUsersPage = () => {
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
             onRecordsPerPageChange={(value) => {
-              setPerPage(value);
               setSettingsAdminItemsPerPage(value);
               setPage(1);
             }}

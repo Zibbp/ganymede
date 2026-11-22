@@ -1,4 +1,4 @@
-import { Playlist, PlaylistGroupOperator, PlaylistRuleField, PlaylistRuleGroup, PlaylistRuleOperator, useGetPlaylistRules, useSavePlaylistRules, useTestPlaylistRules } from "@/app/hooks/usePlaylist";
+import { Playlist, PlaylistGroupOperator, PlaylistRule, PlaylistRuleField, PlaylistRuleGroup, PlaylistRuleOperator, useGetPlaylistRules, useSavePlaylistRules, useTestPlaylistRules } from "@/app/hooks/usePlaylist";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { ActionIcon, Button, Divider, Flex, Text, Select, Group, Card, TextInput, NumberInput, Switch, Title, Box } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -56,11 +56,11 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
   useEffect(() => {
     if (playlistRules) {
       form.setValues({
-        rule_groups: playlistRules.map((group: any, groupIdx: number) => ({
+        rule_groups: playlistRules.map((group, groupIdx) => ({
           id: group.id,
           operator: group.operator,
           position: groupIdx,
-          rules: (group.edges?.rules || []).map((rule: any, ruleIdx: number) => ({
+          rules: (group.edges?.rules || []).map((rule, ruleIdx) => ({
             id: rule.id,
             name: rule.name,
             field: rule.field,
@@ -269,16 +269,16 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
                   mt="sm"
                   variant="light"
                   onClick={() => {
-                    const newRule = {
+                    const newRule: PlaylistRule = {
                       id: `rule-${Date.now()}`,
                       name: "",
-                      field: "title",
-                      operator: "contains",
+                      field: PlaylistRuleField.Title,
+                      operator: PlaylistRuleOperator.Contains,
                       value: "",
                       position: group.rules.length + 1,
                       enabled: true,
                     };
-                    form.insertListItem(`rule_groups.${groupIdx}.rules`, newRule as any);
+                    form.insertListItem(`rule_groups.${groupIdx}.rules`, newRule);
                   }}
                 >
                   {t('automationRules.addRuleButton')}
@@ -293,13 +293,13 @@ const PlaylistAutomationRuleModalContent = ({ playlist, handleClose }: Props) =>
             <Button
               variant="outline"
               onClick={() => {
-                const newGroup = {
+                const newGroup: PlaylistRuleGroup = {
                   id: `group-${Date.now()}`,
                   operator: "AND",
                   position: form.values.rule_groups.length,
                   rules: [],
                 };
-                form.insertListItem("rule_groups", newGroup as any);
+                form.insertListItem("rule_groups", newGroup);
               }}
             >
               {t('automationRules.addRuleGroupButton')}

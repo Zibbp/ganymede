@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { SearchField, useSearchVideos } from "../hooks/useVideos";
 import { useVideoListParams } from "../hooks/useVideoListParams";
 import useSettingsStore from "../store/useSettingsStore";
@@ -22,11 +22,12 @@ const SearchPage = () => {
   const t = useTranslations("SearchPage");
 
   const [inputValue, setInputValue] = useState<string>(searchTerm);
-
+  const [prevSearchTerm, setPrevSearchTerm] = useState<string>(searchTerm);
   // Keep the input in sync when the term changes through history navigation
-  useEffect(() => {
+  if (searchTerm !== prevSearchTerm) {
+    setPrevSearchTerm(searchTerm);
     setInputValue(searchTerm);
-  }, [searchTerm]);
+  }
 
   const [advancedSearchOpened, { toggle: toggleAdvancedSearch }] = useDisclosure(false);
 

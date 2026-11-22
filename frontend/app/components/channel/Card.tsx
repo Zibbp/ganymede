@@ -3,7 +3,7 @@
 import { Channel } from "@/app/hooks/useChannels";
 import { AspectRatio, Card, Center, Title, Image, Skeleton } from "@mantine/core";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { env } from "next-runtime-env";
 import classes from "./Card.module.css"
 
@@ -13,10 +13,12 @@ type Props = {
 
 const ChannelCard = ({ channel }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
+  const [prevImagePath, setPrevImagePath] = useState(channel.image_path);
+  // Reset the loading skeleton when a new channel image arrives.
+  if (channel.image_path !== prevImagePath) {
+    setPrevImagePath(channel.image_path);
     setImageLoaded(false);
-  }, [channel.image_path]);
+  }
 
   return (
     <div>

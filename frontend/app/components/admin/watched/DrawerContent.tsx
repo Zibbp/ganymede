@@ -5,13 +5,12 @@ import { ActionIcon, Button, NumberInput, TextInput, Tooltip, Text, Divider, Che
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import classes from "./Watched.module.css"
 import { getTwitchCategories } from "@/app/hooks/useCategory";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { metadata } from "@/app/layout";
 import { VideoQuality } from "@/app/hooks/useArchive";
 
 type Props = {
@@ -53,8 +52,6 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel: singleWatchedChannel
   const [liveTitleRegexes, setLiveTitleRegexes] = useState<WatchedChannelTitleRegex[]>(
     watchedChannel?.edges.title_regex || []
   );
-
-  const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);
 
   const [clipMoreInfoOpened, { toggle: clipMoreInfoToggle }] = useDisclosure(false);
 
@@ -309,20 +306,16 @@ const AdminWatchedChannelDrawerContent = ({ watchedChannel: singleWatchedChannel
 
   const { data: channels } = useFetchChannels();
 
-  useEffect(() => {
-    if (!channels) return;
-
-    // Channels that are already watched can't be added again.
+  // Derived from the channel query. Channels that are already watched
+  // can't be added again.
+  const channelSelect: SelectOption[] = useMemo(() => {
     const watchedIds = new Set((existingWatchedChannels ?? []).map((wc) => wc.edges.channel.id));
-
-    const transformedChannels: SelectOption[] = channels
+    return (channels ?? [])
       .filter((channel: Channel) => mode !== WatchedChannelEditMode.Create || !watchedIds.has(channel.id))
       .map((channel: Channel) => ({
         label: channel.name,
         value: channel.id,
       }));
-
-    setChannelSelect(transformedChannels);
   }, [channels, existingWatchedChannels, mode]);
 
   return (
