@@ -76,6 +76,13 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 			case <-startChatDownload:
 				// start chat download if requested
 				if dbItems.Queue.ArchiveChat {
+					// Kick has no platform VOD to correct the chat anchor later, so
+					// anchor to the capture start instead of the chat job pickup.
+					if dbItems.Channel.Platform == utils.PlatformKick && dbItems.Queue.ChatStart.IsZero() {
+						if _, err := store.Client.Queue.UpdateOneID(dbItems.Queue.ID).SetChatStart(time.Now()).Save(workCtx); err != nil {
+							log.Warn().Err(err).Str("queue_id", dbItems.Queue.ID.String()).Msg("failed to record kick capture start time")
+						}
+					}
 					log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
 					client := river.ClientFromContext[pgx.Tx](workCtx)
 					_, insertErr := client.Insert(workCtx, &DownloadLiveChatArgs{
