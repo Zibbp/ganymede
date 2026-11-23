@@ -230,10 +230,7 @@ func (h *Handler) mapRoutes() {
 	groupV1Routes(v1, h)
 }
 
-// mediaRoutePrefix returns the URL prefix used to serve dir. Absolute
-// production paths (/data/videos) pass through unchanged; relative development
-// paths (dev/videos) get the leading slash that route patterns and
-// http.StripPrefix require.
+// mediaRoutePrefix returns the URL path for dir, starting with "/".
 func mediaRoutePrefix(dir string) string {
 	return path.Clean("/" + filepath.ToSlash(dir))
 }

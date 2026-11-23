@@ -9,9 +9,8 @@
 # go.mod's `go 1.26.0` stays the minimum required version.
 go = "1.27"
 node = "26"
-# ffmpeg/ffprobe are used by the host-native API for media metadata (the video
-# information tab and version reporting). Media processing still runs in the
-# pinned media image; keep this on the same major as FFMPEG_VERSION there.
+# ffmpeg and ffprobe for the host-native API. Media processing still runs in
+# the pinned image, so keep it on the same major version as the image.
 ffmpeg = "9.0.0"
 # Pin to what golangci-lint-action's `version: latest` currently resolves so
 # local findings match CI. Must stay on the v2 line while .golangci.yml is
@@ -34,9 +33,8 @@ DB_USER = "ganymede"
 DB_PASS = "ganymede"
 DB_NAME = "ganymede"
 DB_SSL = "disable"
-# Compose file list for the dev services. Override in mise.local.toml (for
-# example `COMPOSE_FILE = "compose.dev.yml:compose.local.yml"`) to merge a
-# personal override without editing the tracked tasks.
+# Compose files used by the dev tasks. Override this in mise.local.toml to add
+# a personal override file.
 COMPOSE_FILE = "compose.dev.yml"
 
 [tasks.setup]
@@ -62,7 +60,7 @@ description = "Stop the dev database and destroy its volume"
 run = "docker compose down -v"
 
 [tasks."dev:chown"]
-description = "Reclaim dev/ and tmp/ from files the root-run media worker created"
+description = "Fix dev/ and tmp/ ownership after running the worker"
 run = 'for dir in dev tmp; do [ -d "$dir" ] && sudo chown -R "$(id -u):$(id -g)" "$dir"; done'
 
 [tasks."db:tui"]
@@ -84,8 +82,8 @@ run = "docker compose --profile media run --rm --no-deps worker"
 [tasks.web]
 description = "Next.js dev server"
 dir = "frontend"
-# Load the repository-root .env so API_URL/CDN_URL reach the frontend. Variables
-# already set by mise (including mise.local.toml overrides) win over .env.
+# Load the repo-root .env so the frontend gets API_URL and CDN_URL.
+# Values already set by mise (including mise.local.toml) take priority.
 run = "godotenv -f ../.env npm run dev"
 
 [tasks.lint]

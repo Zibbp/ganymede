@@ -5,8 +5,7 @@ export function escapeURL(str: string): string {
   return str.replace(/#/g, "%23");
 }
 
-// Normalize a stored media path into a rooted URL path, resolving dot segments
-// so a parent-relative path cannot escape a CDN prefix.
+// Make a stored media path start with "/" and remove "." and "..".
 function normalizeMediaPath(path: string): string {
   const parts: string[] = [];
   for (const segment of path.split("/")) {
@@ -20,11 +19,10 @@ function normalizeMediaPath(path: string): string {
   return `/${parts.join("/")}`;
 }
 
-// Media paths are stored as configured: absolute in production (/data/videos/…)
-// and repo-relative in development (dev/videos/…). Browsers resolve non-rooted
-// src values against the current page path, so root them at the origin first.
+// Build the URL for a media path. Paths are absolute in production and relative
+// in development, so make them start with "/" first.
 export function mediaSrc(path: string): string {
-  // External avatars and other absolute URLs are already usable.
+  // Leave absolute URLs (such as external avatars) alone.
   if (/^https?:\/\//i.test(path)) {
     return path;
   }

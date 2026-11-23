@@ -5,14 +5,9 @@
 #   mise run worker   -> Go worker with air, inside the pinned media image
 #   mise run media -- <cmd> -> one-off command in the media image
 #
-# The worker is gated behind the "media" profile so `docker compose up -d`
-# only starts the database. Per-user overrides (LAN port publishing, other
-# images) belong in an untracked compose.local.yml. The mise tasks read
-# COMPOSE_FILE, so merge it by putting
-#   [env]
-#   COMPOSE_FILE = "compose.dev.yml:compose.local.yml"
-# in mise.local.toml, or pass both `-f` flags to docker compose directly
-# (Compose >= 2.24.4 for !override).
+# The worker is behind the "media" profile, so `docker compose up -d` only
+# starts the database. Put personal overrides in an untracked compose.local.yml;
+# see the README for how to merge it.
 name: ganymede-dev
 
 services:
@@ -50,9 +45,7 @@ services:
       DB_PASS: ganymede
       DB_NAME: ganymede
       DB_SSL: disable
-      # The bind-mounted checkout is owned by the host user, so root would
-      # otherwise reject it as a dubious Git repository and break the build's
-      # VCS stamping. Trust only the mounted workspace.
+      # The checkout is owned by the host user, so tell Git to trust it.
       GIT_CONFIG_COUNT: "1"
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: /workspace
