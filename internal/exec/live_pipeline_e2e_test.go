@@ -106,6 +106,7 @@ func TestExportHlsToMp4PreservesLateStreamStart(t *testing.T) {
 	if delta := mediaAVStartOffset(t, exportPath) - inputOffset; math.Abs(delta) > 0.05 {
 		t.Fatalf("HLS export changed the A/V start offset by %f seconds", delta)
 	}
+	assertFirefoxSafeEditLists(t, exportPath)
 	if want := probe.LongestStreamDuration + math.Abs(inputOffset); math.Abs(probe.FormatDuration-want) > 1 {
 		t.Fatalf("exported duration = %f, want about %f seconds including the initial gap", probe.FormatDuration, want)
 	}

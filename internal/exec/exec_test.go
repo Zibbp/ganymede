@@ -474,6 +474,115 @@ func TestPostProcessVideoPreservesOffsetsWithMultipleAudioStreams(t *testing.T) 
 	}
 }
 
+func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		Title:                "timescale pin",
+		TmpVideoDownloadPath: "/tmp/input.ts",
+		TmpVideoConvertPath:  "/tmp/output.mp4",
+	}
+	// A user overriding the muxer timescales must not be able to reintroduce a
+	// movie/track mismatch: FFmpeg applies the last option occurrence, so the
+	// built-in pins have to follow the config arguments.
+	configArgs := "-movie_timescale 1000 -video_track_timescale 60"
+	lastOptionValue := func(args []string, option string) string {
+		value := ""
+		for i := 0; i < len(args)-1; i++ {
+			if args[i] == option {
+				value = args[i+1]
+			}
+		}
+		return value
+	}
+	for _, args := range [][]string{
+		postProcessVideoFFmpegArgs(video, configArgs, nil),
+		buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, configArgs, false, nil),
+	} {
+		if got := lastOptionValue(args, "-movie_timescale"); got != "48000" {
+			t.Fatalf("last -movie_timescale = %q, want 48000 (pinned after config args): %v", got, args)
+		}
+		if got := lastOptionValue(args, "-video_track_timescale"); got != "48000" {
+			t.Fatalf("last -video_track_timescale = %q, want 48000 (pinned after config args): %v", got, args)
+		}
+	}
+}
+
+// TestPostProcessVideoWritesFirefoxSafeEditLists covers the Mozilla bug 2082877
+// workaround: FFmpeg expresses a later stream start as an edit-list empty edit
+// whose duration Firefox reads in the track timescale instead of the movie
+// timescale, so exported files must keep those timescales equal.
+func TestPostProcessVideoWritesFirefoxSafeEditLists(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		videoOffset string
+		audioOffset string
+	}{
+		{name: "late video", videoOffset: "0.25", audioOffset: "0"},
+		{name: "late audio", videoOffset: "0", audioOffset: "0.25"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			inputPath := filepath.Join(dir, "input.mp4")
+			cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
+				"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
+				"-f", "lavfi", "-i", "sine=frequency=1000:sample_rate=48000:duration=3",
+				"-filter_complex", fmt.Sprintf("[0:v]setpts=PTS+%s/TB[v];[1:a]asetpts=PTS+%s/TB[a]", tc.videoOffset, tc.audioOffset),
+				"-map", "[v]", "-map", "[a]",
+				"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+				"-c:a", "aac",
+				// Preserve the initial gap instead of filling it with duplicate frames.
+				"-fps_mode", "passthrough",
+				// Mirror captured live video tracks (90 kHz) so the input itself
+				// contains an empty edit whose movie and track timescales differ.
+				"-video_track_timescale", "90000",
+				"-f", "mp4", inputPath)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("create gap media: %v\n%s", err, out)
+			}
+
+			// The input must reproduce the Firefox bug's preconditions.
+			inputMovieTimescale, inputTracks := probeMp4EditLists(t, inputPath)
+			hasEmptyEdit := false
+			videoTimescale := int64(-1)
+			for _, track := range inputTracks {
+				hasEmptyEdit = hasEmptyEdit || len(track.EmptyEdits) > 0
+				if track.Handler == "vide" {
+					videoTimescale = track.TrackTimescale
+				}
+			}
+			if !hasEmptyEdit {
+				t.Fatalf("fixture %s has no empty edit to exercise Mozilla bug 2082877", inputPath)
+			}
+			if videoTimescale != 90000 || videoTimescale == inputMovieTimescale {
+				t.Fatalf("fixture video timescale = %d, movie timescale = %d, want differing values", videoTimescale, inputMovieTimescale)
+			}
+
+			inputOffset := mediaAVStartOffset(t, inputPath)
+			if math.Abs(inputOffset) < 0.1 {
+				t.Fatalf("fixture A/V offset = %f, want a real start gap", inputOffset)
+			}
+			outputPath := filepath.Join(dir, "output.mp4")
+			if err := postProcessVideo(t.Context(), ent.Vod{
+				Title:                "firefox edit lists",
+				TmpVideoDownloadPath: inputPath,
+				TmpVideoConvertPath:  outputPath,
+			}, "", io.Discard); err != nil {
+				t.Fatalf("post-process media: %v", err)
+			}
+
+			assertFirefoxSafeEditLists(t, outputPath)
+			if got := mediaAVStartOffset(t, outputPath); math.Abs(got-inputOffset) > 0.05 {
+				t.Fatalf("exported A/V offset = %f, want %f", got, inputOffset)
+			}
+			decode := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
+			if out, err := decode.CombinedOutput(); err != nil {
+				t.Fatalf("decode exported output: %v\n%s", err, out)
+			}
+		})
+	}
+}
+
 func TestVodArchiveProcessGroupExitsAfterWorkerHardCrash(t *testing.T) {
 	tempDir := t.TempDir()
 	ytDlpPIDPath := filepath.Join(tempDir, "yt-dlp.pid")

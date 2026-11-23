@@ -2,6 +2,7 @@ package exec
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -205,6 +206,190 @@ func mediaAVStartOffset(t *testing.T, path string) float64 {
 		t.Fatalf("expected audio and video streams, got %v", starts)
 	}
 	return starts["video"] - starts["audio"]
+}
+
+type mp4Box struct {
+	Kind string
+	Body []byte
+}
+
+func mp4ChildBoxes(data []byte) ([]mp4Box, error) {
+	var boxes []mp4Box
+	for off := 0; off+8 <= len(data); {
+		size := int(binary.BigEndian.Uint32(data[off:]))
+		kind := string(data[off+4 : off+8])
+		header := 8
+		switch size {
+		case 1:
+			if off+16 > len(data) {
+				return nil, fmt.Errorf("malformed %s box", kind)
+			}
+			size = int(binary.BigEndian.Uint64(data[off+8:]))
+			header = 16
+		case 0:
+			size = len(data) - off
+		}
+		if size < header || off+size > len(data) {
+			return nil, fmt.Errorf("malformed %s box", kind)
+		}
+		boxes = append(boxes, mp4Box{Kind: kind, Body: data[off+header : off+size]})
+		off += size
+	}
+	return boxes, nil
+}
+
+func mp4FindBox(boxes []mp4Box, kind string) (mp4Box, bool) {
+	for _, box := range boxes {
+		if box.Kind == kind {
+			return box, true
+		}
+	}
+	return mp4Box{}, false
+}
+
+// mp4HeaderTimescale reads the timescale of an mvhd or mdhd box.
+func mp4HeaderTimescale(body []byte) (int64, error) {
+	if len(body) < 16 {
+		return 0, fmt.Errorf("short header box")
+	}
+	offset := 12
+	if body[0] == 1 {
+		if len(body) < 24 {
+			return 0, fmt.Errorf("short header box")
+		}
+		offset = 20
+	}
+	return int64(binary.BigEndian.Uint32(body[offset:])), nil
+}
+
+type mp4EmptyEdit struct {
+	SegmentDuration int64
+	MediaTime       int64
+}
+
+type mp4TrackEdits struct {
+	Handler        string
+	TrackTimescale int64
+	EmptyEdits     []mp4EmptyEdit
+}
+
+// probeMp4EditLists parses moov atoms enough to report the movie timescale and
+// each track's timescale and empty edits (elst entries with media_time == -1).
+// ffprobe does not expose edit lists, so walk the atoms directly.
+func probeMp4EditLists(t *testing.T, path string) (movieTimescale int64, tracks []mp4TrackEdits) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read MP4 %s: %v", path, err)
+	}
+	top, err := mp4ChildBoxes(data)
+	if err != nil {
+		t.Fatalf("parse %s atoms: %v", path, err)
+	}
+	moov, ok := mp4FindBox(top, "moov")
+	if !ok {
+		t.Fatalf("no moov box in %s", path)
+	}
+	moovChildren, err := mp4ChildBoxes(moov.Body)
+	if err != nil {
+		t.Fatalf("parse moov atoms: %v", err)
+	}
+	mvhd, ok := mp4FindBox(moovChildren, "mvhd")
+	if !ok {
+		t.Fatalf("no mvhd box in %s", path)
+	}
+	movieTimescale, err = mp4HeaderTimescale(mvhd.Body)
+	if err != nil {
+		t.Fatalf("read movie timescale of %s: %v", path, err)
+	}
+	for _, trak := range moovChildren {
+		if trak.Kind != "trak" {
+			continue
+		}
+		var track mp4TrackEdits
+		trakChildren, err := mp4ChildBoxes(trak.Body)
+		if err != nil {
+			t.Fatalf("parse trak atoms: %v", err)
+		}
+		mdia, ok := mp4FindBox(trakChildren, "mdia")
+		if !ok {
+			continue
+		}
+		mdiaChildren, err := mp4ChildBoxes(mdia.Body)
+		if err != nil {
+			t.Fatalf("parse mdia atoms: %v", err)
+		}
+		if hdlr, ok := mp4FindBox(mdiaChildren, "hdlr"); ok && len(hdlr.Body) >= 12 {
+			track.Handler = string(hdlr.Body[8:12])
+		}
+		if mdhd, ok := mp4FindBox(mdiaChildren, "mdhd"); ok {
+			if track.TrackTimescale, err = mp4HeaderTimescale(mdhd.Body); err != nil {
+				t.Fatalf("read track timescale of %s: %v", path, err)
+			}
+		}
+		if edts, ok := mp4FindBox(trakChildren, "edts"); ok {
+			edtsChildren, err := mp4ChildBoxes(edts.Body)
+			if err != nil {
+				t.Fatalf("parse edts atoms: %v", err)
+			}
+			if elst, ok := mp4FindBox(edtsChildren, "elst"); ok {
+				track.EmptyEdits = mp4EmptyEditEntries(elst.Body)
+			}
+		}
+		tracks = append(tracks, track)
+	}
+	return movieTimescale, tracks
+}
+
+// mp4EmptyEditEntries reads an elst box body and returns its empty edits.
+func mp4EmptyEditEntries(elst []byte) []mp4EmptyEdit {
+	var entries []mp4EmptyEdit
+	if len(elst) < 8 {
+		return entries
+	}
+	version := elst[0]
+	count := int(binary.BigEndian.Uint32(elst[4:8]))
+	entrySize := 12
+	if version == 1 {
+		entrySize = 20
+	}
+	for off, i := 8, 0; i < count; i, off = i+1, off+entrySize {
+		if off+entrySize > len(elst) {
+			return entries
+		}
+		var duration, mediaTime int64
+		if version == 1 {
+			duration = int64(binary.BigEndian.Uint64(elst[off:]))
+			mediaTime = int64(binary.BigEndian.Uint64(elst[off+8:]))
+		} else {
+			duration = int64(int32(binary.BigEndian.Uint32(elst[off:])))
+			mediaTime = int64(int32(binary.BigEndian.Uint32(elst[off+4:])))
+		}
+		if mediaTime == -1 {
+			entries = append(entries, mp4EmptyEdit{SegmentDuration: duration, MediaTime: mediaTime})
+		}
+	}
+	return entries
+}
+
+// assertFirefoxSafeEditLists fails when an MP4 empty edit could desync Firefox:
+// the MP4 spec defines elst segment durations in the movie timescale, but
+// Firefox reads them in the track timescale (Mozilla bug 2082877), so the two
+// timescales must be equal for every track that carries an empty edit.
+func assertFirefoxSafeEditLists(t *testing.T, path string) {
+	t.Helper()
+	movieTimescale, tracks := probeMp4EditLists(t, path)
+	for _, track := range tracks {
+		for _, edit := range track.EmptyEdits {
+			if movieTimescale != track.TrackTimescale {
+				t.Fatalf("%s: %s empty edit of %d/%d movie units is read by Firefox as %.3fs instead of %.3fs; movie timescale %d != track timescale %d",
+					path, track.Handler, edit.SegmentDuration, movieTimescale,
+					float64(edit.SegmentDuration)/float64(track.TrackTimescale),
+					float64(edit.SegmentDuration)/float64(movieTimescale),
+					movieTimescale, track.TrackTimescale)
+			}
+		}
+	}
 }
 
 func TestGetFfprobeData(t *testing.T) {

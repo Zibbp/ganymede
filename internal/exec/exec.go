@@ -750,11 +750,21 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+// firefoxSafeTimescaleArgs pins the MP4 movie and video timescales to the
+// audio track's 48 kHz rate. FFmpeg writes empty-edit durations (used when one
+// stream starts later than another) in the movie timescale, but Firefox reads
+// them in the track timescale (Mozilla bug 2082877), turning small start gaps
+// into seconds of A/V desync; equal timescales make both readings identical.
+// FFmpeg keeps the last option occurrence, so these must follow any
+// user-supplied config arguments.
+func firefoxSafeTimescaleArgs() []string {
+	return []string{"-movie_timescale", "48000", "-video_track_timescale", "48000"}
+}
+
 func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool, starts []mediaStreamStart) []string {
 	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
-	// Bound empty-edit delays misread by Firefox (Mozilla bug 2082877).
-	args = append(args, "-movie_timescale", "1000")
 	args = append(args, strings.Fields(configFfmpegArgs)...)
+	args = append(args, firefoxSafeTimescaleArgs()...)
 	args = appendMediaTimestampArgs(args, starts, normalizeTimestamps)
 	return append(args, exportPath)
 }
@@ -1101,11 +1111,9 @@ func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, nor
 	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative"}
 	ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
-	// Bound empty-edit delays misread by Firefox (Mozilla bug 2082877).
-	ffmpegArgs = append(ffmpegArgs, "-movie_timescale", "1000")
-
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
+	ffmpegArgs = append(ffmpegArgs, firefoxSafeTimescaleArgs()...)
 	ffmpegArgs = appendMediaTimestampArgs(ffmpegArgs, starts, normalizeTimestamps)
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 
