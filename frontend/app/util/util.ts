@@ -1,7 +1,34 @@
 import { useEffect } from "react";
+import { env } from "next-runtime-env";
 
 export function escapeURL(str: string): string {
   return str.replace(/#/g, "%23");
+}
+
+// Make a stored media path start with "/" and remove "." and "..".
+function normalizeMediaPath(path: string): string {
+  const parts: string[] = [];
+  for (const segment of path.split("/")) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") {
+      parts.pop();
+      continue;
+    }
+    parts.push(segment);
+  }
+  return `/${parts.join("/")}`;
+}
+
+// Build the URL for a media path. Paths are absolute in production and relative
+// in development, so make them start with "/" first.
+export function mediaSrc(path: string): string {
+  // Leave absolute URLs (such as external avatars) alone.
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  const rooted = normalizeMediaPath(path);
+  const cdn = (env("NEXT_PUBLIC_CDN_URL") ?? "").replace(/\/+$/, "");
+  return `${cdn}${escapeURL(rooted)}`;
 }
 
 // saves an npm depedency - can't use the crypto API as that is not available over HTTP

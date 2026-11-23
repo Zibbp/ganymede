@@ -1,7 +1,7 @@
 "use client"
 import Head from "next/head";
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
-import { escapeURL } from "../../../util/util";
+import { mediaSrc } from "../../../util/util";
 import classes from "./PlaylistMultistream.module.css"
 import { ActionIcon, Drawer, Text } from "@mantine/core";
 import { IconChevronUp } from "@tabler/icons-react";
@@ -10,7 +10,6 @@ import { useGetPlaylist, useUpdateMultistreamVideoOffset, Playlist } from "@/app
 import GanymedeLoader from "@/app/components/utils/GanymedeLoader";
 import { MultistreamTimeline } from "@/app/components/videos/multistream/MultistreamTimeline";
 import SyncedVideoPlayer from "@/app/components/videos/multistream/SyncedVideoPlayer";
-import { env } from "next-runtime-env";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Video } from "@/app/hooks/useVideos";
 
@@ -316,10 +315,10 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
         }}
       >
         <SyncedVideoPlayer
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(playingVod.video_path)}`}
+          src={mediaSrc(playingVod.video_path)}
           vodId={playingVod.id}
           title={playingVod.title}
-          poster={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(playingVod.web_thumbnail_path)}`}
+          poster={mediaSrc(playingVod.web_thumbnail_path)}
           time={vodTime}
           playing={playing}
           muted={true}

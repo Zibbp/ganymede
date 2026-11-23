@@ -2,8 +2,7 @@ import { Video } from "@/app/hooks/useVideos";
 import classes from "./VideoSpritePeek.module.css";
 import { useState } from "react";
 import { Flex, Popover, Progress } from "@mantine/core";
-import { env } from "next-runtime-env";
-import { durationToTime, escapeURL } from "@/app/util/util";
+import { durationToTime, mediaSrc } from "@/app/util/util";
 import clsx from "clsx";
 import {
   useElementSize,
@@ -123,11 +122,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
                 "--sprite-x": `${hoveredTimeElement ? hoveredTimeElement.spriteX : 0}`,
                 "--sprite-y": `${hoveredTimeElement ? hoveredTimeElement.spriteY : 0}`,
                 "--sprite-image": `url(${
-                  hoveredTimeElement
-                    ? `${env("NEXT_PUBLIC_CDN_URL") ?? ""}${escapeURL(
-                        hoveredTimeElement.imageSrc
-                      )}`
-                    : ""
+                  hoveredTimeElement ? mediaSrc(hoveredTimeElement.imageSrc) : ""
                 })`,
               } as React.CSSProperties
             }

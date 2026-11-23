@@ -15,3 +15,7 @@ If you used the previous PostgreSQL 14 configuration, its `postgres-data` volume
 is retained but is not used by PostgreSQL 18. Migrating its contents requires a
 PostgreSQL major-version upgrade, such as a dump and restore; rebuilding alone
 starts with a new database.
+
+The dev API port is published on `127.0.0.1:4000` only, so it is not exposed to
+your LAN. If you need LAN access, add a Compose port override bound deliberately,
+or use a tunnel.

@@ -1,0 +1,107 @@
+# Host-native development toolchain. Install once per clone:
+#   mise trust && mise install
+# Then run tasks with `mise run <task>`. Personal overrides belong in an
+# untracked mise.local.toml. Tools resolve through mise shims; if `go` or
+# `node` is missing in a non-interactive context, use `mise exec -- go ...`.
+
+[tools]
+# Match CI's test image (golang:1.27-bookworm) and the devcontainer image;
+# go.mod's `go 1.26.0` stays the minimum required version.
+go = "1.27"
+node = "26"
+# ffmpeg and ffprobe for the host-native API. Media processing still runs in
+# the pinned image, so keep it on the same major version as the image.
+ffmpeg = "9.0.0"
+# Pin to what golangci-lint-action's `version: latest` currently resolves so
+# local findings match CI. Must stay on the v2 line while .golangci.yml is
+# `version: "2"`.
+golangci-lint = "2.15.0"
+# Dev binaries via mise's go: backend instead of `make dev_setup`, keeping the
+# host GOPATH clean and versions project-scoped.
+"go:github.com/air-verse/air" = "latest"
+"go:github.com/joho/godotenv/cmd/godotenv" = "latest"
+"go:github.com/almottier/rivertui" = "latest"
+
+[env]
+# Host-side dev defaults for mise-run processes. air starts binaries through
+# `godotenv -f .env`, and godotenv does not overwrite already-set variables,
+# so these win over a .env written for containers (DB_HOST=db, ...). Override
+# per user in mise.local.toml.
+DB_HOST = "127.0.0.1"
+DB_PORT = "5432"
+DB_USER = "ganymede"
+DB_PASS = "ganymede"
+DB_NAME = "ganymede"
+DB_SSL = "disable"
+# Compose files used by the dev tasks. Override this in mise.local.toml to add
+# a personal override file.
+COMPOSE_FILE = "compose.dev.yml"
+
+[tasks.setup]
+description = "First-time setup: seed .env, start the dev database, install frontend dependencies"
+run = [
+  "docker compose up -d --wait db || echo 'WARNING: could not start the dev database; is Docker running? Start it later with mise run db'",
+  "test -f .env || cp .env.dev.example .env",
+  "mkdir -p tmp dev/videos dev/temp dev/logs dev/config",
+  "npm --prefix frontend install --force",
+  "grep -q '^TWITCH_CLIENT_ID=.' .env && grep -q '^TWITCH_CLIENT_SECRET=.' .env || echo 'WARNING: TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET are empty in .env; the server will refuse to start until you set them (https://dev.twitch.tv/console/apps/create)'",
+]
+
+[tasks.db]
+description = "Start the dev PostgreSQL and wait until healthy (127.0.0.1:5432)"
+run = "docker compose up -d --wait db"
+
+[tasks."db:down"]
+description = "Stop the dev database"
+run = "docker compose down"
+
+[tasks."db:nuke"]
+description = "Stop the dev database and destroy its volume"
+run = "docker compose down -v"
+
+[tasks."dev:chown"]
+description = "Fix dev/ and tmp/ ownership after running the worker"
+run = 'for dir in dev tmp; do [ -d "$dir" ] && sudo chown -R "$(id -u):$(id -g)" "$dir"; done'
+
+[tasks."db:tui"]
+description = "River queue TUI against the dev database"
+run = "RIVER_DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME} rivertui --refresh 0.5s"
+
+[tasks.server]
+description = "API server with live reload, native on the host"
+run = "air -c .server.air.toml"
+
+[tasks.worker]
+description = "Worker with live reload, inside the pinned media image"
+run = "docker compose --profile media up --build worker"
+
+[tasks.media]
+description = "One-off command inside the media image, e.g. mise run media -- ffmpeg -version"
+run = "docker compose --profile media run --rm --no-deps worker"
+
+[tasks.web]
+description = "Next.js dev server"
+dir = "frontend"
+# Load the repo-root .env so the frontend gets API_URL and CDN_URL.
+# Values already set by mise (including mise.local.toml) take priority.
+run = "godotenv -f ../.env npm run dev"
+
+[tasks.lint]
+description = "golangci-lint (same major as CI)"
+run = "golangci-lint run"
+
+[tasks.test]
+description = "Run the test suite in Docker the same way CI does"
+run = [
+  "docker build --target tests -t ganymede-tests .",
+  "docker network create ganymede-tests 2>/dev/null || true",
+  "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$PWD:/opt/app\" -w /opt/app -e TESTCONTAINER_DOCKER_NETWORK=ganymede-tests -e SKIP_SECRET_TESTS=${SKIP_SECRET_TESTS:-true} -e TWITCH_CLIENT_ID -e TWITCH_CLIENT_SECRET ganymede-tests make test",
+]
+
+[tasks.ent]
+description = "Regenerate Ent code from ent/schema (go.mod-pinned version)"
+run = "go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert ./ent/schema"
+
+[tasks.swagger]
+description = "Regenerate Swagger docs (go.mod-pinned version)"
+run = 'go run -mod=mod github.com/swaggo/swag/cmd/swag init -g cmd/server/main.go -o docs --templateDelims "[[,]]"'

@@ -8,8 +8,7 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import classes from "./Card.module.css"
-import { env } from "next-runtime-env";
-import { durationToTime, escapeURL, prettyNumber } from "@/app/util/util";
+import { durationToTime, mediaSrc, prettyNumber } from "@/app/util/util";
 import { PlaybackStatus, useFetchPlaybackForVideo } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -93,9 +92,7 @@ const VideoCard = ({
             <Skeleton visible={!thumbnailLoaded} animate radius={0} height="100%">
               <Image
                 className={classes.videoImage}
-                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-                  video.web_thumbnail_path
-                )}`}
+                src={mediaSrc(video.web_thumbnail_path)}
                 onLoad={() => setThumbnailLoaded(true)}
                 onError={handleThumbnailError}
                 width={thumbnailError ? "100%" : "100%"}
@@ -179,9 +176,7 @@ const VideoCard = ({
         <Group className={classes.channelFooter}>
           <Center>
             <Avatar
-              src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-                video.edges.channel.image_path
-              )}`}
+              src={mediaSrc(video.edges.channel.image_path)}
               size={24}
               radius="xl"
               mr="xs"
