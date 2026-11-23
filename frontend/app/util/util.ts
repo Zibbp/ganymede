@@ -5,13 +5,30 @@ export function escapeURL(str: string): string {
   return str.replace(/#/g, "%23");
 }
 
+// Normalize a stored media path into a rooted URL path, resolving dot segments
+// so a parent-relative path cannot escape a CDN prefix.
+function normalizeMediaPath(path: string): string {
+  const parts: string[] = [];
+  for (const segment of path.split("/")) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") {
+      parts.pop();
+      continue;
+    }
+    parts.push(segment);
+  }
+  return `/${parts.join("/")}`;
+}
+
 // Media paths are stored as configured: absolute in production (/data/videos/…)
 // and repo-relative in development (dev/videos/…). Browsers resolve non-rooted
 // src values against the current page path, so root them at the origin first.
-// Collapse repeated leading slashes too: a `//host` path would be treated as a
-// protocol-relative URL, while the server route is normalized to a single `/`.
 export function mediaSrc(path: string): string {
-  const rooted = `/${path.replace(/^\/+/, "")}`;
+  // External avatars and other absolute URLs are already usable.
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  const rooted = normalizeMediaPath(path);
   const cdn = (env("NEXT_PUBLIC_CDN_URL") ?? "").replace(/\/+$/, "");
   return `${cdn}${escapeURL(rooted)}`;
 }

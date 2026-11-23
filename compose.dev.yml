@@ -50,6 +50,12 @@ services:
       DB_PASS: ganymede
       DB_NAME: ganymede
       DB_SSL: disable
+      # The bind-mounted checkout is owned by the host user, so root would
+      # otherwise reject it as a dubious Git repository and break the build's
+      # VCS stamping. Trust only the mounted workspace.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /workspace
     volumes:
       - .:/workspace:cached
       # Aliases so a devcontainer-style .env (*/data/* paths) keeps working;
