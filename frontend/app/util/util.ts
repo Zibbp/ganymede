@@ -1,7 +1,16 @@
 import { useEffect } from "react";
+import { env } from "next-runtime-env";
 
 export function escapeURL(str: string): string {
   return str.replace(/#/g, "%23");
+}
+
+// Media paths are stored as configured: absolute in production (/data/videos/…)
+// and repo-relative in development (dev/videos/…). Browsers resolve non-rooted
+// src values against the current page path, so root them at the origin first.
+export function mediaSrc(path: string): string {
+  const rooted = path.startsWith("/") ? path : `/${path}`;
+  return `${env("NEXT_PUBLIC_CDN_URL") ?? ""}${escapeURL(rooted)}`;
 }
 
 // saves an npm depedency - can't use the crypto API as that is not available over HTTP

@@ -3,8 +3,7 @@ import classes from "./MultistreamTimeline.module.css"
 import { IconPlayerPauseFilled, IconPlayerPlayFilled, IconRewindBackward5, IconRewindBackward60, IconRewindForward5, IconRewindForward60 } from "@tabler/icons-react";
 import React, { Fragment, useRef, useState } from "react";
 import dayjs from "dayjs";
-import { escapeURL } from "@/app/util/util";
-import { env } from "next-runtime-env";
+import { mediaSrc } from "@/app/util/util";
 import { Video } from "@/app/hooks/useVideos";
 import { useTranslations } from "next-intl";
 
@@ -170,7 +169,7 @@ export const MultistreamTimeline = ({ vodPlaybackOffsets, globalTime, startDateM
                 <Group gap='sm'>
                   <div onDragStart={(e) => onStreamerNameDragStart(e, streamerId)} draggable="true">
                     <Group gap="sm">
-                      <Image ref={(img) => { streamerImageRefs.current[streamerId] = img }} src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(streamer.imagePath)}`} alt={streamer.name} w={'1.5em'} h={'1.5em'} radius={'1.5em'} />
+                      <Image ref={(img) => { streamerImageRefs.current[streamerId] = img }} src={mediaSrc(streamer.imagePath)} alt={streamer.name} w={'1.5em'} h={'1.5em'} radius={'1.5em'} />
                       {streamer.name}
                     </Group>
                   </div>
