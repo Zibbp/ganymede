@@ -751,21 +751,29 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 }
 
 // firefoxSafeTimescaleArgs pins the MP4 movie and video timescales to the
-// primary audio track's sample rate (48 kHz when absent or unknown). FFmpeg
-// writes empty-edit durations (used when one stream starts later than another)
-// in the movie timescale, but Firefox reads them in the track timescale
-// (Mozilla bug 2082877), turning small start gaps into seconds of A/V
-// desync; equal timescales make both readings identical. FFmpeg keeps the
-// last option occurrence, so these must follow any user-supplied config
-// arguments: a matching user pin is re-set to itself, mismatched values are
-// corrected.
+// sample rate of the latest-starting audio track (48 kHz when absent or
+// unknown). FFmpeg writes empty-edit durations (used when one stream starts
+// later than another) in the movie timescale, but Firefox reads them in the
+// track timescale (Mozilla bug 2082877), turning small start gaps into
+// seconds of A/V desync; equal timescales make both readings identical. A
+// delayed audio track is the one whose empty edit is at risk, so its rate
+// wins over earlier audio streams. Two delayed audio tracks with different
+// rates cannot share one movie timescale; their residual error stays a
+// small fraction of the start gap, and stream copy is never affected.
+// FFmpeg keeps the last option occurrence, so these must follow any
+// user-supplied config arguments: a matching user pin is re-set to itself,
+// mismatched values are corrected.
 func firefoxSafeTimescaleArgs(starts []mediaStreamStart) []string {
-	timescale := 48000
+	timescale := 0
+	var latestStart float64
 	for _, start := range starts {
-		if start.SampleRate > 0 {
+		if start.SampleRate > 0 && (timescale == 0 || start.Time > latestStart) {
 			timescale = start.SampleRate
-			break
+			latestStart = start.Time
 		}
+	}
+	if timescale == 0 {
+		timescale = 48000
 	}
 	return []string{"-movie_timescale", strconv.Itoa(timescale), "-video_track_timescale", strconv.Itoa(timescale)}
 }

@@ -500,12 +500,19 @@ func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
 		{Specifier: "v:0", Time: 0, Anchor: "STARTPTS"},
 		{Specifier: "a:0", Time: 0.25, Anchor: "STARTPTS", SampleRate: 44100},
 	}
+	// The delayed 48 kHz track's rate must win over the earlier 44.1 kHz one.
+	startsMixed := []mediaStreamStart{
+		{Specifier: "v:0", Time: 0, Anchor: "STARTPTS"},
+		{Specifier: "a:0", Time: 0, Anchor: "STARTPTS", SampleRate: 44100},
+		{Specifier: "a:1", Time: 0.25, Anchor: "STARTPTS", SampleRate: 48000},
+	}
 	for _, tc := range []struct {
 		name   string
 		starts []mediaStreamStart
 		want   string
 	}{
 		{name: "44.1 kHz audio", starts: starts44k, want: "44100"},
+		{name: "mixed-rate delayed audio", starts: startsMixed, want: "48000"},
 		{name: "default without audio rate", starts: nil, want: "48000"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -601,6 +608,80 @@ func TestPostProcessVideoWritesFirefoxSafeEditLists(t *testing.T) {
 				t.Fatalf("decode exported output: %v\n%s", err, out)
 			}
 		})
+	}
+}
+
+// TestPostProcessVideoHandlesMixedRateDelayedAudio covers inputs whose audio
+// streams use different sample rates (e.g. 44.1 kHz ad audio alongside 48 kHz
+// content) with the non-matching track starting later: the delayed track is
+// the one whose empty edit Firefox reads, so the pinned movie timescale must
+// follow its rate rather than the first audio stream's.
+func TestPostProcessVideoHandlesMixedRateDelayedAudio(t *testing.T) {
+	dir := t.TempDir()
+	inputPath := filepath.Join(dir, "input.mp4")
+	cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=880:sample_rate=48000:duration=3",
+		"-filter_complex", "[2:a]asetpts=PTS+0.25/TB[a2]",
+		"-map", "0:v", "-map", "1:a", "-map", "[a2]",
+		"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-c:a", "aac",
+		// Preserve the initial gap instead of filling it with duplicate frames.
+		"-fps_mode", "passthrough",
+		// Mirror captured live video tracks (90 kHz).
+		"-video_track_timescale", "90000",
+		"-f", "mp4", inputPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("create mixed-rate media: %v\n%s", err, out)
+	}
+
+	// The input must contain a delayed 48 kHz audio track with an empty edit.
+	_, inputTracks := probeMp4EditLists(t, inputPath)
+	delayedAudioEdit := false
+	for _, track := range inputTracks {
+		if track.Handler == "soun" && track.TrackTimescale == 48000 && len(track.EmptyEdits) > 0 {
+			delayedAudioEdit = true
+		}
+	}
+	if !delayedAudioEdit {
+		t.Fatalf("fixture %s has no delayed 48 kHz audio empty edit", inputPath)
+	}
+
+	inputStarts, err := probeMediaStreamStarts(t.Context(), inputPath)
+	if err != nil {
+		t.Fatalf("probe input streams: %v", err)
+	}
+	if len(inputStarts) != 3 {
+		t.Fatalf("expected three input streams, got %+v", inputStarts)
+	}
+
+	outputPath := filepath.Join(dir, "output.mp4")
+	if err := postProcessVideo(t.Context(), ent.Vod{
+		Title:                "mixed-rate delayed audio",
+		TmpVideoDownloadPath: inputPath,
+		TmpVideoConvertPath:  outputPath,
+	}, "", io.Discard); err != nil {
+		t.Fatalf("post-process media: %v", err)
+	}
+
+	assertFirefoxSafeEditLists(t, outputPath)
+	outputStarts, err := probeMediaStreamStarts(t.Context(), outputPath)
+	if err != nil {
+		t.Fatalf("probe output streams: %v", err)
+	}
+	if len(outputStarts) != len(inputStarts) {
+		t.Fatalf("export lost streams: %+v", outputStarts)
+	}
+	for i, start := range inputStarts {
+		want := start.Time - inputStarts[0].Time
+		got := outputStarts[i].Time - outputStarts[0].Time
+		if start.Specifier != outputStarts[i].Specifier || math.Abs(got-want) > 0.05 {
+			t.Fatalf("stream %s offset = %f, want %f", start.Specifier, got, want)
+		}
+	}
+	decode := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
+	if out, err := decode.CombinedOutput(); err != nil {
+		t.Fatalf("decode exported output: %v\n%s", err, out)
 	}
 }
 
