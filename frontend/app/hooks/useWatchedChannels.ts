@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Category } from "./useCategory";
 import { ApiResponse } from "./useAxios";
 import { NullResponse } from "./usePlayback";
-import { update } from "lodash";
 
 export interface WatchedChannel {
   id: string;

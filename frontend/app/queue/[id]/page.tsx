@@ -20,7 +20,7 @@ const QueueIdPage = ({ params }: { params: Promise<Params> }) => {
   const t = useTranslations("QueuePage");
   useEffect(() => {
     document.title = `${t('title')} - ${id}`;
-  }, [id]);
+  }, [id, t]);
 
   const axiosPrivate = useAxiosPrivate()
 

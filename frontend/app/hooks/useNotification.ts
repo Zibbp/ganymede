@@ -25,6 +25,7 @@ export enum NotificationEventType {
   LiveSuccess = "live_success",
   Error = "error",
   IsLive = "is_live",
+  SystemWarning = "system_warning",
 }
 
 export interface Notification {
@@ -37,10 +38,12 @@ export interface Notification {
   trigger_live_success: boolean;
   trigger_error: boolean;
   trigger_is_live: boolean;
+  trigger_system_warning: boolean;
   video_success_template: string;
   live_success_template: string;
   error_template: string;
   is_live_template: string;
+  system_warning_template: string;
   apprise_urls: string;
   apprise_title: string;
   apprise_type: AppriseType;

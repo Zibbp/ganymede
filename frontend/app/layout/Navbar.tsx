@@ -1,5 +1,5 @@
 "use client"
-import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip, Flex, Skeleton } from '@mantine/core';
+import { Menu, Group, Center, Burger, rem, Drawer, ScrollArea, Divider, Button, ActionIcon, TextInput, useMantineColorScheme, useComputedColorScheme, UnstyledButton, Collapse, Tooltip, Skeleton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconChevronDown, IconChevronUp, IconLanguage, IconMoon, IconSearch, IconSun, IconUserCircle, IconX } from '@tabler/icons-react';
 import classes from './Navbar.module.css';

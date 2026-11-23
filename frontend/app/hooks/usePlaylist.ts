@@ -31,9 +31,19 @@ export interface PlaylistRule {
 
 export interface PlaylistRuleGroup {
   id: string;
-  operator: "and" | "or";
+  operator: "AND" | "OR";
   rules: Array<PlaylistRule>;
   position: number;
+}
+
+// The rules endpoint returns Ent entities; rules are nested under the group's "edges".
+export interface PlaylistRuleGroupResponse {
+  id: string;
+  operator: "AND" | "OR";
+  position: number;
+  edges?: {
+    rules?: Array<PlaylistRule>;
+  };
 }
 
 export enum PlaylistRuleField {
@@ -282,8 +292,8 @@ const useUpdateMultistreamVideoOffset = () => {
 
 const getPlaylistRules = async (
   id: string
-): Promise<Array<PlaylistRuleGroup>> => {
-  const response = await useAxios.get<ApiResponse<Array<PlaylistRuleGroup>>>(
+): Promise<Array<PlaylistRuleGroupResponse>> => {
+  const response = await useAxios.get<ApiResponse<Array<PlaylistRuleGroupResponse>>>(
     `/api/v1/playlist/${id}/rules`
   );
   return response.data.data;

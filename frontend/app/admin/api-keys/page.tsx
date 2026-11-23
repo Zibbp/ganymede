@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import { IconCheck, IconCopy, IconPencil, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
@@ -63,15 +63,14 @@ const AdminApiKeysPage = () => {
   );
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
-  const [records, setRecords] = useState<ApiKey[]>([]);
+  // Per-page preference is owned by the persisted settings store.
+  const perPage = settingsAdminItemsPerPage;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ApiKey>>({
     columnAccessor: "created_at",
     direction: "desc",
   });
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(query, 500);
-  const [filteredCount, setFilteredCount] = useState(0);
   const [activeKey, setActiveKey] = useState<ApiKey | null>(null);
   const [showOnceSecret, setShowOnceSecret] = useState<string | null>(null);
   // includeRevoked surfaces soft-deleted rows so admins can audit
@@ -95,12 +94,9 @@ const AdminApiKeysPage = () => {
   const axiosPrivate = useAxiosPrivate();
   const { data: apiKeys, isPending, isError } = useGetApiKeys(axiosPrivate, includeRevoked);
 
-  useEffect(() => {
-    setPerPage(settingsAdminItemsPerPage);
-  }, [settingsAdminItemsPerPage]);
-
-  useEffect(() => {
-    if (!apiKeys) return;
+  // Records are derived from the query data and table controls.
+  const filteredApiKeys = useMemo(() => {
+    if (!apiKeys) return [];
     let filtered = [...apiKeys];
 
     if (debouncedQuery) {
@@ -115,16 +111,14 @@ const AdminApiKeysPage = () => {
     }
 
     const sorted = sortBy(filtered, sortStatus.columnAccessor);
-    filtered = sortStatus.direction === "desc" ? sorted.reverse() : sorted;
-
-    setFilteredCount(filtered.length);
-    const from = (page - 1) * perPage;
-    setRecords(filtered.slice(from, from + perPage));
-  }, [apiKeys, page, perPage, sortStatus, debouncedQuery]);
+    return sortStatus.direction === "desc" ? sorted.reverse() : sorted;
+  }, [apiKeys, sortStatus, debouncedQuery]);
 
   // totalRecords drives the page count; must reflect the search filter
   // so a narrowed result set doesn't render phantom pages.
-  const totalRecords = filteredCount;
+  const totalRecords = filteredApiKeys.length;
+  const from = (page - 1) * perPage;
+  const records = filteredApiKeys.slice(from, from + perPage);
 
   const handleDeleteModal = (key: ApiKey) => {
     setActiveKey(key);
@@ -321,7 +315,6 @@ const AdminApiKeysPage = () => {
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
             onRecordsPerPageChange={(value) => {
-              setPerPage(value);
               setSettingsAdminItemsPerPage(value);
               setPage(1);
             }}

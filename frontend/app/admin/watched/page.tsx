@@ -7,7 +7,7 @@ import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconSearch, IconPencil, IconTrash, IconPencilPlus, IconX } from "@tabler/icons-react";
 import { sortBy } from "lodash";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import classes from "./AdminWatchedChannelsPage.module.css"
 import AdminWatchedChannelDrawerContent, { WatchedChannelEditMode } from "@/app/components/admin/watched/DrawerContent";
 import DeleteWatchedChannelModalContent from "@/app/components/admin/watched/DeleteModalContent";
@@ -24,9 +24,8 @@ const AdminWatchChannelsPage = () => {
   const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
-  const [records, setRecords] = useState<WatchedChannel[]>([]);
-  const [initialRecords, setInitialRecords] = useState(false);
+  // Per-page preference is owned by the persisted settings store.
+  const perPage = settingsAdminItemsPerPage;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<WatchedChannel>>({
     columnAccessor: "edges.channel.name",
     direction: "asc",
@@ -55,12 +54,9 @@ const AdminWatchChannelsPage = () => {
 
   const setSelectedChannels = (selected: WatchedChannel[]) => setSelectedIds(selected.map((c) => c.id))
 
-  useEffect(() => {
-    setPerPage(settingsAdminItemsPerPage);
-  }, [settingsAdminItemsPerPage]);
-
-  useEffect(() => {
-    if (!channels) return;
+  // Records are derived from the query data and table controls.
+  const records = useMemo(() => {
+    if (!channels) return [];
 
     let filteredData = [...channels] as WatchedChannel[];
 
@@ -82,12 +78,8 @@ const AdminWatchChannelsPage = () => {
     // Apply pagination
     const from = (page - 1) * perPage;
     const to = from + perPage;
-    setRecords(filteredData.slice(from, to));
-
-    if (!initialRecords) {
-      setInitialRecords(true);
-    }
-  }, [channels, page, perPage, sortStatus, debouncedQuery, initialRecords]);
+    return filteredData.slice(from, to);
+  }, [channels, page, perPage, sortStatus, debouncedQuery]);
 
   const openDrawer = (mode: WatchedChannelEditMode, watchedChannel: WatchedChannel) => {
     setActiveWatchedChannel(watchedChannel);
@@ -287,7 +279,6 @@ const AdminWatchChannelsPage = () => {
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
             onRecordsPerPageChange={(value) => {
-              setPerPage(value);
               setSettingsAdminItemsPerPage(value);
               setPage(1);
             }}

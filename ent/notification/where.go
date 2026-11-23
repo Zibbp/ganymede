@@ -90,6 +90,11 @@ func TriggerIsLive(v bool) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldTriggerIsLive, v))
 }
 
+// TriggerSystemWarning applies equality check predicate on the "trigger_system_warning" field. It's identical to TriggerSystemWarningEQ.
+func TriggerSystemWarning(v bool) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldTriggerSystemWarning, v))
+}
+
 // VideoSuccessTemplate applies equality check predicate on the "video_success_template" field. It's identical to VideoSuccessTemplateEQ.
 func VideoSuccessTemplate(v string) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldVideoSuccessTemplate, v))
@@ -108,6 +113,11 @@ func ErrorTemplate(v string) predicate.Notification {
 // IsLiveTemplate applies equality check predicate on the "is_live_template" field. It's identical to IsLiveTemplateEQ.
 func IsLiveTemplate(v string) predicate.Notification {
 	return predicate.Notification(sql.FieldEQ(FieldIsLiveTemplate, v))
+}
+
+// SystemWarningTemplate applies equality check predicate on the "system_warning_template" field. It's identical to SystemWarningTemplateEQ.
+func SystemWarningTemplate(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldSystemWarningTemplate, v))
 }
 
 // AppriseUrls applies equality check predicate on the "apprise_urls" field. It's identical to AppriseUrlsEQ.
@@ -333,6 +343,16 @@ func TriggerIsLiveEQ(v bool) predicate.Notification {
 // TriggerIsLiveNEQ applies the NEQ predicate on the "trigger_is_live" field.
 func TriggerIsLiveNEQ(v bool) predicate.Notification {
 	return predicate.Notification(sql.FieldNEQ(FieldTriggerIsLive, v))
+}
+
+// TriggerSystemWarningEQ applies the EQ predicate on the "trigger_system_warning" field.
+func TriggerSystemWarningEQ(v bool) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldTriggerSystemWarning, v))
+}
+
+// TriggerSystemWarningNEQ applies the NEQ predicate on the "trigger_system_warning" field.
+func TriggerSystemWarningNEQ(v bool) predicate.Notification {
+	return predicate.Notification(sql.FieldNEQ(FieldTriggerSystemWarning, v))
 }
 
 // VideoSuccessTemplateEQ applies the EQ predicate on the "video_success_template" field.
@@ -593,6 +613,71 @@ func IsLiveTemplateEqualFold(v string) predicate.Notification {
 // IsLiveTemplateContainsFold applies the ContainsFold predicate on the "is_live_template" field.
 func IsLiveTemplateContainsFold(v string) predicate.Notification {
 	return predicate.Notification(sql.FieldContainsFold(FieldIsLiveTemplate, v))
+}
+
+// SystemWarningTemplateEQ applies the EQ predicate on the "system_warning_template" field.
+func SystemWarningTemplateEQ(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldEQ(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateNEQ applies the NEQ predicate on the "system_warning_template" field.
+func SystemWarningTemplateNEQ(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldNEQ(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateIn applies the In predicate on the "system_warning_template" field.
+func SystemWarningTemplateIn(vs ...string) predicate.Notification {
+	return predicate.Notification(sql.FieldIn(FieldSystemWarningTemplate, vs...))
+}
+
+// SystemWarningTemplateNotIn applies the NotIn predicate on the "system_warning_template" field.
+func SystemWarningTemplateNotIn(vs ...string) predicate.Notification {
+	return predicate.Notification(sql.FieldNotIn(FieldSystemWarningTemplate, vs...))
+}
+
+// SystemWarningTemplateGT applies the GT predicate on the "system_warning_template" field.
+func SystemWarningTemplateGT(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldGT(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateGTE applies the GTE predicate on the "system_warning_template" field.
+func SystemWarningTemplateGTE(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldGTE(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateLT applies the LT predicate on the "system_warning_template" field.
+func SystemWarningTemplateLT(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldLT(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateLTE applies the LTE predicate on the "system_warning_template" field.
+func SystemWarningTemplateLTE(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldLTE(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateContains applies the Contains predicate on the "system_warning_template" field.
+func SystemWarningTemplateContains(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldContains(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateHasPrefix applies the HasPrefix predicate on the "system_warning_template" field.
+func SystemWarningTemplateHasPrefix(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldHasPrefix(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateHasSuffix applies the HasSuffix predicate on the "system_warning_template" field.
+func SystemWarningTemplateHasSuffix(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldHasSuffix(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateEqualFold applies the EqualFold predicate on the "system_warning_template" field.
+func SystemWarningTemplateEqualFold(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldEqualFold(FieldSystemWarningTemplate, v))
+}
+
+// SystemWarningTemplateContainsFold applies the ContainsFold predicate on the "system_warning_template" field.
+func SystemWarningTemplateContainsFold(v string) predicate.Notification {
+	return predicate.Notification(sql.FieldContainsFold(FieldSystemWarningTemplate, v))
 }
 
 // AppriseUrlsEQ applies the EQ predicate on the "apprise_urls" field.

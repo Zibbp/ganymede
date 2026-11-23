@@ -2,7 +2,7 @@
 import { ActionIcon, Container, Group, TextInput, Title, Box, Button, Drawer, Modal, Text } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import { IconSearch, IconTrash } from "@tabler/icons-react";
@@ -27,9 +27,8 @@ const AdminBlockedVideosPage = () => {
   const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
-  const [records, setRecords] = useState<BlockedVideo[]>([]);
-  const [initialRecords, setInitialRecords] = useState(false);
+  // Per-page preference is owned by the persisted settings store.
+  const perPage = settingsAdminItemsPerPage;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<BlockedVideo>>({
     columnAccessor: "id",
     direction: "asc",
@@ -48,12 +47,9 @@ const AdminBlockedVideosPage = () => {
 
   const { data: blockedVideos, isPending, isError } = useGetBlockedVideos(axiosPrivate)
 
-  useEffect(() => {
-    setPerPage(settingsAdminItemsPerPage);
-  }, [settingsAdminItemsPerPage]);
-
-  useEffect(() => {
-    if (!blockedVideos) return;
+  // Records are derived from the query data and table controls.
+  const records = useMemo(() => {
+    if (!blockedVideos) return [];
 
     let filteredData = [...blockedVideos] as BlockedVideo[];
 
@@ -73,12 +69,8 @@ const AdminBlockedVideosPage = () => {
     // Apply pagination
     const from = (page - 1) * perPage;
     const to = from + perPage;
-    setRecords(filteredData.slice(from, to));
-
-    if (!initialRecords) {
-      setInitialRecords(true);
-    }
-  }, [blockedVideos, page, perPage, sortStatus, debouncedQuery, initialRecords]);
+    return filteredData.slice(from, to);
+  }, [blockedVideos, page, perPage, sortStatus, debouncedQuery]);
 
   const handleDeleteModal = (blockedVideo: BlockedVideo) => {
     setActiveBlockedVideo(blockedVideo);
@@ -185,7 +177,6 @@ const AdminBlockedVideosPage = () => {
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
             onRecordsPerPageChange={(value) => {
-              setPerPage(value);
               setSettingsAdminItemsPerPage(value);
               setPage(1);
             }}

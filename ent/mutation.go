@@ -7167,32 +7167,34 @@ func (m *MutedSegmentMutation) ResetEdge(name string) error {
 // NotificationMutation represents an operation that mutates the Notification nodes in the graph.
 type NotificationMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	name                   *string
-	enabled                *bool
-	_type                  *notification.Type
-	url                    *string
-	trigger_video_success  *bool
-	trigger_live_success   *bool
-	trigger_error          *bool
-	trigger_is_live        *bool
-	video_success_template *string
-	live_success_template  *string
-	error_template         *string
-	is_live_template       *string
-	apprise_urls           *string
-	apprise_title          *string
-	apprise_type           *notification.AppriseType
-	apprise_tag            *string
-	apprise_format         *notification.AppriseFormat
-	updated_at             *time.Time
-	created_at             *time.Time
-	clearedFields          map[string]struct{}
-	done                   bool
-	oldValue               func(context.Context) (*Notification, error)
-	predicates             []predicate.Notification
+	op                      Op
+	typ                     string
+	id                      *uuid.UUID
+	name                    *string
+	enabled                 *bool
+	_type                   *notification.Type
+	url                     *string
+	trigger_video_success   *bool
+	trigger_live_success    *bool
+	trigger_error           *bool
+	trigger_is_live         *bool
+	trigger_system_warning  *bool
+	video_success_template  *string
+	live_success_template   *string
+	error_template          *string
+	is_live_template        *string
+	system_warning_template *string
+	apprise_urls            *string
+	apprise_title           *string
+	apprise_type            *notification.AppriseType
+	apprise_tag             *string
+	apprise_format          *notification.AppriseFormat
+	updated_at              *time.Time
+	created_at              *time.Time
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*Notification, error)
+	predicates              []predicate.Notification
 }
 
 var _ ent.Mutation = (*NotificationMutation)(nil)
@@ -7587,6 +7589,42 @@ func (m *NotificationMutation) ResetTriggerIsLive() {
 	m.trigger_is_live = nil
 }
 
+// SetTriggerSystemWarning sets the "trigger_system_warning" field.
+func (m *NotificationMutation) SetTriggerSystemWarning(b bool) {
+	m.trigger_system_warning = &b
+}
+
+// TriggerSystemWarning returns the value of the "trigger_system_warning" field in the mutation.
+func (m *NotificationMutation) TriggerSystemWarning() (r bool, exists bool) {
+	v := m.trigger_system_warning
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTriggerSystemWarning returns the old "trigger_system_warning" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldTriggerSystemWarning(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTriggerSystemWarning is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTriggerSystemWarning requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTriggerSystemWarning: %w", err)
+	}
+	return oldValue.TriggerSystemWarning, nil
+}
+
+// ResetTriggerSystemWarning resets all changes to the "trigger_system_warning" field.
+func (m *NotificationMutation) ResetTriggerSystemWarning() {
+	m.trigger_system_warning = nil
+}
+
 // SetVideoSuccessTemplate sets the "video_success_template" field.
 func (m *NotificationMutation) SetVideoSuccessTemplate(s string) {
 	m.video_success_template = &s
@@ -7729,6 +7767,42 @@ func (m *NotificationMutation) OldIsLiveTemplate(ctx context.Context) (v string,
 // ResetIsLiveTemplate resets all changes to the "is_live_template" field.
 func (m *NotificationMutation) ResetIsLiveTemplate() {
 	m.is_live_template = nil
+}
+
+// SetSystemWarningTemplate sets the "system_warning_template" field.
+func (m *NotificationMutation) SetSystemWarningTemplate(s string) {
+	m.system_warning_template = &s
+}
+
+// SystemWarningTemplate returns the value of the "system_warning_template" field in the mutation.
+func (m *NotificationMutation) SystemWarningTemplate() (r string, exists bool) {
+	v := m.system_warning_template
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSystemWarningTemplate returns the old "system_warning_template" field's value of the Notification entity.
+// If the Notification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationMutation) OldSystemWarningTemplate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSystemWarningTemplate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSystemWarningTemplate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSystemWarningTemplate: %w", err)
+	}
+	return oldValue.SystemWarningTemplate, nil
+}
+
+// ResetSystemWarningTemplate resets all changes to the "system_warning_template" field.
+func (m *NotificationMutation) ResetSystemWarningTemplate() {
+	m.system_warning_template = nil
 }
 
 // SetAppriseUrls sets the "apprise_urls" field.
@@ -8056,7 +8130,7 @@ func (m *NotificationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *NotificationMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.name != nil {
 		fields = append(fields, notification.FieldName)
 	}
@@ -8081,6 +8155,9 @@ func (m *NotificationMutation) Fields() []string {
 	if m.trigger_is_live != nil {
 		fields = append(fields, notification.FieldTriggerIsLive)
 	}
+	if m.trigger_system_warning != nil {
+		fields = append(fields, notification.FieldTriggerSystemWarning)
+	}
 	if m.video_success_template != nil {
 		fields = append(fields, notification.FieldVideoSuccessTemplate)
 	}
@@ -8092,6 +8169,9 @@ func (m *NotificationMutation) Fields() []string {
 	}
 	if m.is_live_template != nil {
 		fields = append(fields, notification.FieldIsLiveTemplate)
+	}
+	if m.system_warning_template != nil {
+		fields = append(fields, notification.FieldSystemWarningTemplate)
 	}
 	if m.apprise_urls != nil {
 		fields = append(fields, notification.FieldAppriseUrls)
@@ -8138,6 +8218,8 @@ func (m *NotificationMutation) Field(name string) (ent.Value, bool) {
 		return m.TriggerError()
 	case notification.FieldTriggerIsLive:
 		return m.TriggerIsLive()
+	case notification.FieldTriggerSystemWarning:
+		return m.TriggerSystemWarning()
 	case notification.FieldVideoSuccessTemplate:
 		return m.VideoSuccessTemplate()
 	case notification.FieldLiveSuccessTemplate:
@@ -8146,6 +8228,8 @@ func (m *NotificationMutation) Field(name string) (ent.Value, bool) {
 		return m.ErrorTemplate()
 	case notification.FieldIsLiveTemplate:
 		return m.IsLiveTemplate()
+	case notification.FieldSystemWarningTemplate:
+		return m.SystemWarningTemplate()
 	case notification.FieldAppriseUrls:
 		return m.AppriseUrls()
 	case notification.FieldAppriseTitle:
@@ -8185,6 +8269,8 @@ func (m *NotificationMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldTriggerError(ctx)
 	case notification.FieldTriggerIsLive:
 		return m.OldTriggerIsLive(ctx)
+	case notification.FieldTriggerSystemWarning:
+		return m.OldTriggerSystemWarning(ctx)
 	case notification.FieldVideoSuccessTemplate:
 		return m.OldVideoSuccessTemplate(ctx)
 	case notification.FieldLiveSuccessTemplate:
@@ -8193,6 +8279,8 @@ func (m *NotificationMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldErrorTemplate(ctx)
 	case notification.FieldIsLiveTemplate:
 		return m.OldIsLiveTemplate(ctx)
+	case notification.FieldSystemWarningTemplate:
+		return m.OldSystemWarningTemplate(ctx)
 	case notification.FieldAppriseUrls:
 		return m.OldAppriseUrls(ctx)
 	case notification.FieldAppriseTitle:
@@ -8272,6 +8360,13 @@ func (m *NotificationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTriggerIsLive(v)
 		return nil
+	case notification.FieldTriggerSystemWarning:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTriggerSystemWarning(v)
+		return nil
 	case notification.FieldVideoSuccessTemplate:
 		v, ok := value.(string)
 		if !ok {
@@ -8299,6 +8394,13 @@ func (m *NotificationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsLiveTemplate(v)
+		return nil
+	case notification.FieldSystemWarningTemplate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSystemWarningTemplate(v)
 		return nil
 	case notification.FieldAppriseUrls:
 		v, ok := value.(string)
@@ -8443,6 +8545,9 @@ func (m *NotificationMutation) ResetField(name string) error {
 	case notification.FieldTriggerIsLive:
 		m.ResetTriggerIsLive()
 		return nil
+	case notification.FieldTriggerSystemWarning:
+		m.ResetTriggerSystemWarning()
+		return nil
 	case notification.FieldVideoSuccessTemplate:
 		m.ResetVideoSuccessTemplate()
 		return nil
@@ -8454,6 +8559,9 @@ func (m *NotificationMutation) ResetField(name string) error {
 		return nil
 	case notification.FieldIsLiveTemplate:
 		m.ResetIsLiveTemplate()
+		return nil
+	case notification.FieldSystemWarningTemplate:
+		m.ResetSystemWarningTemplate()
 		return nil
 	case notification.FieldAppriseUrls:
 		m.ResetAppriseUrls()

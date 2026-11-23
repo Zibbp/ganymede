@@ -3,7 +3,6 @@ import { Container, SimpleGrid } from "@mantine/core";
 import ChannelCard from "../components/channel/Card";
 import { useFetchChannels } from "../hooks/useChannels";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "../util/util";
 

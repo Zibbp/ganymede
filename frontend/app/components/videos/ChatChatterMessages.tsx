@@ -50,6 +50,10 @@ const ChatChatterMessages = ({
 
   const processedComments = useMemo(() => {
     if (!comments) return null;
+    // Chat maps are populated once during player initialization and never
+    // mutated afterwards, so reading the ref here is stable for this render
+    // tree. Passed as a ref because the parent builds the maps asynchronously.
+    // eslint-disable-next-line react-hooks/refs
     return comments.map((comment) => processComment(
       comment,
       chatMapsRef.current,

@@ -103,6 +103,14 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   const { data: chatEmotes, error: emotesError } = useGetEmotesForVideo(video.id);
   const { data: chatBadges, error: badgesError } = useGetBadgesForVideo(video.id);
 
+  // Chat is ready once emote/badge data has loaded without errors. Latched:
+  // once ready it stays ready, so a later transient refetch failure cannot
+  // blank an active chat.
+  const chatDataReady = Boolean(chatEmotes?.length) && Boolean(chatBadges?.length) && !emotesError && !badgesError;
+  if (chatDataReady && !isReady) {
+    setIsReady(true);
+  }
+
   const scrollToBottom = useCallback((smooth = chatPlaybackSmoothScroll) => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
@@ -386,8 +394,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
   useEffect(() => {
     if (!chatEmotes?.length || !chatBadges?.length) return;
     if (emotesError || badgesError) {
-      const errorMessage = (emotesError?.message || badgesError?.message || "Unknown error");
-      handleError(new Error(errorMessage), "Chat initialization");
+      // Query failures are surfaced through the derived chat error below.
       return;
     }
 
@@ -421,7 +428,10 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
         }
       });
 
-      setIsReady(true);
+      // One-time announcements for async chat initialization completing.
+      // The stats depend on the maps populated just above, so they cannot be
+      // derived during render; this is the single sync point with data arrival.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       addCustomComment(t('chatPlayerReady'));
       addCustomComment(
         t.markup('chatPlayerReadyStats', {
@@ -433,7 +443,7 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     } catch (error) {
       handleError(error as Error, "Chat initialization");
     }
-  }, [chatEmotes, chatBadges, addCustomComment, handleError, emotesError, badgesError]);
+  }, [chatEmotes, chatBadges, addCustomComment, handleError, emotesError, badgesError, t]);
 
   // Chat update interval
   useEffect(() => {
@@ -501,6 +511,11 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
     scrollToBottom(false);
   }, [scrollToBottom]);
 
+  // Emote/badge query failures are derived so no state sync is needed.
+  const initError = emotesError || badgesError
+    ? `Chat initialization: ${emotesError?.message ?? badgesError?.message ?? "Unknown error"}`
+    : null;
+
   if (!isReady) {
     return (
       <div className={classes.chatPlayerContainer}>
@@ -510,9 +525,9 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
               <Loader size="xl" />
             </Center>
             <Text mt={5}>{t('loadingChat')}</Text>
-            {error && (
+            {(error || initError) && (
               <Text size="sm">
-                {t('chatError')}: {error.message}
+                {t('chatError')}: {error?.message ?? initError}
               </Text>
             )}
           </div>
@@ -527,9 +542,9 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
       ref={chatContainerRef}
       className={`${classes.chatPlayerContainer} `}
     >
-      {error && (
+      {(error || initError) && (
         <Box className="p-2 mb-2 bg-red-100 text-red-800 rounded">
-          <Text size="sm">{error.message}</Text>
+          <Text size="sm">{error?.message ?? initError}</Text>
         </Box>
       )}
       {messages.map((comment) => (

@@ -60,7 +60,7 @@ func DownloadAndSaveFile(ctx context.Context, url, path string) error {
 	// Create the local file
 	out, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("error creating file: %v", err)
+		return fmt.Errorf("error creating file: %w", err)
 	}
 	defer func() {
 		if err := out.Close(); err != nil {
@@ -71,7 +71,7 @@ func DownloadAndSaveFile(ctx context.Context, url, path string) error {
 	// Write the response body to the local file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return fmt.Errorf("error writing to file: %v", err)
+		return fmt.Errorf("error writing to file: %w", err)
 	}
 
 	return nil
