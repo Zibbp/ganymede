@@ -7,6 +7,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -197,15 +199,20 @@ func (h *Handler) mapRoutes() {
 
 	// Static files if not using nginx
 	env := config.GetEnvConfig()
+	// Media routes are derived from the configured directories. Development
+	// values may be relative (dev/videos), so normalize the URL prefix: route
+	// patterns and http.StripPrefix require the leading slash in every case.
+	videosPrefix := mediaRoutePrefix(env.VideosDir)
+	tempPrefix := mediaRoutePrefix(env.TempDir)
 	// Use one handler for both GET + HEAD
-	videosH := echo.WrapHandler(http.StripPrefix(env.VideosDir, http.FileServer(http.Dir(env.VideosDir))))
-	tempH := echo.WrapHandler(http.StripPrefix(env.TempDir, http.FileServer(http.Dir(env.TempDir))))
+	videosH := echo.WrapHandler(http.StripPrefix(videosPrefix, http.FileServer(http.Dir(env.VideosDir))))
+	tempH := echo.WrapHandler(http.StripPrefix(tempPrefix, http.FileServer(http.Dir(env.TempDir))))
 
-	h.Server.GET(env.VideosDir+"/*", videosH)
-	h.Server.HEAD(env.VideosDir+"/*", videosH)
+	h.Server.GET(videosPrefix+"/*", videosH)
+	h.Server.HEAD(videosPrefix+"/*", videosH)
 
-	h.Server.GET(env.TempDir+"/*", tempH)
-	h.Server.HEAD(env.TempDir+"/*", tempH)
+	h.Server.GET(tempPrefix+"/*", tempH)
+	h.Server.HEAD(tempPrefix+"/*", tempH)
 
 	// RiverUI
 	h.Server.Any("/riverui/", echo.WrapHandler(h.RiverUIServer), AuthGuardMiddleware, AuthGetUserMiddleware, AuthUserRoleMiddleware(utils.EditorRole))
@@ -221,6 +228,14 @@ func (h *Handler) mapRoutes() {
 	// create v1 group and setup v1 routes
 	v1 := h.Server.Group("/api/v1")
 	groupV1Routes(v1, h)
+}
+
+// mediaRoutePrefix returns the URL prefix used to serve dir. Absolute
+// production paths (/data/videos) pass through unchanged; relative development
+// paths (dev/videos) get the leading slash that route patterns and
+// http.StripPrefix require.
+func mediaRoutePrefix(dir string) string {
+	return "/" + strings.TrimLeft(path.Clean(filepath.ToSlash(dir)), "/")
 }
 
 func groupV1Routes(e *echo.Group, h *Handler) {
