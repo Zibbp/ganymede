@@ -750,6 +750,24 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+// userPinsTimescales reports whether config arguments pin both the movie and
+// video timescales to one value. Such a config owns the timescale policy —
+// for example an export that re-encodes audio to another sample rate and
+// matches the pins to it — so the built-in Firefox-safe pins must not
+// override it.
+func userPinsTimescales(configArgs []string) bool {
+	movieTimescale, videoTimescale := "", ""
+	for i := 0; i < len(configArgs)-1; i++ {
+		switch configArgs[i] {
+		case "-movie_timescale":
+			movieTimescale = configArgs[i+1]
+		case "-video_track_timescale":
+			videoTimescale = configArgs[i+1]
+		}
+	}
+	return movieTimescale != "" && movieTimescale == videoTimescale
+}
+
 // firefoxSafeTimescaleArgs pins the MP4 movie and video timescales to the
 // sample rate of the latest-starting audio track (48 kHz when absent or
 // unknown). FFmpeg writes empty-edit durations (used when one stream starts
@@ -761,8 +779,8 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 // rates cannot share one movie timescale; their residual error stays a
 // small fraction of the start gap, and stream copy is never affected.
 // FFmpeg keeps the last option occurrence, so these must follow any
-// user-supplied config arguments: a matching user pin is re-set to itself,
-// mismatched values are corrected.
+// user-supplied config arguments unless the config pins both timescales
+// itself (userPinsTimescales).
 func firefoxSafeTimescaleArgs(starts []mediaStreamStart) []string {
 	timescale := 0
 	var latestStart float64
@@ -780,8 +798,11 @@ func firefoxSafeTimescaleArgs(starts []mediaStreamStart) []string {
 
 func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool, starts []mediaStreamStart) []string {
 	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
-	args = append(args, strings.Fields(configFfmpegArgs)...)
-	args = append(args, firefoxSafeTimescaleArgs(starts)...)
+	configArgs := strings.Fields(configFfmpegArgs)
+	args = append(args, configArgs...)
+	if !userPinsTimescales(configArgs) {
+		args = append(args, firefoxSafeTimescaleArgs(starts)...)
+	}
 	args = appendMediaTimestampArgs(args, starts, normalizeTimestamps)
 	return append(args, exportPath)
 }
@@ -1130,7 +1151,9 @@ func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, nor
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
-	ffmpegArgs = append(ffmpegArgs, firefoxSafeTimescaleArgs(starts)...)
+	if !userPinsTimescales(arr) {
+		ffmpegArgs = append(ffmpegArgs, firefoxSafeTimescaleArgs(starts)...)
+	}
 	ffmpegArgs = appendMediaTimestampArgs(ffmpegArgs, starts, normalizeTimestamps)
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 

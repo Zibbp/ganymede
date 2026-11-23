@@ -484,9 +484,11 @@ func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
 	}
 	// A user overriding the muxer timescales must not be able to reintroduce a
 	// movie/track mismatch: FFmpeg applies the last option occurrence, so the
-	// built-in pins have to follow the config arguments. A user pin that
-	// already matches the audio rate is re-set to itself.
-	configArgs := "-movie_timescale 1000 -video_track_timescale 60"
+	// built-in pins have to follow the config arguments. A config that pins
+	// both timescales to one value owns the policy (e.g. an export that
+	// re-encodes audio to another rate) and is left untouched.
+	overrideArgs := "-movie_timescale 1000 -video_track_timescale 60"
+	ownershipArgs := "-c:a aac -ar 44100 -movie_timescale 44100 -video_track_timescale 44100"
 	lastOptionValue := func(args []string, option string) string {
 		value := ""
 		for i := 0; i < len(args)-1; i++ {
@@ -495,6 +497,15 @@ func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
 			}
 		}
 		return value
+	}
+	optionCount := func(args []string, option string) int {
+		count := 0
+		for i := 0; i < len(args)-1; i++ {
+			if args[i] == option {
+				count++
+			}
+		}
+		return count
 	}
 	starts44k := []mediaStreamStart{
 		{Specifier: "v:0", Time: 0, Anchor: "STARTPTS"},
@@ -507,24 +518,34 @@ func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
 		{Specifier: "a:1", Time: 0.25, Anchor: "STARTPTS", SampleRate: 48000},
 	}
 	for _, tc := range []struct {
-		name   string
-		starts []mediaStreamStart
-		want   string
+		name        string
+		configArgs  string
+		starts      []mediaStreamStart
+		want        string
+		wantAppends int // pins appended by the builders per option
 	}{
-		{name: "44.1 kHz audio", starts: starts44k, want: "44100"},
-		{name: "mixed-rate delayed audio", starts: startsMixed, want: "48000"},
-		{name: "default without audio rate", starts: nil, want: "48000"},
+		{name: "44.1 kHz audio", configArgs: overrideArgs, starts: starts44k, want: "44100", wantAppends: 1},
+		{name: "mixed-rate delayed audio", configArgs: overrideArgs, starts: startsMixed, want: "48000", wantAppends: 1},
+		{name: "default without audio rate", configArgs: overrideArgs, starts: nil, want: "48000", wantAppends: 1},
+		{name: "user owns equal pins", configArgs: ownershipArgs, starts: starts44k, want: "44100", wantAppends: 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			userPins := optionCount(strings.Fields(tc.configArgs), "-movie_timescale")
 			for _, args := range [][]string{
-				postProcessVideoFFmpegArgs(video, configArgs, tc.starts),
-				buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, configArgs, false, tc.starts),
+				postProcessVideoFFmpegArgs(video, tc.configArgs, tc.starts),
+				buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, tc.configArgs, false, tc.starts),
 			} {
 				if got := lastOptionValue(args, "-movie_timescale"); got != tc.want {
-					t.Fatalf("last -movie_timescale = %q, want %q (pinned after config args): %v", got, tc.want, args)
+					t.Fatalf("last -movie_timescale = %q, want %q: %v", got, tc.want, args)
 				}
 				if got := lastOptionValue(args, "-video_track_timescale"); got != tc.want {
-					t.Fatalf("last -video_track_timescale = %q, want %q (pinned after config args): %v", got, tc.want, args)
+					t.Fatalf("last -video_track_timescale = %q, want %q: %v", got, tc.want, args)
+				}
+				if got := optionCount(args, "-movie_timescale") - userPins; got != tc.wantAppends {
+					t.Fatalf("appended -movie_timescale pins = %d, want %d: %v", got, tc.wantAppends, args)
+				}
+				if got := optionCount(args, "-video_track_timescale") - userPins; got != tc.wantAppends {
+					t.Fatalf("appended -video_track_timescale pins = %d, want %d: %v", got, tc.wantAppends, args)
 				}
 			}
 		})
