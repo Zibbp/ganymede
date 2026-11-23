@@ -484,7 +484,8 @@ func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
 	}
 	// A user overriding the muxer timescales must not be able to reintroduce a
 	// movie/track mismatch: FFmpeg applies the last option occurrence, so the
-	// built-in pins have to follow the config arguments.
+	// built-in pins have to follow the config arguments. A user pin that
+	// already matches the audio rate is re-set to itself.
 	configArgs := "-movie_timescale 1000 -video_track_timescale 60"
 	lastOptionValue := func(args []string, option string) string {
 		value := ""
@@ -495,16 +496,31 @@ func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
 		}
 		return value
 	}
-	for _, args := range [][]string{
-		postProcessVideoFFmpegArgs(video, configArgs, nil),
-		buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, configArgs, false, nil),
+	starts44k := []mediaStreamStart{
+		{Specifier: "v:0", Time: 0, Anchor: "STARTPTS"},
+		{Specifier: "a:0", Time: 0.25, Anchor: "STARTPTS", SampleRate: 44100},
+	}
+	for _, tc := range []struct {
+		name   string
+		starts []mediaStreamStart
+		want   string
+	}{
+		{name: "44.1 kHz audio", starts: starts44k, want: "44100"},
+		{name: "default without audio rate", starts: nil, want: "48000"},
 	} {
-		if got := lastOptionValue(args, "-movie_timescale"); got != "48000" {
-			t.Fatalf("last -movie_timescale = %q, want 48000 (pinned after config args): %v", got, args)
-		}
-		if got := lastOptionValue(args, "-video_track_timescale"); got != "48000" {
-			t.Fatalf("last -video_track_timescale = %q, want 48000 (pinned after config args): %v", got, args)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			for _, args := range [][]string{
+				postProcessVideoFFmpegArgs(video, configArgs, tc.starts),
+				buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, configArgs, false, tc.starts),
+			} {
+				if got := lastOptionValue(args, "-movie_timescale"); got != tc.want {
+					t.Fatalf("last -movie_timescale = %q, want %q (pinned after config args): %v", got, tc.want, args)
+				}
+				if got := lastOptionValue(args, "-video_track_timescale"); got != tc.want {
+					t.Fatalf("last -video_track_timescale = %q, want %q (pinned after config args): %v", got, tc.want, args)
+				}
+			}
+		})
 	}
 }
 
@@ -517,16 +533,21 @@ func TestPostProcessVideoWritesFirefoxSafeEditLists(t *testing.T) {
 		name        string
 		videoOffset string
 		audioOffset string
+		audioRate   string
 	}{
-		{name: "late video", videoOffset: "0.25", audioOffset: "0"},
-		{name: "late audio", videoOffset: "0", audioOffset: "0.25"},
+		{name: "late video", videoOffset: "0.25", audioOffset: "0", audioRate: "48000"},
+		{name: "late audio", videoOffset: "0", audioOffset: "0.25", audioRate: "48000"},
+		// Non-48 kHz audio (e.g. 44.1 kHz ad segments woven into a capture)
+		// must pin the timescales to its own rate.
+		{name: "late video 44.1 kHz", videoOffset: "0.25", audioOffset: "0", audioRate: "44100"},
+		{name: "late audio 44.1 kHz", videoOffset: "0", audioOffset: "0.25", audioRate: "44100"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
 			inputPath := filepath.Join(dir, "input.mp4")
 			cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
 				"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
-				"-f", "lavfi", "-i", "sine=frequency=1000:sample_rate=48000:duration=3",
+				"-f", "lavfi", "-i", fmt.Sprintf("sine=frequency=1000:sample_rate=%s:duration=3", tc.audioRate),
 				"-filter_complex", fmt.Sprintf("[0:v]setpts=PTS+%s/TB[v];[1:a]asetpts=PTS+%s/TB[a]", tc.videoOffset, tc.audioOffset),
 				"-map", "[v]", "-map", "[a]",
 				"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",

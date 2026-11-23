@@ -151,6 +151,9 @@ type mediaStreamStart struct {
 	Specifier string
 	Time      float64
 	Anchor    string
+	// SampleRate is set for audio streams; the MP4 export pins its
+	// timescales to it so Firefox reads edit-list empty edits exactly.
+	SampleRate int
 }
 
 // Read one packet per stream because HLS metadata may report a segment's start
@@ -168,6 +171,12 @@ func probeMediaStreamStarts(ctx context.Context, path string) ([]mediaStreamStar
 		}
 		specifier := fmt.Sprintf("%s:%d", stream.CodecType[:1], ordinals[stream.CodecType])
 		ordinals[stream.CodecType]++
+		var sampleRate int
+		if stream.CodecType == "audio" && stream.SampleRate != nil {
+			if rate, err := strconv.Atoi(*stream.SampleRate); err == nil {
+				sampleRate = rate
+			}
+		}
 		cmd := osExec.CommandContext(ctx, "ffprobe", "-v", "error",
 			"-select_streams", strconv.FormatInt(stream.Index, 10),
 			"-read_intervals", "%+#1", "-show_entries", "packet=pts_time,dts_time",
@@ -197,7 +206,7 @@ func probeMediaStreamStarts(ctx context.Context, path string) ([]mediaStreamStar
 		if err != nil || math.IsNaN(start) || math.IsInf(start, 0) {
 			return nil, fmt.Errorf("no valid first packet timestamp for %s in %s", specifier, path)
 		}
-		starts = append(starts, mediaStreamStart{Specifier: specifier, Time: start, Anchor: anchor})
+		starts = append(starts, mediaStreamStart{Specifier: specifier, Time: start, Anchor: anchor, SampleRate: sampleRate})
 	}
 	return starts, nil
 }
