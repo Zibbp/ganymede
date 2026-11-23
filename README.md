@@ -223,8 +223,11 @@ The API server, web server, and worker are long-running services, so run each in
 | `mise run test`       | Full test suite in Docker, the same `tests` stage CI builds        |
 | `mise run ent` / `mise run swagger` | Ent / Swagger codegen                              |
 | `mise run db:tui`     | River queue TUI against the dev database                           |
+| `mise run dev:chown`  | Reclaim `dev/` and `tmp/` from root-owned worker files              |
 
-`ffmpeg` and `ffprobe` are installed by mise because the host-native API uses them for the video information view and version reporting. `yt-dlp` and `TwitchDownloaderCLI` are only in the pinned media image. Run media processing inside the pinned image, for example `mise run media -- ffmpeg -version`. The worker runs there too: `mise run worker` starts it with live reload against the same database and `dev/` directories. `mise run setup` creates `dev/` and `tmp/` as your user; if you start the worker before setup and the host server then cannot write to them, reclaim them with `sudo chown -R "$(id -u):$(id -g)" dev tmp`.
+`ffmpeg` and `ffprobe` are installed by mise because the host-native API uses them for the video information view and version reporting. `yt-dlp` and `TwitchDownloaderCLI` are only in the pinned media image. Run media processing inside the pinned image, for example `mise run media -- ffmpeg -version`. The worker runs there too: `mise run worker` starts it with live reload against the same database and `dev/` directories.
+
+`mise run setup` creates `dev/` and `tmp/` as your user. The worker container runs as root, so files and directories it creates under those bind mounts are root-owned. If the host server then cannot write or clean them up, stop the worker and reclaim them with `mise run dev:chown` (equivalent to `sudo chown -R "$(id -u):$(id -g)" dev tmp`). Run the recovery again after a later worker run creates new paths.
 
 Committed Compose files bind services to `127.0.0.1` only. For machine-specific overrides (LAN port publishing, different ports), use an untracked `compose.local.yml` — it is gitignored, and merging it requires Docker Compose >= 2.24.4 for `!override` support:
 

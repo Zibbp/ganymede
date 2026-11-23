@@ -8,8 +8,10 @@ export function escapeURL(str: string): string {
 // Media paths are stored as configured: absolute in production (/data/videos/…)
 // and repo-relative in development (dev/videos/…). Browsers resolve non-rooted
 // src values against the current page path, so root them at the origin first.
+// Collapse repeated leading slashes too: a `//host` path would be treated as a
+// protocol-relative URL, while the server route is normalized to a single `/`.
 export function mediaSrc(path: string): string {
-  const rooted = path.startsWith("/") ? path : `/${path}`;
+  const rooted = `/${path.replace(/^\/+/, "")}`;
   const cdn = (env("NEXT_PUBLIC_CDN_URL") ?? "").replace(/\/+$/, "");
   return `${cdn}${escapeURL(rooted)}`;
 }

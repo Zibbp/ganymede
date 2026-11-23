@@ -61,6 +61,10 @@ run = "docker compose down"
 description = "Stop the dev database and destroy its volume"
 run = "docker compose down -v"
 
+[tasks."dev:chown"]
+description = "Reclaim dev/ and tmp/ from files the root-run media worker created"
+run = 'for dir in dev tmp; do [ -d "$dir" ] && sudo chown -R "$(id -u):$(id -g)" "$dir"; done'
+
 [tasks."db:tui"]
 description = "River queue TUI against the dev database"
 run = "RIVER_DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME} rivertui --refresh 0.5s"
