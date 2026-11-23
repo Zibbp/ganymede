@@ -199,7 +199,7 @@ The primary development path is host-native: toolchains come from `mise.toml`, w
 
 | Task | What it does |
 | --- | --- |
-| `mise run setup` | First-time setup: seed `.env` from `.env.dev.example`, `npm install` the frontend |
+| `mise run setup` | First-time setup: seed `.env` from `.env.dev.example`, start the dev database, `npm install` the frontend |
 | `mise run db` | Start dev PostgreSQL 18 on 127.0.0.1:5432 |
 | `mise run server` | API server with live reload (air), native on the host |
 | `mise run web` | Next.js dev server |

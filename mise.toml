@@ -32,8 +32,9 @@ DB_NAME = "ganymede"
 DB_SSL = "disable"
 
 [tasks.setup]
-description = "First-time setup: seed .env and install frontend dependencies"
+description = "First-time setup: seed .env, start the dev database, install frontend dependencies"
 run = [
+  "docker compose -f compose.dev.yml up -d --wait db || echo 'WARNING: could not start the dev database; is Docker running? Start it later with mise run db'",
   "test -f .env || cp .env.dev.example .env",
   "mkdir -p dev/videos dev/temp dev/logs dev/config",
   "npm --prefix frontend install --force",

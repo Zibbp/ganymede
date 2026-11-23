@@ -202,15 +202,15 @@ Toolchains (Go 1.27, Node 26, air, golangci-lint) run natively on your machine v
 
 ```bash
 mise trust && mise install
-mise run setup    # seeds .env from .env.dev.example and installs frontend dependencies
-mise run db       # PostgreSQL 18 on 127.0.0.1:5432
+mise run setup    # seeds .env, starts the dev database, installs frontend dependencies
+mise run db       # PostgreSQL 18 on 127.0.0.1:5432 (idempotent; also starts it after setup)
 mise run server   # API server with live reload on :4000
 mise run web      # Next.js dev server
 ```
 
 | Task                  | Description                                                        |
 | --------------------- | ------------------------------------------------------------------ |
-| `mise run setup`      | First-time setup: seed `.env`, install frontend dependencies        |
+| `mise run setup`      | First-time setup: seed `.env`, start dev database, install frontend dependencies |
 | `mise run db`         | Start dev PostgreSQL 18 (127.0.0.1:5432)                          |
 | `mise run server`     | API server with live reload, native on the host                   |
 | `mise run web`        | Next.js dev server                                                 |
