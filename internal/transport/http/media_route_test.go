@@ -18,6 +18,8 @@ func TestMediaRoutePrefix(t *testing.T) {
 		{"development dot relative", "./dev/videos", "/dev/videos"},
 		{"trailing slash", "/data/videos/", "/data/videos"},
 		{"repeated leading slashes", "//data/videos", "/data/videos"},
+		{"parent relative", "../videos", "/videos"},
+		{"nested parent", "dev/../videos", "/videos"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

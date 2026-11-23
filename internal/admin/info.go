@@ -30,28 +30,25 @@ func (s *Service) GetInfo(ctx context.Context) (InfoResp, error) {
 	resp.BuildTime = utils.BuildTime
 	resp.Uptime = time.Since(utils.StartTime).String()
 
-	// Program versions
+	// Program versions. A host-native API may not have every media tool
+	// installed, so report the missing one instead of failing the whole page.
 	var programVersion ProgramVersions
-	ffmpegVersion, err := getFFmpegVersion()
-	if err != nil {
-		return resp, fmt.Errorf("error getting ffmpeg version: %v", err)
-	}
-	programVersion.FFmpeg = ffmpegVersion
-
-	twitchDownloaderVersion, err := getTwitchDownloaderVersion()
-	if err != nil {
-		return resp, fmt.Errorf("error getting TwitchDownloaderCLI version: %v", err)
-	}
-	programVersion.TwitchDownloader = twitchDownloaderVersion
-
-	ytdlpVersion, err := getYtDlpVersion()
-	if err != nil {
-		return resp, fmt.Errorf("error getting yt-dlp version: %v", err)
-	}
-	programVersion.YtDlp = ytdlpVersion
+	programVersion.FFmpeg = versionOrUnavailable(getFFmpegVersion)
+	programVersion.TwitchDownloader = versionOrUnavailable(getTwitchDownloaderVersion)
+	programVersion.YtDlp = versionOrUnavailable(getYtDlpVersion)
 
 	resp.ProgramVersions = programVersion
 	return resp, nil
+}
+
+// versionOrUnavailable runs a version command and reports a missing tool
+// without failing the rest of the response.
+func versionOrUnavailable(get func() (string, error)) string {
+	out, err := get()
+	if err != nil {
+		return "unavailable"
+	}
+	return out
 }
 
 func getFFmpegVersion() (string, error) {
@@ -67,11 +64,11 @@ func getFFmpegVersion() (string, error) {
 func getTwitchDownloaderVersion() (string, error) {
 	run := exec.Command("TwitchDownloaderCLI", "--version")
 	out, err := run.CombinedOutput()
-	if err != nil {
-		// TwitchDownloaderCLI throws exit status 1 on --version
-		// so we ignore the error
-		return string(out), nil
+	if err != nil && len(out) == 0 {
+		return "", fmt.Errorf("error getting TwitchDownloaderCLI version: %v", err)
 	}
+	// TwitchDownloaderCLI throws exit status 1 on --version, so accept output
+	// from a non-zero exit. Missing binaries produce no output and are reported.
 	return string(out), nil
 }
 

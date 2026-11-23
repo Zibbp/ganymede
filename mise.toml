@@ -9,6 +9,10 @@
 # go.mod's `go 1.26.0` stays the minimum required version.
 go = "1.27"
 node = "26"
+# ffmpeg/ffprobe are used by the host-native API for media metadata (the video
+# information tab and version reporting). Media processing still runs in the
+# pinned media image; keep this on the same major as FFMPEG_VERSION there.
+ffmpeg = "9.0.0"
 # Pin to what golangci-lint-action's `version: latest` currently resolves so
 # local findings match CI. Must stay on the v2 line while .golangci.yml is
 # `version: "2"`.
@@ -30,28 +34,32 @@ DB_USER = "ganymede"
 DB_PASS = "ganymede"
 DB_NAME = "ganymede"
 DB_SSL = "disable"
+# Compose file list for the dev services. Override in mise.local.toml (for
+# example `COMPOSE_FILE = "compose.dev.yml:compose.local.yml"`) to merge a
+# personal override without editing the tracked tasks.
+COMPOSE_FILE = "compose.dev.yml"
 
 [tasks.setup]
 description = "First-time setup: seed .env, start the dev database, install frontend dependencies"
 run = [
-  "docker compose -f compose.dev.yml up -d --wait db || echo 'WARNING: could not start the dev database; is Docker running? Start it later with mise run db'",
+  "docker compose up -d --wait db || echo 'WARNING: could not start the dev database; is Docker running? Start it later with mise run db'",
   "test -f .env || cp .env.dev.example .env",
-  "mkdir -p dev/videos dev/temp dev/logs dev/config",
+  "mkdir -p tmp dev/videos dev/temp dev/logs dev/config",
   "npm --prefix frontend install --force",
   "grep -q '^TWITCH_CLIENT_ID=.' .env && grep -q '^TWITCH_CLIENT_SECRET=.' .env || echo 'WARNING: TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET are empty in .env; the server will refuse to start until you set them (https://dev.twitch.tv/console/apps/create)'",
 ]
 
 [tasks.db]
 description = "Start the dev PostgreSQL and wait until healthy (127.0.0.1:5432)"
-run = "docker compose -f compose.dev.yml up -d --wait db"
+run = "docker compose up -d --wait db"
 
 [tasks."db:down"]
 description = "Stop the dev database"
-run = "docker compose -f compose.dev.yml down"
+run = "docker compose down"
 
 [tasks."db:nuke"]
 description = "Stop the dev database and destroy its volume"
-run = "docker compose -f compose.dev.yml down -v"
+run = "docker compose down -v"
 
 [tasks."db:tui"]
 description = "River queue TUI against the dev database"
@@ -63,16 +71,18 @@ run = "air -c .server.air.toml"
 
 [tasks.worker]
 description = "Worker with live reload, inside the pinned media image"
-run = "docker compose -f compose.dev.yml --profile media up --build worker"
+run = "docker compose --profile media up --build worker"
 
 [tasks.media]
 description = "One-off command inside the media image, e.g. mise run media -- ffmpeg -version"
-run = "docker compose -f compose.dev.yml --profile media run --rm --no-deps worker"
+run = "docker compose --profile media run --rm --no-deps worker"
 
 [tasks.web]
 description = "Next.js dev server"
 dir = "frontend"
-run = "npm run dev"
+# Load the repository-root .env so API_URL/CDN_URL reach the frontend. Variables
+# already set by mise (including mise.local.toml overrides) win over .env.
+run = "godotenv -f ../.env npm run dev"
 
 [tasks.lint]
 description = "golangci-lint (same major as CI)"

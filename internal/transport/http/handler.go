@@ -235,7 +235,7 @@ func (h *Handler) mapRoutes() {
 // paths (dev/videos) get the leading slash that route patterns and
 // http.StripPrefix require.
 func mediaRoutePrefix(dir string) string {
-	return "/" + strings.TrimLeft(path.Clean(filepath.ToSlash(dir)), "/")
+	return path.Clean("/" + filepath.ToSlash(dir))
 }
 
 func groupV1Routes(e *echo.Group, h *Handler) {

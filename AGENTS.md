@@ -211,10 +211,10 @@ The primary development path is host-native: toolchains come from `mise.toml`, w
 
 Important for agents:
 
-- **ffmpeg, ffprobe, yt-dlp, and TwitchDownloaderCLI are NOT installed on the host.** Run them through `mise run media -- ffmpeg -version`, never `apt install ffmpeg`; host-installed versions drift from the pinned versions in the Dockerfiles.
+- **Media processing runs in the pinned media image, not on the host.** `ffmpeg`/`ffprobe` are installed by mise for the host-native API's metadata endpoints, but use `mise run media -- <cmd>` (such as `mise run media -- ffmpeg -version`) for processing and for the exact container versions. `yt-dlp` and `TwitchDownloaderCLI` are image-only; never `apt install` them.
 - Tools resolve through mise shims scoped to the repo directory. If `go` is missing, the harness was launched without the shim directory on `PATH`; use `mise exec -- go ...`. Non-interactive contexts need `mise trust` or `MISE_TRUSTED_CONFIG_PATHS=<repo>`.
 - A single `.env` is shared by host and container runs. The `*_DIR` values in `.env.dev.example` are repo-relative (`dev/videos`, ...) so the host server and the compose worker (repo bind-mounted at `/workspace`) resolve stored paths identically; `DB_HOST` differs per context and is overridden by the mise/compose environment. Do not commit `.env`.
-- Personal overrides belong in untracked `mise.local.toml` and `compose.local.yml` (gitignored). Do not edit `mise.toml` or `compose.dev.yml` for machine-specific settings.
+- Personal overrides belong in untracked `mise.local.toml` and `compose.local.yml` (gitignored). Do not edit `mise.toml` or `compose.dev.yml` for machine-specific settings. The mise tasks read `COMPOSE_FILE`, so a `mise.local.toml` with `COMPOSE_FILE = "compose.dev.yml:compose.local.yml"` merges the local Compose override.
 - `.devcontainer/` remains the zero-install path for VS Code/Codespaces. Do not edit it for local tooling changes; add the tool to `mise.toml` instead.
 
 ## Development and deployment notes

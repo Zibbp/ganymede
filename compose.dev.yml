@@ -7,8 +7,12 @@
 #
 # The worker is gated behind the "media" profile so `docker compose up -d`
 # only starts the database. Per-user overrides (LAN port publishing, other
-# images) belong in an untracked compose.local.yml merged with
-# `-f compose.dev.yml -f compose.local.yml` (Compose >= 2.24.4 for !override).
+# images) belong in an untracked compose.local.yml. The mise tasks read
+# COMPOSE_FILE, so merge it by putting
+#   [env]
+#   COMPOSE_FILE = "compose.dev.yml:compose.local.yml"
+# in mise.local.toml, or pass both `-f` flags to docker compose directly
+# (Compose >= 2.24.4 for !override).
 name: ganymede-dev
 
 services:

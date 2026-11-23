@@ -10,7 +10,8 @@ export function escapeURL(str: string): string {
 // src values against the current page path, so root them at the origin first.
 export function mediaSrc(path: string): string {
   const rooted = path.startsWith("/") ? path : `/${path}`;
-  return `${env("NEXT_PUBLIC_CDN_URL") ?? ""}${escapeURL(rooted)}`;
+  const cdn = (env("NEXT_PUBLIC_CDN_URL") ?? "").replace(/\/+$/, "");
+  return `${cdn}${escapeURL(rooted)}`;
 }
 
 // saves an npm depedency - can't use the crypto API as that is not available over HTTP
