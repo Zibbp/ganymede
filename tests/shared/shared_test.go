@@ -1,10 +1,14 @@
 package tests_shared
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/riverqueue/river/rivertype"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRiverJobBelongsToArchive(t *testing.T) {
@@ -86,4 +90,29 @@ func TestRiverJobBlocksArchiveCompletion(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHlsPlaylistDuration(t *testing.T) {
+	t.Run("sums EXTINF entries", func(t *testing.T) {
+		dir := t.TempDir()
+		playlistPath := filepath.Join(dir, "video.m3u8")
+		require.NoError(t, os.WriteFile(playlistPath, []byte(
+			"#EXTM3U\n#EXTINF:10.000000,\nsegment0.m4s\n#EXTINF:9.5,\nsegment1.m4s\n",
+		), 0o600))
+
+		got, ok := hlsPlaylistDuration(playlistPath)
+		require.True(t, ok)
+		require.Equal(t, 19500*time.Millisecond, got)
+	})
+
+	t.Run("falls back to completed segments", func(t *testing.T) {
+		dir := t.TempDir()
+		playlistPath := filepath.Join(dir, "video.m3u8")
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "id_segment000000.m4s"), []byte("complete"), 0o600))
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "id_segment000001.m4s"), []byte("growing"), 0o600))
+
+		got, ok := hlsPlaylistDuration(playlistPath)
+		require.True(t, ok)
+		require.Equal(t, 10*time.Second, got)
+	})
 }

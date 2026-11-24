@@ -3,6 +3,7 @@ package tasks_worker
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -161,6 +162,11 @@ func (rc *RiverWorkerClient) Close() error {
 }
 
 func getPeriodicTasks() ([]periodicTask, error) {
+	// Tests trigger periodic jobs explicitly when needed.
+	if os.Getenv("TESTS_DISABLE_PERIODIC_JOBS") == "true" {
+		return nil, nil
+	}
+
 	env := config.GetEnvConfig()
 	midnightCron, err := cron.ParseStandard("0 0 * * *")
 	if err != nil {

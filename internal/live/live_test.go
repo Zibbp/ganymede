@@ -6,6 +6,7 @@ import (
 	"os"
 	osExec "os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -36,6 +37,25 @@ var (
 	TestArchiveTimeout      = 120 * time.Second
 )
 
+const (
+	liveCaptureMinimumDuration  = 15 * time.Second
+	liveCaptureStartupAllowance = 75 * time.Second
+)
+
+// configuredLiveCaptureDuration uses a short capture by default. TESTS_LIVE_CAPTURE_SECONDS overrides it.
+func configuredLiveCaptureDuration() time.Duration {
+	if value := os.Getenv("TESTS_LIVE_CAPTURE_SECONDS"); value != "" {
+		if seconds, err := strconv.Atoi(value); err == nil && seconds > 0 {
+			return time.Duration(seconds) * time.Second
+		}
+	}
+	return liveCaptureMinimumDuration
+}
+
+func configuredLiveCaptureTimeout() time.Duration {
+	return configuredLiveCaptureDuration() + liveCaptureStartupAllowance
+}
+
 // waitForWatchedChannelToStartArchiving waits for the watched channel to start archiving.
 func waitForWatchedChannelToStartArchiving(t *testing.T, app *server.Application, watchedChannelId uuid.UUID) error {
 	startTime := time.Now()
@@ -53,7 +73,7 @@ func waitForWatchedChannelToStartArchiving(t *testing.T, app *server.Application
 			return nil
 		}
 
-		time.Sleep(5 * time.Second) // Wait before checking again
+		time.Sleep(250 * time.Millisecond) // Wait before checking again
 	}
 }
 
@@ -128,12 +148,12 @@ func waitForQueueTaskStatus(t *testing.T, app *server.Application, queueID uuid.
 			return q, nil
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
 // Helper to assert VOD and queue item, stop archive, and check files
-func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo, stopArchive bool) {
+func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platform.LiveStreamInfo, stopArchive bool, expectChat bool) {
 	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).WithChannel().WithChapters().First(t.Context())
 	assert.NoError(t, err, "Failed to query VOD for live stream")
 	assert.NotNil(t, vod, "VOD should not be nil")
@@ -173,8 +193,15 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, vod.FileName, expectedFileName, "File name should match the expected storage template")
 
 	if stopArchive {
-		t.Logf("Waiting for live stream to archive")
-		time.Sleep(60 * time.Second)
+		t.Logf("Waiting for live stream to capture %s", configuredLiveCaptureDuration())
+		tests_shared.WaitForLiveCaptureDuration(
+			t,
+			app,
+			q.ID,
+			vod.TmpVideoDownloadPath,
+			configuredLiveCaptureDuration(),
+			configuredLiveCaptureTimeout(),
+		)
 
 		assert.FileExists(t, vod.TmpVideoDownloadPath, "Live HLS playlist should exist while archiving")
 
@@ -195,15 +222,22 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	assert.Equal(t, utils.Success, q.TaskVideoDownload)
 	assert.Equal(t, utils.Success, q.TaskVideoConvert)
 	assert.Equal(t, utils.Success, q.TaskVideoMove)
+	assert.Equal(t, expectChat, q.ArchiveChat)
+	assert.Equal(t, expectChat, q.RenderChat)
 
 	assert.FileExists(t, vod.ThumbnailPath)
 	assert.FileExists(t, vod.WebThumbnailPath)
 	assert.FileExists(t, vod.VideoPath)
-	assert.FileExists(t, vod.ChatPath)
-	assert.FileExists(t, vod.ChatVideoPath)
+	if expectChat {
+		assert.FileExists(t, vod.ChatPath)
+		assert.FileExists(t, vod.ChatVideoPath)
+		assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
+	} else {
+		assert.Empty(t, vod.ChatPath)
+		assert.Empty(t, vod.ChatVideoPath)
+	}
 	assert.NotEqual(t, 0, vod.StorageSizeBytes)
 	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Video file is not playable")
-	assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
 
 	// Live captures HLS temp but saves a single format in video_path:
 	// MP4 by default, HLS playlist when save_as_hls is set.
@@ -221,14 +255,12 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 	// Assert at least one chapter exists
 	assert.NotEmpty(t, vod.Edges.Chapters, "Expected at least one chapter to be present")
 
-	// Assert video is playable
-	assert.True(t, tests_shared.IsPlayableVideo(vod.VideoPath), "Video file is not playable")
-	assert.True(t, tests_shared.IsPlayableVideo(vod.ChatVideoPath), "Video file is not playable")
-
-	// Assert chat files is greater than 0 bytes
-	chatFileInfo, err := os.Stat(vod.ChatPath)
-	assert.NoError(t, err)
-	assert.Greater(t, chatFileInfo.Size(), int64(0), "Chat file should not be empty")
+	if expectChat {
+		// Assert chat files is greater than 0 bytes
+		chatFileInfo, err := os.Stat(vod.ChatPath)
+		assert.NoError(t, err)
+		assert.Greater(t, chatFileInfo.Size(), int64(0), "Chat file should not be empty")
+	}
 
 	// Assert info file is greater than 0 bytes
 	infoFileInfo, err := os.Stat(vod.InfoPath)
@@ -285,8 +317,15 @@ func assertAudioOnlyVodAndQueue(t *testing.T, app *server.Application, liveChann
 	assert.NoError(t, err, "Failed to query queue item for VOD")
 	assert.NotNil(t, q, "Queue item for VOD should not be nil")
 
-	t.Logf("Waiting for audio-only live stream to archive")
-	time.Sleep(60 * time.Second)
+	t.Logf("Waiting for audio-only live stream to capture %s", configuredLiveCaptureDuration())
+	tests_shared.WaitForLiveCaptureDuration(
+		t,
+		app,
+		q.ID,
+		vod.TmpVideoDownloadPath,
+		configuredLiveCaptureDuration(),
+		configuredLiveCaptureTimeout(),
+	)
 
 	assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
 	tests_shared.WaitForArchiveCompletion(t, app, vod.ID, TestArchiveTimeout)
@@ -364,7 +403,7 @@ func TestTwitchWatchedChannelLive(t *testing.T) {
 	}
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel, true)
+	assertVodAndQueue(t, app, liveChannel, true, true)
 }
 
 // TestTwitchWatchedChannelLiveAudioOnlyNoChat tests live archiving audio only without chat.
@@ -426,7 +465,7 @@ func TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes(t *testing.T) {
 			killMatched = true
 			break
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 	}
 	assert.True(t, killMatched, "Expected to kill at least one ffmpeg process for the live VOD")
 
@@ -445,7 +484,7 @@ func TestTwitchWatchedChannelLiveFFmpegKilledStillFinalizes(t *testing.T) {
 		if time.Now().After(deadline) {
 			t.Fatalf("expected post-process or move task to start after ffmpeg termination")
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
@@ -608,16 +647,16 @@ func TestTwitchWatchedChannelLiveCategoryRestriction(t *testing.T) {
 		DownloadArchives:      false,
 		DownloadHighlights:    false,
 		DownloadUploads:       false,
-		ArchiveChat:           true,
+		ArchiveChat:           false,
 		Resolution:            "best",
-		RenderChat:            true,
+		RenderChat:            false,
 		DownloadSubOnly:       false,
 		UpdateMetadataMinutes: 1,
 		Categories:            []string{liveChannel.GameName},
 	}
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel, true)
+	assertVodAndQueue(t, app, liveChannel, true, false)
 }
 
 // TestTwitchWatchedChannelLiveCategoryRestrictionStrict tests live archiving with matching category restrictions with strict category restriction enabled. The category is changed after the live stream archive starts causing it to stop archiving once the category no longer matches.
@@ -630,9 +669,9 @@ func TestTwitchWatchedChannelLiveCategoryRestrictionStrict(t *testing.T) {
 		DownloadArchives:      false,
 		DownloadHighlights:    false,
 		DownloadUploads:       false,
-		ArchiveChat:           true,
+		ArchiveChat:           false,
 		Resolution:            "best",
-		RenderChat:            true,
+		RenderChat:            false,
 		DownloadSubOnly:       false,
 		UpdateMetadataMinutes: 1,
 		ApplyCategoriesToLive: true,
@@ -643,18 +682,31 @@ func TestTwitchWatchedChannelLiveCategoryRestrictionStrict(t *testing.T) {
 
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
 
+	vod, err := app.Database.Client.Vod.Query().Where(entVod.ExtStreamID(liveChannel.ID)).Only(t.Context())
+	assert.NoError(t, err, "Failed to query VOD for live stream")
+	assert.NotNil(t, vod, "VOD should not be nil")
+	q, err := app.Database.Client.Queue.Query().Where(queue.HasVodWith(entVod.ID(vod.ID))).Only(t.Context())
+	assert.NoError(t, err, "Failed to query queue item for VOD")
+	assert.NotNil(t, q, "Queue item for VOD should not be nil")
+	tests_shared.WaitForLiveCaptureDuration(
+		t,
+		app,
+		q.ID,
+		vod.TmpVideoDownloadPath,
+		configuredLiveCaptureDuration(),
+		configuredLiveCaptureTimeout(),
+	)
+
 	// Change category to "TestCategory" causing the live archive to stop
 	liveInput.Categories = []string{"TestCategory"}
 	liveInput.ID = watchedChannel.ID
-	_, err := app.LiveService.UpdateLiveWatchedChannel(context.Background(), liveInput)
+	_, err = app.LiveService.UpdateLiveWatchedChannel(context.Background(), liveInput)
 	assert.NoError(t, err, "Failed to update watched channel with new category")
-
-	time.Sleep(15 * time.Second) // Let stream archive for a bit
 
 	// Run check live again
 	assert.NoError(t, app.TaskService.StartTask(t.Context(), "check_live"), "Failed to run check_live task")
 
-	assertVodAndQueue(t, app, liveChannel, false)
+	assertVodAndQueue(t, app, liveChannel, false, false)
 }
 
 // TestTwitchWatchedChannelBlacklistCategoryRestriction tests live archiving with a blacklisted category that prevents archiving
@@ -690,16 +742,16 @@ func TestTwitchWatchedChannelBlacklistCategoryRestrictionNoCategorySelected(t *t
 		DownloadArchives:      false,
 		DownloadHighlights:    false,
 		DownloadUploads:       false,
-		ArchiveChat:           true,
+		ArchiveChat:           false,
 		Resolution:            "720p",
-		RenderChat:            true,
+		RenderChat:            false,
 		DownloadSubOnly:       false,
 		ApplyCategoriesToLive: true,
 		BlacklistCategories:   true,
 	}
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, nil, nil)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel, true)
+	assertVodAndQueue(t, app, liveChannel, true, false)
 }
 
 // TestTwitchWatchedChannelTitleRegexFail tests live archiving with a title regex that does not match
@@ -739,9 +791,9 @@ func TestTwitchWatchedChannelTitleRegex(t *testing.T) {
 		DownloadArchives:      false,
 		DownloadHighlights:    false,
 		DownloadUploads:       false,
-		ArchiveChat:           true,
+		ArchiveChat:           false,
 		Resolution:            "best",
-		RenderChat:            true,
+		RenderChat:            false,
 		DownloadSubOnly:       false,
 		UpdateMetadataMinutes: 1,
 		TitleRegex: []ent.LiveTitleRegex{
@@ -759,5 +811,5 @@ func TestTwitchWatchedChannelTitleRegex(t *testing.T) {
 
 	watchedChannel := createWatchedChannel(t, app, liveInput, channel.ID, &customFolder, &customFile)
 	startAndWaitForArchiving(t, app, watchedChannel.ID, false)
-	assertVodAndQueue(t, app, liveChannel, true)
+	assertVodAndQueue(t, app, liveChannel, true, false)
 }

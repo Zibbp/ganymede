@@ -31,6 +31,9 @@ var (
 	TestPostgresPassword = "ganymede"
 )
 
+// testChatRenderArgs is faster for tests. Set TESTS_FULL_CHAT_RENDER=true to use production defaults.
+const testChatRenderArgs = "-h 1440 -w 340 --framerate 5 --font Inter --font-size 13 --bttv=false --ffz=false --stv=false"
+
 // setupPostgresTestContainer sets up a postgres container for testing
 func setupPostgresTestContainer(ctx context.Context) (*postgres.PostgresContainer, error) {
 	pgContainer, err := postgres.Run(ctx, "postgres:17-alpine",
@@ -70,6 +73,8 @@ func setupEnvironment(t *testing.T, postgresHost string, postgresPort string) {
 	// Set the environment variables specific to the test
 	assert.NoError(t, os.Setenv("TESTS_LOGGING", "true")) // Disable logging for tests
 	assert.NoError(t, os.Setenv("DEBUG", "true"))
+	// Tests trigger periodic jobs explicitly when needed.
+	assert.NoError(t, os.Setenv("TESTS_DISABLE_PERIODIC_JOBS", "true"))
 	assert.NoError(t, os.Setenv("DB_HOST", postgresHost))
 	assert.NoError(t, os.Setenv("DB_PORT", postgresPort))
 	assert.NoError(t, os.Setenv("DB_NAME", TestPostgresDatabase))
@@ -171,6 +176,9 @@ func setup(t *testing.T, startWorker bool) (*server.Application, error) {
 	// Set config to defaults
 	cfg := config.Get()
 	cfg.SetDefaults()
+	if os.Getenv("TESTS_FULL_CHAT_RENDER") != "true" {
+		cfg.Parameters.ChatRender = testChatRenderArgs
+	}
 	// Low-space behavior is tested explicitly.
 	cfg.Archive.StorageCheckEnabled = false
 	assert.NoError(t, config.UpdateConfig(cfg))
@@ -265,7 +273,7 @@ func SetupHTTP(t *testing.T) (*httpexpect.Expect, error) {
 	})
 
 	// Wait for the application to start
-	time.Sleep(5 * time.Second)
+	waitForHTTPReady(t, port, 30*time.Second)
 
 	e := httpexpect.WithConfig(httpexpect.Config{
 		BaseURL:  fmt.Sprintf("http://localhost:%d/api/v1", port),
@@ -297,6 +305,32 @@ func Cleanup(t *testing.T) {
 	assert.NoError(t, os.RemoveAll(os.Getenv("TEMP_DIR")))
 	assert.NoError(t, os.RemoveAll(os.Getenv("CONFIG_DIR")))
 	assert.NoError(t, os.RemoveAll(os.Getenv("LOGS_DIR")))
+}
+
+// waitForHTTPReady polls /health until the test server is ready.
+func waitForHTTPReady(t *testing.T, port int, timeout time.Duration) {
+	t.Helper()
+
+	client := &http.Client{Timeout: time.Second}
+	url := fmt.Sprintf("http://127.0.0.1:%d/health", port)
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for {
+		resp, err := client.Get(url)
+		if err == nil {
+			_ = resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return
+			}
+			lastErr = fmt.Errorf("health endpoint returned %s", resp.Status)
+		} else {
+			lastErr = err
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for test HTTP server: %v", lastErr)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 // getFreePort returns a free port on the host

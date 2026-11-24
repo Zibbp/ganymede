@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -33,7 +34,10 @@ var (
 	TestArchiveTimeout          = 500 * time.Second
 )
 
-const riverJobPageSize = 500
+const (
+	riverJobPageSize = 500
+	waitPollInterval = 250 * time.Millisecond
+)
 
 // update_stream_video_id is deliberately scheduled after a live archive has
 // finished. It enriches the completed VOD with its eventual platform ID, so it
@@ -107,7 +111,7 @@ func WaitForArchiveCompletion(t *testing.T, app *server.Application, videoId uui
 			}
 			t.Fatalf("timeout waiting for video %s to be archived: queue is still processing", videoId)
 		}
-		time.Sleep(time.Second)
+		time.Sleep(waitPollInterval)
 	}
 }
 
@@ -196,7 +200,7 @@ func WaitForArchiveCompletionAfterCrash(t *testing.T, app *server.Application, v
 		if time.Now().After(deadline) {
 			t.Fatalf("timeout waiting for crashed archive %s to complete", videoID)
 		}
-		time.Sleep(time.Second)
+		time.Sleep(waitPollInterval)
 	}
 }
 
@@ -221,7 +225,7 @@ func WaitForArchiveMetadataFinalization(t *testing.T, app *server.Application, v
 		if time.Now().After(deadline) {
 			t.Fatalf("timeout waiting for archive %s metadata finalization", videoID)
 		}
-		time.Sleep(time.Second)
+		time.Sleep(waitPollInterval)
 	}
 }
 
@@ -253,8 +257,66 @@ func WaitForRunningVideoDownload(t *testing.T, app *server.Application, queueID 
 	}
 }
 
+// WaitForLiveCaptureDuration waits until a live capture has enough HLS media.
+func WaitForLiveCaptureDuration(
+	t *testing.T,
+	app *server.Application,
+	queueID uuid.UUID,
+	playlistPath string,
+	minimumDuration time.Duration,
+	timeout time.Duration,
+) {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	for {
+		q, err := app.Database.Client.Queue.Get(t.Context(), queueID)
+		if err != nil {
+			t.Fatalf("query live archive queue: %v", err)
+		}
+		if q.TaskVideoDownload == utils.Running {
+			if duration, ok := hlsPlaylistDuration(playlistPath); ok && duration >= minimumDuration {
+				return
+			}
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timeout waiting for live capture to reach %s of media at %s", minimumDuration, playlistPath)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
 func isHLSPlaylistPath(mediaPath string) bool {
 	return strings.HasSuffix(mediaPath, ".m3u8")
+}
+
+// hlsPlaylistDuration returns the duration of completed HLS segments.
+func hlsPlaylistDuration(playlistPath string) (time.Duration, bool) {
+	if byts, err := os.ReadFile(playlistPath); err == nil {
+		var total time.Duration
+		for _, line := range strings.Split(string(byts), "\n") {
+			line = strings.TrimSpace(line)
+			if !strings.HasPrefix(line, "#EXTINF:") {
+				continue
+			}
+			value := strings.TrimSuffix(strings.TrimPrefix(line, "#EXTINF:"), ",")
+			seconds, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				continue
+			}
+			total += time.Duration(seconds * float64(time.Second))
+		}
+		if total > 0 {
+			return total, true
+		}
+	}
+
+	matches, err := filepath.Glob(filepath.Join(filepath.Dir(playlistPath), "*_segment*.m4s"))
+	if err != nil || len(matches) <= 1 {
+		return 0, false
+	}
+	// Live captures use ten-second segments; the newest file may still be open.
+	return time.Duration(len(matches)-1) * 10 * time.Second, true
 }
 
 // hlsPlaylistHasMedia reports whether an HLS capture has produced real media,
@@ -334,7 +396,7 @@ func WaitForCompletedArchiveRecovery(t *testing.T, app *server.Application, queu
 		if time.Now().After(deadline) {
 			t.Fatalf("timeout waiting for completed recovery job for queue %s", queueID)
 		}
-		time.Sleep(time.Second)
+		time.Sleep(waitPollInterval)
 	}
 }
 
