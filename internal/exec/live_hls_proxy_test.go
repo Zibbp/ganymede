@@ -930,6 +930,9 @@ func TestLiveHLSProxyKeepsProgramTimeOfOutstandingSegment(t *testing.T) {
 	response := getLiveHLSResource(t.Context(), proxyResourceURL(t, p, base.String(), "a.ts", "media"))
 	<-requested
 	rewrite("2026-11-22T20:00:02Z", "b.ts")
+	if _, err := p.rewritePlaylist([]byte("#EXTM3U\n#EXTINF:2.000,\na.ts\n"), base); err != nil {
+		t.Fatal(err)
+	}
 	close(release)
 	if res := awaitLiveHLSResponse(t, response); res.err != nil || res.status != http.StatusOK {
 		t.Fatalf("segment: status=%d err=%v", res.status, res.err)

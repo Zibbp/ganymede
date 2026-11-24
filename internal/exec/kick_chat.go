@@ -30,9 +30,23 @@ const (
 var kickEmoteTokenRe = regexp.MustCompile(`\[emote:(\d+):([^\]]*)\]`)
 
 type kickPusherFrame struct {
-	Event   string `json:"event"`
-	Data    string `json:"data"`
-	Channel string `json:"channel,omitempty"`
+	Event   string         `json:"event"`
+	Data    kickPusherData `json:"data"`
+	Channel string         `json:"channel,omitempty"`
+}
+
+// kickPusherData is an event payload, which Pusher sends either as a JSON
+// string (chat) or as a plain JSON value (errors).
+type kickPusherData string
+
+func (d *kickPusherData) UnmarshalJSON(raw []byte) error {
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		*d = kickPusherData(s)
+		return nil
+	}
+	*d = kickPusherData(raw)
+	return nil
 }
 
 type kickChatBadge struct {

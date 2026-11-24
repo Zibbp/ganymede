@@ -202,3 +202,16 @@ func TestEmbedKickChatAssetsFetchesOnlyUsedBadges(t *testing.T) {
 	assert.Contains(t, string(out), `"name":"used"`)
 	assert.Zero(t, unusedRequests.Load())
 }
+
+func TestKickPusherFrameDataForms(t *testing.T) {
+	t.Parallel()
+	for raw, want := range map[string]string{
+		`{"event":"e","data":"{\"id\":\"1\"}"}`: `{"id":"1"}`,
+		`{"event":"e","data":{"code":4009}}`:    `{"code":4009}`,
+		`{"event":"e"}`:                         "",
+	} {
+		var frame kickPusherFrame
+		require.NoError(t, json.Unmarshal([]byte(raw), &frame))
+		assert.Equal(t, want, string(frame.Data))
+	}
+}

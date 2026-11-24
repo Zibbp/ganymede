@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"net"
 	"net/http"
 	"net/url"
@@ -238,7 +237,11 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 			if p.segmentTimes == nil {
 				p.segmentTimes = make(map[string]time.Time, len(segmentTimes))
 			}
-			maps.Copy(p.segmentTimes, segmentTimes)
+			for uri, t := range segmentTimes {
+				if known := p.segmentTimes[uri]; known.IsZero() {
+					p.segmentTimes[uri] = t
+				}
+			}
 		}
 		p.mu.Unlock()
 	}

@@ -151,7 +151,7 @@ const AdminChannelsPage = () => {
               {
                 accessor: "platform",
                 title: t('columns.platform'),
-                render: ({ platform }) => (platform === "kick" ? "Kick" : "Twitch"),
+                render: ({ platform }) => ({ kick: "Kick", twitch: "Twitch", youtube: "YouTube" }[platform ?? "twitch"]),
               },
               {
                 accessor: "storage_size_bytes", title: t('columns.storageSize'), sortable: true,
