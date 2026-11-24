@@ -844,6 +844,7 @@ func TestLiveHLSProxyReportsFirstMediaProgramTime(t *testing.T) {
 		switch r.URL.Path {
 		case "/live.m3u8":
 			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:7\n"+
+				"#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\"\n"+
 				"#EXT-X-PROGRAM-DATE-TIME:2026-11-22T20:00:00.000Z\n#EXTINF:2.000,\nseg7.ts\n"+
 				"#EXTINF:2.000,\nseg8.ts\n")
 		default:
@@ -860,7 +861,7 @@ func TestLiveHLSProxyReportsFirstMediaProgramTime(t *testing.T) {
 	if playlist.err != nil || playlist.status != http.StatusOK {
 		t.Fatalf("playlist: status=%d err=%v", playlist.status, playlist.err)
 	}
-	for _, seg := range []string{"seg8.ts", "seg7.ts"} {
+	for _, seg := range []string{"key.bin", "seg8.ts", "seg7.ts"} {
 		res := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, upstream.URL+"/live.m3u8", seg, "media")))
 		if res.err != nil || res.status != http.StatusOK {
 			t.Fatalf("%s: status=%d err=%v", seg, res.status, res.err)
@@ -942,4 +943,19 @@ func TestLiveHLSProxyKeepsProgramTimeOfOutstandingSegment(t *testing.T) {
 	default:
 		t.Fatal("outstanding segment lost its program time")
 	}
+}
+
+func TestLiveHLSProxyIgnoresByteRangeProgramTimes(t *testing.T) {
+	t.Parallel()
+	p := testLiveHLSProxy(t)
+	p.setFirstMediaHook(func(programTime time.Time) { t.Errorf("ambiguous program time reported: %s", programTime) })
+	base, err := url.Parse("https://example.com/live.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := "#EXTM3U\n#EXT-X-PROGRAM-DATE-TIME:2026-11-22T20:00:00Z\n#EXTINF:2,\n#EXT-X-BYTERANGE:10@0\na.ts\n#EXTINF:2,\n#EXT-X-BYTERANGE:10@10\na.ts\n"
+	if _, err := p.rewritePlaylist([]byte(body), base); err != nil {
+		t.Fatal(err)
+	}
+	p.recordFirstMedia("https://example.com/a.ts")
 }

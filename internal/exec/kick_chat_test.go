@@ -142,6 +142,8 @@ func TestFetchKickAssets(t *testing.T) {
 			_, _ = w.Write(png)
 		case "/huge":
 			_, _ = w.Write(make([]byte, kickAssetMaxBytes+1))
+		case "/html":
+			_, _ = w.Write([]byte("<html>error</html>"))
 		case "/gone":
 			w.WriteHeader(http.StatusNotFound)
 		case "/flaky":
@@ -156,13 +158,47 @@ func TestFetchKickAssets(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	assets, err := fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/gone", srv.URL + "/huge", srv.URL + "/flaky"})
+	assets, err := fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/gone", srv.URL + "/huge", srv.URL + "/html", srv.URL + "/flaky"})
 	require.NoError(t, err)
 	assert.Contains(t, assets, srv.URL+"/ok")
 	assert.Contains(t, assets, srv.URL+"/flaky", "transient failure should be retried")
 	assert.NotContains(t, assets, srv.URL+"/gone")
 	assert.NotContains(t, assets, srv.URL+"/huge")
+	assert.NotContains(t, assets, srv.URL+"/html")
 
 	_, err = fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/down"})
 	assert.Error(t, err, "persistent transient failure must fail the embed")
+}
+
+func TestEmbedKickChatAssetsFetchesOnlyUsedBadges(t *testing.T) {
+	t.Parallel()
+	var unusedRequests atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/unused" {
+			unusedRequests.Add(1)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		_, _ = w.Write([]byte("\x89PNG\r\n\x1a\n"))
+	}))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	livePath, tdlPath, outPath := filepath.Join(dir, "live.json"), filepath.Join(dir, "tdl.json"), filepath.Join(dir, "out.json")
+	badge := func(name string) utils.LiveCommentBadge {
+		return utils.LiveCommentBadge{Name: name, Version: "1", Icons: []utils.LiveCommentBadgeIcon{{URL: srv.URL + "/" + name}}}
+	}
+	comments := make([]utils.LiveComment, 2)
+	comments[0].Author.Badges = []utils.LiveCommentBadge{badge("used")}
+	comments[1].Author.Badges = []utils.LiveCommentBadge{badge("unused")}
+	live, err := json.Marshal(comments)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(livePath, live, 0o600))
+	require.NoError(t, os.WriteFile(tdlPath, []byte(`{"comments":[{"message":{"user_badges":[{"_id":"used","version":"1"}]}}]}`), 0o600))
+
+	require.NoError(t, EmbedKickChatAssets(context.Background(), livePath, tdlPath, outPath))
+	out, err := os.ReadFile(outPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(out), `"name":"used"`)
+	assert.Zero(t, unusedRequests.Load())
 }

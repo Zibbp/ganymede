@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,6 +59,7 @@ func EmbedKickChatAssets(ctx context.Context, liveChatPath, tdlPath, outPath str
 					EmoticonID string `json:"emoticon_id"`
 				} `json:"emoticon"`
 			} `json:"fragments"`
+			UserBadges []utils.UserBadge `json:"user_badges"`
 		} `json:"message"`
 	}
 	if c, ok := doc["comments"]; ok {
@@ -66,8 +68,13 @@ func EmbedKickChatAssets(ctx context.Context, liveChatPath, tdlPath, outPath str
 		}
 	}
 
+	type badgeKey struct{ name, version string }
 	emoteNames := map[string]string{}
+	usedBadges := map[badgeKey]struct{}{}
 	for _, c := range comments {
+		for _, b := range c.Message.UserBadges {
+			usedBadges[badgeKey{b.ID, b.Version}] = struct{}{}
+		}
 		for _, f := range c.Message.Fragments {
 			if f.Emoticon != nil && f.Emoticon.EmoticonID != "" {
 				if _, seen := emoteNames[f.Emoticon.EmoticonID]; !seen {
@@ -78,7 +85,6 @@ func EmbedKickChatAssets(ctx context.Context, liveChatPath, tdlPath, outPath str
 	}
 	comments = nil
 
-	type badgeKey struct{ name, version string }
 	type badgeSource struct{ url, title string }
 	badgeURLs := map[badgeKey]badgeSource{}
 	if err := forEachLiveComment(liveChatPath, func(lc utils.LiveComment) {
@@ -86,11 +92,15 @@ func EmbedKickChatAssets(ctx context.Context, liveChatPath, tdlPath, outPath str
 			if len(b.Icons) == 0 || b.Icons[0].URL == "" {
 				continue
 			}
+			key := badgeKey{b.Name, fmt.Sprintf("%v", b.Version)}
+			if _, used := usedBadges[key]; !used {
+				continue
+			}
 			title := b.Title
 			if title == "" {
 				title = b.Name
 			}
-			badgeURLs[badgeKey{b.Name, fmt.Sprintf("%v", b.Version)}] = badgeSource{b.Icons[0].URL, title}
+			badgeURLs[key] = badgeSource{b.Icons[0].URL, title}
 		}
 	}); err != nil {
 		log.Warn().Err(err).Msg("could not read kick live chat for badge images; badges will not be embedded")
@@ -278,8 +288,14 @@ func fetchKickAsset(ctx context.Context, client *http.Client, u string) (kickAss
 	if len(data) > kickAssetMaxBytes {
 		return kickAsset{}, fmt.Errorf("larger than %d bytes: %w", kickAssetMaxBytes, errKickAssetGone)
 	}
+	cfg, _, decodeErr := image.DecodeConfig(bytes.NewReader(data))
+	// Formats Go cannot decode (SVG, AVIF) are accepted by content type.
+	if decodeErr != nil && !strings.HasPrefix(http.DetectContentType(data), "image/") &&
+		!strings.HasPrefix(resp.Header.Get("Content-Type"), "image/") {
+		return kickAsset{}, fmt.Errorf("not an image: %w", errKickAssetGone)
+	}
 	a := kickAsset{data: base64.StdEncoding.EncodeToString(data), width: kickDefaultEmoteSize, height: kickDefaultEmoteSize}
-	if cfg, _, err := image.DecodeConfig(bytes.NewReader(data)); err == nil && cfg.Width > 0 {
+	if decodeErr == nil && cfg.Width > 0 {
 		a.width, a.height = int64(cfg.Width), int64(cfg.Height)
 	}
 	return a, nil

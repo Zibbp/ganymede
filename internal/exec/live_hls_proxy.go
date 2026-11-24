@@ -62,7 +62,6 @@ type liveHLSProxy struct {
 	// onFirstMedia, when set, receives the EXT-X-PROGRAM-DATE-TIME of the first
 	// media segment served to FFmpeg, i.e. the wall clock of the first captured frame.
 	onFirstMedia   func(time.Time)
-	firstMediaOnce sync.Once
 	segmentTimes   map[string]time.Time
 	firstMediaSeen bool
 }
@@ -157,6 +156,7 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 	var segmentTimes map[string]time.Time
 	var programTime time.Time
 	var segmentDuration time.Duration
+	byteRange := false
 	for i, line := range lines {
 		line = strings.TrimSuffix(line, "\r")
 		if line == "" {
@@ -168,16 +168,25 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 				kind = "playlist"
 				playlistNext = false
 			}
-			if trackTimes && kind == "media" && !programTime.IsZero() {
+			if trackTimes && kind == "media" {
 				if ref, err := url.Parse(line); err == nil {
 					if segmentTimes == nil {
 						segmentTimes = make(map[string]time.Time)
 					}
-					segmentTimes[base.ResolveReference(ref).String()] = programTime
+					// The zero time marks a segment without a usable program time;
+					// byte ranges share a URI, so their time is ambiguous.
+					segmentTime := programTime
+					if byteRange {
+						segmentTime = time.Time{}
+					}
+					segmentTimes[base.ResolveReference(ref).String()] = segmentTime
 				}
-				programTime = programTime.Add(segmentDuration)
+				if !programTime.IsZero() {
+					programTime = programTime.Add(segmentDuration)
+				}
 			}
 			segmentDuration = 0
+			byteRange = false
 			rewritten, err := p.resourceURL(base, line, kind)
 			if err != nil {
 				return nil, err
@@ -195,6 +204,8 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 				if f, err := strconv.ParseFloat(strings.TrimSpace(seconds), 64); err == nil && f > 0 {
 					segmentDuration = time.Duration(f * float64(time.Second))
 				}
+			} else if strings.HasPrefix(line, "#EXT-X-BYTERANGE:") {
+				byteRange = true
 			}
 		}
 		kind := "media"
@@ -250,17 +261,20 @@ func (p *liveHLSProxy) wantsSegmentTimes() bool {
 // recordFirstMedia reports the program time of the first media segment FFmpeg
 // received, then stops tracking segment times.
 func (p *liveHLSProxy) recordFirstMedia(resource string) {
-	p.firstMediaOnce.Do(func() {
-		p.mu.Lock()
-		hook := p.onFirstMedia
-		t, ok := p.segmentTimes[resource]
-		p.segmentTimes = nil
-		p.firstMediaSeen = true
+	p.mu.Lock()
+	hook := p.onFirstMedia
+	t, isSegment := p.segmentTimes[resource]
+	// Keys and other auxiliary resources are not listed as segments.
+	if hook == nil || p.firstMediaSeen || !isSegment {
 		p.mu.Unlock()
-		if hook != nil && ok {
-			hook(t)
-		}
-	})
+		return
+	}
+	p.segmentTimes = nil
+	p.firstMediaSeen = true
+	p.mu.Unlock()
+	if !t.IsZero() {
+		hook(t)
+	}
 }
 
 func parseHLSProgramDateTime(value string) (time.Time, error) {
