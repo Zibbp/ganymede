@@ -206,13 +206,14 @@
     "header": "Керування каналами",
     "storageSizeDisclaimerText": "Розмір сховища не оновлюється миттєво. Фонова задача запускається кожну годину для перерахунку.",
     "createButton": "Створити канал",
-    "addTwitchChannel": "Додати Twitch канал",
+    "addChannel": "Додати канал",
     "searchPlaceholder": "Пошук каналів...",
     "columns": {
       "id": "ID",
       "externalId": "Зовнішній ID",
       "name": "Ім'я",
       "displayName": "Відображуване ім'я",
+      "platform": "Платформа",
       "videoRetention": "Термін зберігання відео",
       "createdAt": "Створено",
       "actions": "Дії",
@@ -556,6 +557,7 @@
     "imageUpdateButton": "Оновити зображення каналу з платформи",
     "addedNotification": "Канал додано",
     "platformChannelNameLabel": "Назва каналу на платформі",
+    "platformLabel": "Платформа",
     "addButton": "Додати канал"
   },
   "AdminQueueComponents": {

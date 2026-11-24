@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/channel"
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ChannelCreate is the builder for creating a Channel entity.
@@ -55,6 +56,34 @@ func (_c *ChannelCreate) SetDisplayName(v string) *ChannelCreate {
 // SetImagePath sets the "image_path" field.
 func (_c *ChannelCreate) SetImagePath(v string) *ChannelCreate {
 	_c.mutation.SetImagePath(v)
+	return _c
+}
+
+// SetPlatform sets the "platform" field.
+func (_c *ChannelCreate) SetPlatform(v utils.VideoPlatform) *ChannelCreate {
+	_c.mutation.SetPlatform(v)
+	return _c
+}
+
+// SetNillablePlatform sets the "platform" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillablePlatform(v *utils.VideoPlatform) *ChannelCreate {
+	if v != nil {
+		_c.SetPlatform(*v)
+	}
+	return _c
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (_c *ChannelCreate) SetExtLogin(v string) *ChannelCreate {
+	_c.mutation.SetExtLogin(v)
+	return _c
+}
+
+// SetNillableExtLogin sets the "ext_login" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillableExtLogin(v *string) *ChannelCreate {
+	if v != nil {
+		_c.SetExtLogin(*v)
+	}
 	return _c
 }
 
@@ -207,6 +236,10 @@ func (_c *ChannelCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *ChannelCreate) defaults() {
+	if _, ok := _c.mutation.Platform(); !ok {
+		v := channel.DefaultPlatform
+		_c.mutation.SetPlatform(v)
+	}
 	if _, ok := _c.mutation.Retention(); !ok {
 		v := channel.DefaultRetention
 		_c.mutation.SetRetention(v)
@@ -239,6 +272,14 @@ func (_c *ChannelCreate) check() error {
 	}
 	if _, ok := _c.mutation.ImagePath(); !ok {
 		return &ValidationError{Name: "image_path", err: errors.New(`ent: missing required field "Channel.image_path"`)}
+	}
+	if _, ok := _c.mutation.Platform(); !ok {
+		return &ValidationError{Name: "platform", err: errors.New(`ent: missing required field "Channel.platform"`)}
+	}
+	if v, ok := _c.mutation.Platform(); ok {
+		if err := channel.PlatformValidator(v); err != nil {
+			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Channel.platform": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Retention(); !ok {
 		return &ValidationError{Name: "retention", err: errors.New(`ent: missing required field "Channel.retention"`)}
@@ -303,6 +344,14 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
 		_node.ImagePath = value
+	}
+	if value, ok := _c.mutation.Platform(); ok {
+		_spec.SetField(channel.FieldPlatform, field.TypeEnum, value)
+		_node.Platform = value
+	}
+	if value, ok := _c.mutation.ExtLogin(); ok {
+		_spec.SetField(channel.FieldExtLogin, field.TypeString, value)
+		_node.ExtLogin = value
 	}
 	if value, ok := _c.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
@@ -459,6 +508,36 @@ func (u *ChannelUpsert) SetImagePath(v string) *ChannelUpsert {
 // UpdateImagePath sets the "image_path" field to the value that was provided on create.
 func (u *ChannelUpsert) UpdateImagePath() *ChannelUpsert {
 	u.SetExcluded(channel.FieldImagePath)
+	return u
+}
+
+// SetPlatform sets the "platform" field.
+func (u *ChannelUpsert) SetPlatform(v utils.VideoPlatform) *ChannelUpsert {
+	u.Set(channel.FieldPlatform, v)
+	return u
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdatePlatform() *ChannelUpsert {
+	u.SetExcluded(channel.FieldPlatform)
+	return u
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (u *ChannelUpsert) SetExtLogin(v string) *ChannelUpsert {
+	u.Set(channel.FieldExtLogin, v)
+	return u
+}
+
+// UpdateExtLogin sets the "ext_login" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateExtLogin() *ChannelUpsert {
+	u.SetExcluded(channel.FieldExtLogin)
+	return u
+}
+
+// ClearExtLogin clears the value of the "ext_login" field.
+func (u *ChannelUpsert) ClearExtLogin() *ChannelUpsert {
+	u.SetNull(channel.FieldExtLogin)
 	return u
 }
 
@@ -639,6 +718,41 @@ func (u *ChannelUpsertOne) SetImagePath(v string) *ChannelUpsertOne {
 func (u *ChannelUpsertOne) UpdateImagePath() *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
 		s.UpdateImagePath()
+	})
+}
+
+// SetPlatform sets the "platform" field.
+func (u *ChannelUpsertOne) SetPlatform(v utils.VideoPlatform) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetPlatform(v)
+	})
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdatePlatform() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdatePlatform()
+	})
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (u *ChannelUpsertOne) SetExtLogin(v string) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetExtLogin(v)
+	})
+}
+
+// UpdateExtLogin sets the "ext_login" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateExtLogin() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateExtLogin()
+	})
+}
+
+// ClearExtLogin clears the value of the "ext_login" field.
+func (u *ChannelUpsertOne) ClearExtLogin() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearExtLogin()
 	})
 }
 
@@ -997,6 +1111,41 @@ func (u *ChannelUpsertBulk) SetImagePath(v string) *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) UpdateImagePath() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.UpdateImagePath()
+	})
+}
+
+// SetPlatform sets the "platform" field.
+func (u *ChannelUpsertBulk) SetPlatform(v utils.VideoPlatform) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetPlatform(v)
+	})
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdatePlatform() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdatePlatform()
+	})
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (u *ChannelUpsertBulk) SetExtLogin(v string) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetExtLogin(v)
+	})
+}
+
+// UpdateExtLogin sets the "ext_login" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateExtLogin() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateExtLogin()
+	})
+}
+
+// ClearExtLogin clears the value of the "ext_login" field.
+func (u *ChannelUpsertBulk) ClearExtLogin() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearExtLogin()
 	})
 }
 

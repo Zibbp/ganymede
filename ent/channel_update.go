@@ -16,6 +16,7 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/predicate"
 	"github.com/zibbp/ganymede/ent/vod"
+	"github.com/zibbp/ganymede/internal/utils"
 )
 
 // ChannelUpdate is the builder for updating Channel entities.
@@ -90,6 +91,40 @@ func (_u *ChannelUpdate) SetNillableImagePath(v *string) *ChannelUpdate {
 	if v != nil {
 		_u.SetImagePath(*v)
 	}
+	return _u
+}
+
+// SetPlatform sets the "platform" field.
+func (_u *ChannelUpdate) SetPlatform(v utils.VideoPlatform) *ChannelUpdate {
+	_u.mutation.SetPlatform(v)
+	return _u
+}
+
+// SetNillablePlatform sets the "platform" field if the given value is not nil.
+func (_u *ChannelUpdate) SetNillablePlatform(v *utils.VideoPlatform) *ChannelUpdate {
+	if v != nil {
+		_u.SetPlatform(*v)
+	}
+	return _u
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (_u *ChannelUpdate) SetExtLogin(v string) *ChannelUpdate {
+	_u.mutation.SetExtLogin(v)
+	return _u
+}
+
+// SetNillableExtLogin sets the "ext_login" field if the given value is not nil.
+func (_u *ChannelUpdate) SetNillableExtLogin(v *string) *ChannelUpdate {
+	if v != nil {
+		_u.SetExtLogin(*v)
+	}
+	return _u
+}
+
+// ClearExtLogin clears the value of the "ext_login" field.
+func (_u *ChannelUpdate) ClearExtLogin() *ChannelUpdate {
+	_u.mutation.ClearExtLogin()
 	return _u
 }
 
@@ -274,7 +309,20 @@ func (_u *ChannelUpdate) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (_u *ChannelUpdate) check() error {
+	if v, ok := _u.mutation.Platform(); ok {
+		if err := channel.PlatformValidator(v); err != nil {
+			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Channel.platform": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -297,6 +345,15 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Platform(); ok {
+		_spec.SetField(channel.FieldPlatform, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.ExtLogin(); ok {
+		_spec.SetField(channel.FieldExtLogin, field.TypeString, value)
+	}
+	if _u.mutation.ExtLoginCleared() {
+		_spec.ClearField(channel.FieldExtLogin, field.TypeString)
 	}
 	if value, ok := _u.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)
@@ -488,6 +545,40 @@ func (_u *ChannelUpdateOne) SetNillableImagePath(v *string) *ChannelUpdateOne {
 	if v != nil {
 		_u.SetImagePath(*v)
 	}
+	return _u
+}
+
+// SetPlatform sets the "platform" field.
+func (_u *ChannelUpdateOne) SetPlatform(v utils.VideoPlatform) *ChannelUpdateOne {
+	_u.mutation.SetPlatform(v)
+	return _u
+}
+
+// SetNillablePlatform sets the "platform" field if the given value is not nil.
+func (_u *ChannelUpdateOne) SetNillablePlatform(v *utils.VideoPlatform) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetPlatform(*v)
+	}
+	return _u
+}
+
+// SetExtLogin sets the "ext_login" field.
+func (_u *ChannelUpdateOne) SetExtLogin(v string) *ChannelUpdateOne {
+	_u.mutation.SetExtLogin(v)
+	return _u
+}
+
+// SetNillableExtLogin sets the "ext_login" field if the given value is not nil.
+func (_u *ChannelUpdateOne) SetNillableExtLogin(v *string) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetExtLogin(*v)
+	}
+	return _u
+}
+
+// ClearExtLogin clears the value of the "ext_login" field.
+func (_u *ChannelUpdateOne) ClearExtLogin() *ChannelUpdateOne {
+	_u.mutation.ClearExtLogin()
 	return _u
 }
 
@@ -685,7 +776,20 @@ func (_u *ChannelUpdateOne) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (_u *ChannelUpdateOne) check() error {
+	if v, ok := _u.mutation.Platform(); ok {
+		if err := channel.PlatformValidator(v); err != nil {
+			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Channel.platform": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(channel.Table, channel.Columns, sqlgraph.NewFieldSpec(channel.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {
@@ -725,6 +829,15 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 	}
 	if value, ok := _u.mutation.ImagePath(); ok {
 		_spec.SetField(channel.FieldImagePath, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Platform(); ok {
+		_spec.SetField(channel.FieldPlatform, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.ExtLogin(); ok {
+		_spec.SetField(channel.FieldExtLogin, field.TypeString, value)
+	}
+	if _u.mutation.ExtLoginCleared() {
+		_spec.ClearField(channel.FieldExtLogin, field.TypeString)
 	}
 	if value, ok := _u.mutation.Retention(); ok {
 		_spec.SetField(channel.FieldRetention, field.TypeBool, value)

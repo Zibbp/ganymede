@@ -2,6 +2,7 @@ import { useRecordingStopping } from "@/app/store/useRecordingStopStore";
 import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { Video } from "@/app/hooks/useVideos";
 import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox, Skeleton } from "@mantine/core";
+import PlatformBadge from "@/app/components/platform/PlatformBadge";
 import Link from "next/link";
 import { useState } from "react";
 import dayjs from "dayjs";
@@ -175,12 +176,13 @@ const VideoCard = ({
       {showChannel && (
         <Group className={classes.channelFooter}>
           <Center>
-            <Avatar
-              src={mediaSrc(video.edges.channel.image_path)}
-              size={24}
-              radius="xl"
-              mr="xs"
-            />
+            <PlatformBadge platform={video.edges.channel.platform} size={11} offset={-2} style={{ marginRight: "var(--mantine-spacing-xs)" }}>
+              <Avatar
+                src={mediaSrc(video.edges.channel.image_path)}
+                size={24}
+                radius="xl"
+              />
+            </PlatformBadge>
             <Link href={`/channels/${video.edges.channel.name}`}>
               <Text fz="sm" inline>
                 {video.edges.channel.display_name}

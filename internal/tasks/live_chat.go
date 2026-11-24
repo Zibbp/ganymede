@@ -77,7 +77,11 @@ func (w DownloadLiveChatWorker) Work(ctx context.Context, job *river.Job[Downloa
 
 	// download chat
 	log.Info().Str("task_id", fmt.Sprintf("%d", job.ID)).Msgf("starting live chat download for %s", dbItems.Channel.Name)
-	err = exec.SaveTwitchLiveChatToFile(ctx, dbItems.Channel.Name, dbItems.Video.TmpLiveChatDownloadPath)
+	if dbItems.Channel.Platform == utils.PlatformKick {
+		err = exec.SaveKickLiveChatToFile(ctx, channelLogin(&dbItems.Channel), dbItems.Video.TmpLiveChatDownloadPath)
+	} else {
+		err = exec.SaveTwitchLiveChatToFile(ctx, dbItems.Channel.Name, dbItems.Video.TmpLiveChatDownloadPath)
+	}
 	remotelyCancelled := false
 	var cancellationErr error
 	if err != nil {
@@ -192,6 +196,13 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		return checkIfTasksAreDone(ctx, store.Client, job.Args.Input)
 	}
 
+	if dbItems.Channel.Platform == utils.PlatformKick {
+		if err := convertKickLiveChat(ctx, store, dbItems); err != nil {
+			return err
+		}
+		return finishConvertLiveChat(ctx, store, job, dbItems)
+	}
+
 	// get channel
 	platform, err := PlatformFromContext(ctx)
 	if err != nil {
@@ -260,6 +271,39 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 		return err
 	}
 
+	return finishConvertLiveChat(ctx, store, job, dbItems)
+}
+
+// convertKickLiveChat converts a recorded Kick chat to the archive chat format
+// and embeds its emote/badge images. Kick exposes no VOD lookup, so chat sync
+// anchors to the capture start (the Twitch fallback when no VOD is found).
+func convertKickLiveChat(ctx context.Context, store *database.Database, dbItems *GetDatabaseItemsResponse) error {
+	kickChannelID, err := platform.ParseKickChannelExtID(dbItems.Channel.ExtID)
+	if err != nil {
+		kickChannelID = 0
+	}
+	videoDurationSec, err := resolveLiveChatVideoDurationSec(ctx, store, dbItems)
+	if err != nil {
+		return err
+	}
+	reference := dbItems.Queue.ChatStart
+	if reference.IsZero() {
+		reference = dbItems.Video.CreatedAt
+	}
+	videoStartTime, err := persistLiveChatVideoStartTime(ctx, store, dbItems, reference)
+	if err != nil {
+		return err
+	}
+	if err := utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, kickChannelID, videoStartTime, "", videoDurationSec); err != nil {
+		return err
+	}
+	if err := exec.EmbedKickChatAssets(ctx, dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Video.TmpChatDownloadPath); err != nil {
+		return err
+	}
+	return utils.EnrichTwitchChatMetadataFromLiveChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpChatDownloadPath)
+}
+
+func finishConvertLiveChat(ctx context.Context, store *database.Database, job *river.Job[ConvertLiveChatArgs], dbItems *GetDatabaseItemsResponse) error {
 	next := []transactionalJob{}
 	if job.Args.Continue {
 		if dbItems.Queue.TaskChatRender != utils.Success {
@@ -268,7 +312,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 			next = append(next, transactionalJob{Args: &MoveChatArgs{Continue: true, Input: nextArchiveInput(job.Args.Input)}})
 		}
 	}
-	err = setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
+	err := setQueueStatusAndEnqueue(ctx, store, QueueStatusInput{
 		Status:  utils.Success,
 		QueueId: job.Args.Input.QueueId,
 		Task:    utils.TaskConvertChat,
@@ -375,7 +419,7 @@ func resolveLiveChatVideoStartTime(ctx context.Context, store *database.Database
 	// A manually stopped or interrupted capture has no final broadcast end yet.
 	// Waiting for its VOD cannot establish an end-based anchor while it is live.
 	if dbItems.Video.ExtStreamID != "" {
-		stream, err := platformService.GetLiveStream(ctx, dbItems.Channel.Name)
+		stream, err := platformService.GetLiveStream(ctx, channelLogin(&dbItems.Channel))
 		if err != nil {
 			if ctx.Err() != nil {
 				return time.Time{}, ctx.Err()

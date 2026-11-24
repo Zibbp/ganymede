@@ -338,10 +338,11 @@ type VideoPlatform string
 const (
 	PlatformTwitch  VideoPlatform = "twitch"
 	PlatformYoutube VideoPlatform = "youtube"
+	PlatformKick    VideoPlatform = "kick"
 )
 
 func (VideoPlatform) Values() (kinds []string) {
-	for _, s := range []VideoPlatform{PlatformTwitch, PlatformYoutube} {
+	for _, s := range []VideoPlatform{PlatformTwitch, PlatformYoutube, PlatformKick} {
 		kinds = append(kinds, string(s))
 	}
 	return

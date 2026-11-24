@@ -337,7 +337,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Archive a twitch channel (creates channel in database and download profile image)",
+                "description": "Archive a Twitch or Kick channel (creates channel in database and download profile image)",
                 "consumes": [
                     "application/json"
                 ],
@@ -347,7 +347,7 @@ const docTemplate = `{
                 "tags": [
                     "archive"
                 ],
-                "summary": "Archive a twitch channel",
+                "summary": "Archive a channel",
                 "parameters": [
                     {
                         "description": "Channel",
@@ -5671,6 +5671,10 @@ const docTemplate = `{
                     "description": "The external ID of the channel.",
                     "type": "string"
                 },
+                "ext_login": {
+                    "description": "The channel login/slug on the external platform when it differs from name.",
+                    "type": "string"
+                },
                 "id": {
                     "description": "ID of the ent.",
                     "type": "string"
@@ -5682,6 +5686,14 @@ const docTemplate = `{
                 "name": {
                     "description": "Name holds the value of the \"name\" field.",
                     "type": "string"
+                },
+                "platform": {
+                    "description": "The platform the channel belongs to.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.VideoPlatform"
+                        }
+                    ]
                 },
                 "retention": {
                     "description": "Retention holds the value of the \"retention\" field.",
@@ -6908,6 +6920,14 @@ const docTemplate = `{
             "properties": {
                 "channel_name": {
                     "type": "string"
+                },
+                "platform": {
+                    "description": "Platform is \"twitch\" (default) or \"kick\".",
+                    "type": "string",
+                    "enum": [
+                        "twitch",
+                        "kick"
+                    ]
                 }
             }
         },
@@ -7127,7 +7147,8 @@ const docTemplate = `{
                 "platform": {
                     "enum": [
                         "twitch",
-                        "youtube"
+                        "youtube",
+                        "kick"
                     ],
                     "allOf": [
                         {
@@ -8499,11 +8520,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "twitch",
-                "youtube"
+                "youtube",
+                "kick"
             ],
             "x-enum-varnames": [
                 "PlatformTwitch",
-                "PlatformYoutube"
+                "PlatformYoutube",
+                "PlatformKick"
             ]
         },
         "utils.VodQuality": {

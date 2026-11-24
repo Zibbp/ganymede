@@ -21,6 +21,7 @@ import (
 	"github.com/zibbp/ganymede/internal/storage"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	tasks_worker "github.com/zibbp/ganymede/internal/tasks/worker"
+	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 )
 
@@ -73,15 +74,24 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 		}
 	}
 
+	// Kick needs no credentials; it uses the public web API.
+	platforms := platform.NewRegistry(map[utils.VideoPlatform]platform.Platform{
+		utils.PlatformTwitch: platformTwitch,
+		utils.PlatformKick:   platform.NewKickConnection(),
+	})
+
 	chapterService := chapter.NewService(db)
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, riverClient, platformTwitch)
+	vodService.Platforms = platforms
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodsService := blocked.NewService(db)
 	notificationService := notification.NewService(db)
 	storageChecker := storage.NewService()
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodsService, riverClient, platformTwitch, storageChecker)
+	archiveService.Platforms = platforms
 	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService, notificationService)
+	liveService.Platforms = platforms
 
 	// initialize river
 	riverWorkerClient, err := tasks_worker.NewRiverWorker(tasks_worker.RiverWorkerInput{
@@ -91,6 +101,7 @@ func SetupWorker(ctx context.Context) (*tasks_worker.RiverWorkerClient, error) {
 		DB:                      db,
 		LiveService:             liveService,
 		PlatformTwitch:          platformTwitch,
+		Platforms:               platforms,
 		NotificationService:     notificationService,
 		Enqueuer:                riverClient,
 		StorageChecker:          storageChecker,

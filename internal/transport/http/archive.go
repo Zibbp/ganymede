@@ -19,6 +19,7 @@ import (
 
 type ArchiveService interface {
 	ArchiveChannel(ctx context.Context, channelName string) (*ent.Channel, error)
+	ArchiveKickChannel(ctx context.Context, slug string) (*ent.Channel, error)
 	ArchiveVideo(ctx context.Context, input archive.ArchiveVideoInput) (*archive.ArchiveResponse, error)
 	ArchiveLivestream(ctx context.Context, input archive.ArchiveVideoInput) (*archive.ArchiveResponse, error)
 	ArchiveClip(ctx context.Context, input archive.ArchiveClipInput) (*archive.ArchiveResponse, error)
@@ -26,6 +27,8 @@ type ArchiveService interface {
 
 type ArchiveChannelRequest struct {
 	ChannelName string `json:"channel_name" validate:"required"`
+	// Platform is "twitch" (default) or "kick".
+	Platform string `json:"platform" validate:"omitempty,oneof=twitch kick"`
 }
 type ArchiveVideoRequest struct {
 	VideoId     string           `json:"video_id"`
@@ -63,8 +66,8 @@ func CheckIDType(id string) string {
 
 // ArchiveChannel godoc
 //
-//	@Summary		Archive a twitch channel
-//	@Description	Archive a twitch channel (creates channel in database and download profile image)
+//	@Summary		Archive a channel
+//	@Description	Archive a Twitch or Kick channel (creates channel in database and download profile image)
 //	@Tags			archive
 //	@Accept			json
 //	@Produce		json
@@ -81,6 +84,13 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 	}
 	if err := c.Validate(body); err != nil {
 		return ErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+	if body.Platform == string(utils.PlatformKick) {
+		channel, err := h.Service.ArchiveService.ArchiveKickChannel(c.Request().Context(), body.ChannelName)
+		if err != nil {
+			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		}
+		return SuccessResponse(c, channel, "kick channel created")
 	}
 	channel, err := h.Service.ArchiveService.ArchiveChannel(c.Request().Context(), body.ChannelName)
 	if err != nil {

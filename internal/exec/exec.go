@@ -326,7 +326,9 @@ func DownloadTwitchVideo(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
-func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool) error {
+// onCaptureStart, if non-nil, receives the stream's program date-time of the
+// first captured segment (Kick only).
+func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Channel, startChat chan bool, onCaptureStart func(time.Time)) error {
 	video.Edges.Channel = &channel
 	env := config.GetEnvConfig()
 	monitorStalls := !env.DisableLiveArchiveStallCheck
@@ -359,7 +361,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 	twitchURL := utils.CreateTwitchURL(video.ExtID, video.Type, channel.Name)
 
 	// Handle proxy setting
-	proxyEnabled := config.Get().Livestream.ProxyEnabled
+	// Twitch HLS proxies do not apply to other platforms.
+	isKick := channel.Platform == utils.PlatformKick
+	proxyEnabled := config.Get().Livestream.ProxyEnabled && !isKick
 	whitelistedChannels := config.Get().Livestream.ProxyWhitelist // list of channels that are whitelisted from using proxy
 	if proxyEnabled {
 		if utils.Contains(whitelistedChannels, channel.Name) {
@@ -390,7 +394,13 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		}
 	}
 
-	if !proxyFound {
+	if !proxyFound && isKick {
+		kc := platform.NewKickConnection()
+		masterPlaylist, err = kc.GetLiveMasterPlaylist(ctx, platform.ChannelLogin(channel.Name, channel.ExtLogin))
+		if err != nil {
+			return fmt.Errorf("failed to get kick stream: %w", err)
+		}
+	} else if !proxyFound {
 		tc := &platform.TwitchConnection{}
 		masterPlaylist, err = tc.GetStream(ctx, channel.Name)
 		if err != nil {
@@ -429,6 +439,9 @@ func DownloadTwitchLiveVideo(ctx context.Context, video ent.Vod, channel ent.Cha
 		return err
 	}
 	defer recoveryProxy.Close()
+	if isKick && onCaptureStart != nil {
+		recoveryProxy.setFirstMediaHook(onCaptureStart)
+	}
 	inputURI, err := recoveryProxy.playlistURL(qualitiesURI[closestQuality])
 	if err != nil {
 		return fmt.Errorf("prepare live HLS source: %w", err)

@@ -880,3 +880,20 @@ func (w UpdateChannelStorageUsageWorker) Work(ctx context.Context, job *river.Jo
 	logger.Info().Msg("task completed")
 	return nil
 }
+
+// PlatformForChannel returns the platform implementation that owns channel.
+func PlatformForChannel(ctx context.Context, channel *ent.Channel) (platform.Platform, error) {
+	if channel == nil || channel.Platform == "" || channel.Platform == utils.PlatformTwitch {
+		return PlatformFromContext(ctx)
+	}
+	platforms, ok := ctx.Value(tasks_shared.PlatformsKey).(platform.Registry)
+	if !ok {
+		return nil, errors.New("platform registry not found in context")
+	}
+	return platforms.Get(channel.Platform)
+}
+
+// channelLogin returns the platform login used for API calls.
+func channelLogin(channel *ent.Channel) string {
+	return platform.ChannelLogin(channel.Name, channel.ExtLogin)
+}

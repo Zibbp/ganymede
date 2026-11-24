@@ -61,7 +61,7 @@ type Viewable string
 
 func (s *Service) CheckVodWatchedChannels(ctx context.Context, logger zerolog.Logger) error {
 	// Get channels from DB
-	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true)).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
+	channels, err := s.Store.Client.Live.Query().Where(live.WatchVod(true), live.HasChannelWith(channel.PlatformEQ(utils.PlatformTwitch))).WithChannel().WithCategories().WithTitleRegex(func(ltrq *ent.LiveTitleRegexQuery) {
 		ltrq.Where(livetitleregex.ApplyToVideosEQ(true))
 	}).All(context.Background())
 	if err != nil {

@@ -837,3 +837,128 @@ func TestLiveHLSProxyBoundsChunkedPlaylist(t *testing.T) {
 		t.Fatalf("oversized chunked playlist: %+v, attempts=%d", result, attempts.Load())
 	}
 }
+
+func TestLiveHLSProxyReportsFirstMediaProgramTime(t *testing.T) {
+	t.Parallel()
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/live.m3u8":
+			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:7\n"+
+				"#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\"\n"+
+				"#EXT-X-PROGRAM-DATE-TIME:2026-11-22T20:00:00.000Z\n#EXTINF:2.000,\nseg7.ts\n"+
+				"#EXTINF:2.000,\nseg8.ts\n")
+		default:
+			_, _ = io.WriteString(w, "media")
+		}
+	}))
+	defer upstream.Close()
+
+	p := testLiveHLSProxy(t)
+	got := make(chan time.Time, 2)
+	p.setFirstMediaHook(func(t time.Time) { got <- t })
+
+	playlist := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, upstream.URL+"/live.m3u8", upstream.URL+"/live.m3u8", "playlist")))
+	if playlist.err != nil || playlist.status != http.StatusOK {
+		t.Fatalf("playlist: status=%d err=%v", playlist.status, playlist.err)
+	}
+	for _, seg := range []string{"key.bin", "seg8.ts", "seg7.ts"} {
+		res := awaitLiveHLSResponse(t, getLiveHLSResource(t.Context(), proxyResourceURL(t, p, upstream.URL+"/live.m3u8", seg, "media")))
+		if res.err != nil || res.status != http.StatusOK {
+			t.Fatalf("%s: status=%d err=%v", seg, res.status, res.err)
+		}
+	}
+
+	want := time.Date(2026, 11, 22, 20, 0, 2, 0, time.UTC)
+	select {
+	case first := <-got:
+		if !first.Equal(want) {
+			t.Fatalf("first media program time = %s, want %s", first, want)
+		}
+	default:
+		t.Fatal("first media hook was not called")
+	}
+	select {
+	case extra := <-got:
+		t.Fatalf("hook called more than once (%s)", extra)
+	default:
+	}
+}
+
+func TestParseHLSProgramDateTime(t *testing.T) {
+	t.Parallel()
+	for _, value := range []string{"2026-11-22T20:00:00.123Z", "2026-11-22T21:00:00.123+0100", "2026-11-22T21:00:00.123+01:00"} {
+		got, err := parseHLSProgramDateTime(value)
+		if err != nil {
+			t.Fatalf("%s: %v", value, err)
+		}
+		if want := time.Date(2026, 11, 22, 20, 0, 0, 123e6, time.UTC); !got.Equal(want) {
+			t.Fatalf("%s: got %s want %s", value, got, want)
+		}
+	}
+	if _, err := parseHLSProgramDateTime("garbage"); err == nil {
+		t.Fatal("expected error for invalid value")
+	}
+}
+
+func TestLiveHLSProxyKeepsProgramTimeOfOutstandingSegment(t *testing.T) {
+	t.Parallel()
+	p := testLiveHLSProxy(t)
+	got := make(chan time.Time, 1)
+	p.setFirstMediaHook(func(programTime time.Time) { got <- programTime })
+
+	requested := make(chan struct{})
+	release := make(chan struct{})
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(requested)
+		<-release
+		_, _ = io.WriteString(w, "media")
+	}))
+	defer upstream.Close()
+	base, err := url.Parse(upstream.URL + "/live.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rewrite := func(programTime, segment string) {
+		t.Helper()
+		body := "#EXTM3U\n#EXT-X-PROGRAM-DATE-TIME:" + programTime + "\n#EXTINF:2.000,\n" + segment + "\n"
+		if _, err := p.rewritePlaylist([]byte(body), base); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	rewrite("2026-11-22T20:00:00Z", "a.ts")
+	response := getLiveHLSResource(t.Context(), proxyResourceURL(t, p, base.String(), "a.ts", "media"))
+	<-requested
+	rewrite("2026-11-22T20:00:02Z", "b.ts")
+	if _, err := p.rewritePlaylist([]byte("#EXTM3U\n#EXTINF:2.000,\na.ts\n"), base); err != nil {
+		t.Fatal(err)
+	}
+	close(release)
+	if res := awaitLiveHLSResponse(t, response); res.err != nil || res.status != http.StatusOK {
+		t.Fatalf("segment: status=%d err=%v", res.status, res.err)
+	}
+
+	select {
+	case programTime := <-got:
+		if want := time.Date(2026, 11, 22, 20, 0, 0, 0, time.UTC); !programTime.Equal(want) {
+			t.Fatalf("program time = %s, want %s", programTime, want)
+		}
+	default:
+		t.Fatal("outstanding segment lost its program time")
+	}
+}
+
+func TestLiveHLSProxyIgnoresByteRangeProgramTimes(t *testing.T) {
+	t.Parallel()
+	p := testLiveHLSProxy(t)
+	p.setFirstMediaHook(func(programTime time.Time) { t.Errorf("ambiguous program time reported: %s", programTime) })
+	base, err := url.Parse("https://example.com/live.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := "#EXTM3U\n#EXT-X-PROGRAM-DATE-TIME:2026-11-22T20:00:00Z\n#EXTINF:2,\n#EXT-X-BYTERANGE:10@0\na.ts\n#EXTINF:2,\n#EXT-X-BYTERANGE:10@10\na.ts\n"
+	if _, err := p.rewritePlaylist([]byte(body), base); err != nil {
+		t.Fatal(err)
+	}
+	p.recordFirstMedia("https://example.com/a.ts")
+}

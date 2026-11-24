@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { mediaSrc } from "@/app/util/util";
 import classes from "./Card.module.css"
+import PlatformBadge from "@/app/components/platform/PlatformBadge";
 
 type Props = {
   channel: Channel
@@ -24,6 +25,7 @@ const ChannelCard = ({ channel }: Props) => {
     <div>
       <Link href={"/channels/" + channel.name} className={classes.link}>
         <Card key={channel.id} p="md" radius="md" >
+          <PlatformBadge platform={channel.platform} size={34} offset={8} style={{ display: "block" }}>
           <AspectRatio ratio={300 / 300}>
             <Skeleton visible={!imageLoaded} animate radius="md">
               <Image
@@ -35,6 +37,7 @@ const ChannelCard = ({ channel }: Props) => {
               />
             </Skeleton>
           </AspectRatio>
+          </PlatformBadge>
           <Center mt={5}>
             <Title order={3} mt={5}>
               {channel.display_name}

@@ -33,6 +33,7 @@ import (
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
 	"github.com/zibbp/ganymede/internal/user"
+	"github.com/zibbp/ganymede/internal/utils"
 	"github.com/zibbp/ganymede/internal/vod"
 	"riverqueue.com/riverui"
 )
@@ -139,9 +140,16 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		}
 	}
 
+	// Kick needs no credentials; it uses the public web API.
+	platforms := platform.NewRegistry(map[utils.VideoPlatform]platform.Platform{
+		utils.PlatformTwitch: platformTwitch,
+		utils.PlatformKick:   platform.NewKickConnection(),
+	})
+
 	authService := auth.NewService(db, &envConfig)
 	channelService := channel.NewService(db, platformTwitch)
 	vodService := vod.NewService(db, riverClient, platformTwitch)
+	vodService.Platforms = platforms
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
 	notificationService := notification.NewService(db)
@@ -155,10 +163,12 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	}
 
 	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch, storageChecker)
+	archiveService.Platforms = platforms
 	adminService := admin.NewService(db, storageChecker)
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
 	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService, notificationService)
+	liveService.Platforms = platforms
 	if err := liveService.ResetLiveStatus(ctx); err != nil {
 		return nil, err
 	}

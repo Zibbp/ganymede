@@ -57,6 +57,12 @@ type liveHLSProxy struct {
 	expireOnce    sync.Once
 	expiryContext context.Context
 	cancelExpiry  context.CancelFunc
+
+	// onFirstMedia, when set, receives the EXT-X-PROGRAM-DATE-TIME of the first
+	// media segment served to FFmpeg, i.e. the wall clock of the first captured frame.
+	onFirstMedia   func(time.Time)
+	segmentTimes   map[string]time.Time
+	firstMediaSeen bool
 }
 
 func newLiveHLSProxy(ctx context.Context, videoID, channel string, retryWindow, retryInterval, readTimeout time.Duration) (*liveHLSProxy, error) {
@@ -145,6 +151,11 @@ func (p *liveHLSProxy) playlistURL(raw string) (string, error) {
 func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, error) {
 	lines := strings.Split(string(body), "\n")
 	playlistNext := false
+	trackTimes := p.wantsSegmentTimes()
+	var segmentTimes map[string]time.Time
+	var programTime time.Time
+	var segmentDuration time.Duration
+	byteRange := false
 	for i, line := range lines {
 		line = strings.TrimSuffix(line, "\r")
 		if line == "" {
@@ -156,12 +167,45 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 				kind = "playlist"
 				playlistNext = false
 			}
+			if trackTimes && kind == "media" {
+				if ref, err := url.Parse(line); err == nil {
+					if segmentTimes == nil {
+						segmentTimes = make(map[string]time.Time)
+					}
+					// The zero time marks a segment without a usable program time;
+					// byte ranges share a URI, so their time is ambiguous.
+					segmentTime := programTime
+					if byteRange {
+						segmentTime = time.Time{}
+					}
+					segmentTimes[base.ResolveReference(ref).String()] = segmentTime
+				}
+				if !programTime.IsZero() {
+					programTime = programTime.Add(segmentDuration)
+				}
+			}
+			segmentDuration = 0
+			byteRange = false
 			rewritten, err := p.resourceURL(base, line, kind)
 			if err != nil {
 				return nil, err
 			}
 			lines[i] = rewritten
 			continue
+		}
+		if trackTimes {
+			if value, ok := strings.CutPrefix(line, "#EXT-X-PROGRAM-DATE-TIME:"); ok {
+				if t, err := parseHLSProgramDateTime(value); err == nil {
+					programTime = t
+				}
+			} else if value, ok := strings.CutPrefix(line, "#EXTINF:"); ok {
+				seconds, _, _ := strings.Cut(value, ",")
+				if f, err := strconv.ParseFloat(strings.TrimSpace(seconds), 64); err == nil && f > 0 {
+					segmentDuration = time.Duration(f * float64(time.Second))
+				}
+			} else if strings.HasPrefix(line, "#EXT-X-BYTERANGE:") {
+				byteRange = true
+			}
 		}
 		kind := "media"
 		if strings.HasPrefix(line, "#EXT-X-MAP:") {
@@ -185,7 +229,65 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 			return nil, rewriteErr
 		}
 	}
+	if segmentTimes != nil {
+		p.mu.Lock()
+		if !p.firstMediaSeen {
+			// Keep earlier entries: a refresh may drop a segment that FFmpeg is
+			// still downloading.
+			if p.segmentTimes == nil {
+				p.segmentTimes = make(map[string]time.Time, len(segmentTimes))
+			}
+			for uri, t := range segmentTimes {
+				if known := p.segmentTimes[uri]; known.IsZero() {
+					p.segmentTimes[uri] = t
+				}
+			}
+		}
+		p.mu.Unlock()
+	}
 	return []byte(strings.Join(lines, "\n")), nil
+}
+
+// setFirstMediaHook must be called before FFmpeg starts requesting media.
+func (p *liveHLSProxy) setFirstMediaHook(fn func(time.Time)) {
+	p.mu.Lock()
+	p.onFirstMedia = fn
+	p.mu.Unlock()
+}
+
+func (p *liveHLSProxy) wantsSegmentTimes() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.onFirstMedia != nil && !p.firstMediaSeen
+}
+
+// recordFirstMedia reports the program time of the first media segment FFmpeg
+// received, then stops tracking segment times.
+func (p *liveHLSProxy) recordFirstMedia(resource string) {
+	p.mu.Lock()
+	hook := p.onFirstMedia
+	t, isSegment := p.segmentTimes[resource]
+	// Keys and other auxiliary resources are not listed as segments.
+	if hook == nil || p.firstMediaSeen || !isSegment {
+		p.mu.Unlock()
+		return
+	}
+	p.segmentTimes = nil
+	p.firstMediaSeen = true
+	p.mu.Unlock()
+	if !t.IsZero() {
+		hook(t)
+	}
+}
+
+func parseHLSProgramDateTime(value string) (time.Time, error) {
+	value = strings.TrimSpace(value)
+	for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05.999999999Z0700"} {
+		if t, err := time.Parse(layout, value); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("invalid EXT-X-PROGRAM-DATE-TIME %q", value)
 }
 
 func (p *liveHLSProxy) failureDeadline(resource string) time.Time {
@@ -319,6 +421,9 @@ func (p *liveHLSProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 					status = http.StatusOK
 				} else {
+					if kind == "media" {
+						p.recordFirstMedia(u.String())
+					}
 					copyLiveHLSHeaders(w.Header(), resp.Header)
 					w.Header().Set("Content-Type", "application/octet-stream")
 				}

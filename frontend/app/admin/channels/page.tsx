@@ -118,7 +118,7 @@ const AdminChannelsPage = () => {
               onClick={openPlatformChannelDrawer}
               color="violet"
             >
-              {t('addTwitchChannel')}
+              {t('addChannel')}
             </Button>
           </Box>
         </Group>
@@ -148,6 +148,11 @@ const AdminChannelsPage = () => {
               { accessor: "ext_id", title: t('columns.externalId') },
               { accessor: "name", title: t('columns.name'), sortable: true },
               { accessor: "display_name", title: t('columns.displayName'), sortable: true },
+              {
+                accessor: "platform",
+                title: t('columns.platform'),
+                render: ({ platform }) => ({ kick: "Kick", twitch: "Twitch", youtube: "YouTube" }[platform ?? "twitch"]),
+              },
               {
                 accessor: "storage_size_bytes", title: t('columns.storageSize'), sortable: true,
                 render: ({ storage_size_bytes }) => {

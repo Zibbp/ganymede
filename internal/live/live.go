@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"regexp"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ type Service struct {
 	Store               *database.Database
 	ArchiveService      *archive.Service
 	PlatformTwitch      platform.Platform
+	Platforms           platform.Registry
 	ChapterService      *chapter.Service
 	QueueService        *queue.Service
 	NotificationService *notification.Service
@@ -342,6 +344,9 @@ func (s *Service) Check(ctx context.Context) error {
 	for _, lwc := range liveWatchedChannelsSplit {
 		channelIDs := make([]string, 0, len(lwc))
 		for _, lwc := range lwc {
+			if lwc.Edges.Channel.Platform == utils.PlatformKick {
+				continue
+			}
 			if lwc.Edges.Channel.ExtID == "" {
 				log.Warn().
 					Str("channel_id", lwc.Edges.Channel.ID.String()).
@@ -368,11 +373,26 @@ func (s *Service) Check(ctx context.Context) error {
 		streams = append(streams, twitchStreams...)
 	}
 
+	kickStreams, kickLookupFailed := s.checkKickLiveStreams(ctx, liveWatchedChannels)
+
 	// check if live stream is online
 OUTER:
 	for _, lwc := range liveWatchedChannels {
+		// A failed Kick lookup is not evidence the channel went offline.
+		if kickLookupFailed[lwc.ID] {
+			continue
+		}
+		channelPlatform := lwc.Edges.Channel.Platform
+		if channelPlatform == "" {
+			channelPlatform = utils.PlatformTwitch
+		}
 		// Check if LWC is in twitchStreams.Data
-		stream := channelInLiveStreamInfo(lwc.Edges.Channel.ExtID, streams)
+		// Logins and IDs are only unique within a platform.
+		platformStreams := streams
+		if channelPlatform == utils.PlatformKick {
+			platformStreams = kickStreams
+		}
+		stream := channelInLiveStreamInfo(lwc.Edges.Channel.ExtID, platformStreams)
 		if len(stream.ID) > 0 {
 			// Build map of channel watched categories
 			watchedChannelCategories := make(map[string]struct{}, len(lwc.Edges.Categories))
@@ -389,7 +409,7 @@ OUTER:
 				if _, found := watchedChannelCategories[strings.ToLower(stream.GameName)]; !found {
 					log.Info().Str("channel", lwc.Edges.Channel.Name).Str("category", stream.GameName).Str("category_restrictions", strings.Join(categoryNamesForLog, ", ")).Msg("stream does not match selected categories, stopping archive")
 					// Stop archive
-					video, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
+					video, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID), entVod.PlatformEQ(channelPlatform)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 					if err != nil {
 						log.Error().Err(err).Msg("error getting video")
 						continue OUTER
@@ -407,7 +427,7 @@ OUTER:
 			}
 
 			// Run chapter update, this needs to be done before additional checks to cover the case where a stream is being archived but fails restriction checks
-			err = s.updateLiveStreamArchiveChapter(stream)
+			err = s.updateLiveStreamArchiveChapter(stream, channelPlatform)
 			if err != nil {
 				log.Error().Err(err).Msg("error updating live stream archive chapter")
 			}
@@ -462,7 +482,7 @@ OUTER:
 				// Only queued or running captures prevent a new recording; finalization may overlap.
 				queueItems, err := s.Store.Client.Queue.Query().Where(entQueue.HasVodWith(
 					entVod.HasChannelWith(channel.ID(lwc.Edges.Channel.ID)),
-					entVod.PlatformEQ(utils.PlatformTwitch),
+					entVod.PlatformEQ(channelPlatform),
 					entVod.StatusIn(utils.ArchiveQueued, utils.ArchiveRunning),
 				)).WithVod().All(ctx)
 				if err != nil {
@@ -475,11 +495,17 @@ OUTER:
 					}
 				}
 
-				// Check if the stream is really live or if the API is just slow to update (GH#760)
-				// This is behind an experimental flag
-				if config.Get().Experimental.BetterLiveStreamDetectionAndCleanup {
+				// Check if the stream is really live or if the API is just slow to update (GH#760).
+				// Experimental for Twitch; always on for Kick, whose channel API keeps
+				// reporting a stream as live for a while after it ends.
+				if config.Get().Experimental.BetterLiveStreamDetectionAndCleanup || channelPlatform == utils.PlatformKick {
 					log.Debug().Msgf("checking if %s is really live", lwc.Edges.Channel.Name)
-					isLive, err := s.PlatformTwitch.CheckIfStreamIsLive(ctx, lwc.Edges.Channel.Name)
+					livePlatform, err := s.Platforms.Get(channelPlatform)
+					if err != nil {
+						log.Error().Err(err).Msg("error selecting platform for live check")
+						continue OUTER
+					}
+					isLive, err := livePlatform.CheckIfStreamIsLive(ctx, platform.ChannelLogin(lwc.Edges.Channel.Name, lwc.Edges.Channel.ExtLogin))
 					if err != nil {
 						log.Error().Err(err).Msg("error checking if stream is live")
 						continue OUTER
@@ -520,7 +546,7 @@ OUTER:
 
 				// Notification
 				// Fetch vod for notification and chapter creation
-				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
+				vod, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID), entVod.PlatformEQ(channelPlatform)).WithChannel().WithQueue().Order(ent.Desc(entVod.FieldCreatedAt)).First(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("error getting vod")
 					continue
@@ -575,9 +601,9 @@ func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.
 }
 
 // updateLiveStreamArchiveChapter updates the last chapter of a live stream archive if the category has changed.
-func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo) error {
+func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo, videoPlatform utils.VideoPlatform) error {
 	// Get video
-	video, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID)).Order(ent.Desc(entVod.FieldCreatedAt)).First(context.Background())
+	video, err := s.Store.Client.Vod.Query().Where(entVod.ExtStreamID(stream.ID), entVod.PlatformEQ(videoPlatform)).Order(ent.Desc(entVod.FieldCreatedAt)).First(context.Background())
 	if err != nil {
 		if _, ok := err.(*ent.NotFoundError); ok {
 			// Video not found, likely not archived yet because of restrictions
@@ -642,4 +668,69 @@ func (s *Service) updateLiveStreamArchiveChapter(stream platform.LiveStreamInfo)
 
 	log.Info().Msgf("updated chapter %s -> %s for live stream %s", lastChapter.Title, stream.GameName, video.ID)
 	return nil
+}
+
+const (
+	// kickLiveCheckDelay spaces per-channel Kick lookups to stay under Kick's
+	// (unofficial API) rate limits.
+	kickLiveCheckDelay = 500 * time.Millisecond
+	// kickLiveCheckBudget caps the whole Kick pass; channels not checked in
+	// time keep their current live state until the next run.
+	kickLiveCheckBudget   = 3 * time.Minute
+	kickLiveLookupTimeout = 45 * time.Second
+)
+
+// checkKickLiveStreams looks up each watched Kick channel individually; Kick
+// has no bulk endpoint. Channels whose lookup failed are returned separately so
+// the caller neither archives nor marks them offline on a transient error.
+func (s *Service) checkKickLiveStreams(ctx context.Context, watched []*ent.Live) ([]platform.LiveStreamInfo, map[uuid.UUID]bool) {
+	// Bound the Kick pass so slow Kick lookups leave the periodic job enough
+	// time to archive the live streams it already found.
+	ctx, cancel := context.WithTimeout(ctx, kickLiveCheckBudget)
+	defer cancel()
+	failed := map[uuid.UUID]bool{}
+	var streams []platform.LiveStreamInfo
+	kick, kickErr := s.Platforms.Get(utils.PlatformKick)
+	var kickWatched []*ent.Live
+	for _, lwc := range watched {
+		if ch := lwc.Edges.Channel; ch != nil && ch.Platform == utils.PlatformKick {
+			kickWatched = append(kickWatched, lwc)
+		}
+	}
+	// Vary the order between passes so channels behind persistently slow ones
+	// still get checked before the budget runs out.
+	rand.Shuffle(len(kickWatched), func(i, j int) { kickWatched[i], kickWatched[j] = kickWatched[j], kickWatched[i] })
+	first := true
+	for _, lwc := range kickWatched {
+		ch := lwc.Edges.Channel
+		if kickErr != nil {
+			failed[lwc.ID] = true
+			continue
+		}
+		if !first {
+			select {
+			case <-ctx.Done():
+				failed[lwc.ID] = true
+				continue
+			case <-time.After(kickLiveCheckDelay):
+			}
+		}
+		first = false
+		lookupCtx, lookupCancel := context.WithTimeout(ctx, kickLiveLookupTimeout)
+		stream, err := kick.GetLiveStream(lookupCtx, platform.ChannelLogin(ch.Name, ch.ExtLogin))
+		lookupCancel()
+		if err != nil {
+			var noStreams platform.ErrorNoStreamsFound
+			if errors.As(err, &noStreams) {
+				continue
+			}
+			log.Warn().Err(err).Str("channel", ch.Name).Str("platform", "kick").Msg("kick live check failed; keeping current live state")
+			failed[lwc.ID] = true
+			continue
+		}
+		// Match the stream to the channel by ext_id like Twitch streams.
+		stream.UserID = ch.ExtID
+		streams = append(streams, *stream)
+	}
+	return streams, failed
 }

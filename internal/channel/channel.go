@@ -27,20 +27,29 @@ func NewService(store *database.Database, platformTwitch platform.Platform) *Ser
 }
 
 type Channel struct {
-	ID            uuid.UUID `json:"id"`
-	ExtID         string    `json:"ext_id"`
-	Name          string    `json:"name"`
-	DisplayName   string    `json:"display_name"`
-	ImagePath     string    `json:"image_path"`
-	Retention     bool      `json:"retention"`
-	RetentionDays int64     `json:"retention_days"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID            uuid.UUID           `json:"id"`
+	ExtID         string              `json:"ext_id"`
+	Name          string              `json:"name"`
+	DisplayName   string              `json:"display_name"`
+	ImagePath     string              `json:"image_path"`
+	Platform      utils.VideoPlatform `json:"platform"`
+	ExtLogin      string              `json:"ext_login"`
+	Retention     bool                `json:"retention"`
+	RetentionDays int64               `json:"retention_days"`
+	UpdatedAt     time.Time           `json:"updated_at"`
+	CreatedAt     time.Time           `json:"created_at"`
 }
 
 func (s *Service) CreateChannel(channelDto Channel) (*ent.Channel, error) {
 
-	cha, err := s.Store.Client.Channel.Create().SetExtID(channelDto.ExtID).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath).Save(context.Background())
+	create := s.Store.Client.Channel.Create().SetExtID(channelDto.ExtID).SetName(channelDto.Name).SetDisplayName(channelDto.DisplayName).SetImagePath(channelDto.ImagePath)
+	if channelDto.Platform != "" {
+		create.SetPlatform(channelDto.Platform)
+	}
+	if channelDto.ExtLogin != "" {
+		create.SetExtLogin(channelDto.ExtLogin)
+	}
+	cha, err := create.Save(context.Background())
 	if err != nil {
 		if _, ok := err.(*ent.ConstraintError); ok {
 			return nil, fmt.Errorf("channel already exists: %v", err)
@@ -145,6 +154,16 @@ func (s *Service) CheckChannelExists(cName string) bool {
 	}
 
 	return true
+}
+
+// CheckChannelDisplayNameExists returns whether a channel uses displayName.
+func (s *Service) CheckChannelDisplayNameExists(ctx context.Context, displayName string) bool {
+	exists, err := s.Store.Client.Channel.Query().Where(channel.DisplayName(displayName)).Exist(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("error checking channel display name exists")
+		return false
+	}
+	return exists
 }
 
 // CheckChannelExistsByExtId returns a bool whether a channel exists using the external (platform) ID

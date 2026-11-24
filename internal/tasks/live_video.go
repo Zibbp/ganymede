@@ -70,12 +70,38 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	// cancellation lands first and the receiver below has already exited.
 	startChatDownload := make(chan bool, 1)
 
+	// Kick has no platform VOD to correct the chat anchor afterwards, so this run
+	// owns ChatStart: first the capture start, then the stream's program time of
+	// the first captured segment.
+	ownsKickChatAnchor := dbItems.Channel.Platform == utils.PlatformKick && dbItems.Queue.ArchiveChat && dbItems.Queue.ChatStart.IsZero()
+	captureStart := make(chan kickSegmentTime, 1)
+	var onCaptureStart func(time.Time)
+	if ownsKickChatAnchor {
+		onCaptureStart = func(t time.Time) {
+			select {
+			case captureStart <- kickSegmentTime{program: t, observed: time.Now()}:
+			default:
+			}
+		}
+	}
+	setKickChatAnchor := func(ctx context.Context, t time.Time) {
+		if _, err := store.Client.Queue.UpdateOneID(dbItems.Queue.ID).SetChatStart(t).Save(ctx); err != nil {
+			log.Warn().Err(err).Str("queue_id", dbItems.Queue.ID.String()).Msg("failed to record kick chat anchor")
+		}
+	}
+
 	go func(workCtx context.Context) {
+		var kickAnchor kickChatAnchor
 		for {
 			select {
 			case <-startChatDownload:
 				// start chat download if requested
 				if dbItems.Queue.ArchiveChat {
+					if ownsKickChatAnchor {
+						if t, ok := kickAnchor.captureStarted(time.Now()); ok {
+							setKickChatAnchor(workCtx, t)
+						}
+					}
 					log.Debug().Str("channel", dbItems.Channel.Name).Msgf("starting chat download for %s", dbItems.Video.ExtID)
 					client := river.ClientFromContext[pgx.Tx](workCtx)
 					_, insertErr := client.Insert(workCtx, &DownloadLiveChatArgs{
@@ -85,6 +111,13 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 					if insertErr != nil {
 						log.Error().Err(insertErr).Msg("failed to start chat download")
 					}
+				}
+			case segment := <-captureStart:
+				if t, ok := kickAnchor.segmentCaptured(segment); ok {
+					log.Debug().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", t).Msg("anchoring kick chat to first captured segment")
+					setKickChatAnchor(workCtx, t)
+				} else {
+					log.Warn().Str("queue_id", dbItems.Queue.ID.String()).Time("program_time", segment.program).Msg("ignoring implausible kick segment program time")
 				}
 			case <-workCtx.Done():
 				return
@@ -96,7 +129,7 @@ func (w DownloadLiveVideoWorker) Work(ctx context.Context, job *river.Job[Downlo
 	// Note: even when download fails unexpectedly, continue with finalization steps
 	// (cancel live chat, mark channel not live, enqueue post-process) so partial archive
 	// can still be completed/moved instead of being left in a stuck state.
-	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload)
+	downloadErr := exec.DownloadTwitchLiveVideo(ctx, dbItems.Video, dbItems.Channel, startChatDownload, onCaptureStart)
 	logLiveCaptureOutcome(dbItems, job.Args.Input.QueueId, downloadErr)
 	remotelyCancelled := false
 	if downloadErr != nil {
@@ -209,4 +242,39 @@ func logLiveCaptureOutcome(dbItems *GetDatabaseItemsResponse, queueID uuid.UUID,
 	default:
 		logger.Error().Err(downloadErr).Msg("live video download failed; capture output on disk")
 	}
+}
+
+// kickChatAnchorPlausible rejects segment program times that a skewed or
+// misbehaving upstream clock would put far from the moment of capture.
+func kickChatAnchorPlausible(programTime, now time.Time) bool {
+	return !programTime.IsZero() && !programTime.After(now.Add(30*time.Second)) && !programTime.Before(now.Add(-2*time.Minute))
+}
+
+// kickSegmentTime is a segment's program time and when it was observed, so a
+// busy receiver cannot make a valid program time look stale.
+type kickSegmentTime struct {
+	program  time.Time
+	observed time.Time
+}
+
+// kickChatAnchor orders the two anchor signals, which can arrive in either
+// order: a plausible segment program time always wins over the capture-start
+// fallback.
+type kickChatAnchor struct {
+	fromStream bool
+}
+
+func (a *kickChatAnchor) captureStarted(now time.Time) (time.Time, bool) {
+	if a.fromStream {
+		return time.Time{}, false
+	}
+	return now, true
+}
+
+func (a *kickChatAnchor) segmentCaptured(segment kickSegmentTime) (time.Time, bool) {
+	if !kickChatAnchorPlausible(segment.program, segment.observed) {
+		return time.Time{}, false
+	}
+	a.fromStream = true
+	return segment.program, true
 }

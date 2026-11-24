@@ -223,13 +223,14 @@
     "header": "Manage Channels",
     "storageSizeDisclaimerText": "Storage size is not updated instantly. A background task runs every hour to recalculate it.",
     "createButton": "Create Channel",
-    "addTwitchChannel": "Add Twitch Channel",
+    "addChannel": "Add Channel",
     "searchPlaceholder": "Search channels...",
     "columns": {
       "id": "ID",
       "externalId": "External ID",
       "name": "Name",
       "displayName": "Display Name",
+      "platform": "Platform",
       "videoRetention": "Video Retention",
       "createdAt": "Created At",
       "actions": "Actions",
@@ -577,6 +578,7 @@
     "imageUpdateButton": "Update Channel image from platform",
     "addedNotification": "Channel added",
     "platformChannelNameLabel": "Platform Channel Name",
+    "platformLabel": "Platform",
     "addButton": "Add Channel"
   },
   "AdminQueueComponents": {

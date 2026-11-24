@@ -270,7 +270,7 @@ const DefaultPlatform utils.VideoPlatform = "twitch"
 // PlatformValidator is a validator for the "platform" field enum values. It is called by the builders before save.
 func PlatformValidator(pl utils.VideoPlatform) error {
 	switch pl {
-	case "twitch", "youtube":
+	case "twitch", "youtube", "kick":
 		return nil
 	default:
 		return fmt.Errorf("vod: invalid enum value for platform field: %q", pl)

@@ -32,6 +32,7 @@ type RiverWorkerInput struct {
 	DB                      *database.Database
 	LiveService             *live.Service
 	PlatformTwitch          platform.Platform
+	Platforms               platform.Registry
 	NotificationService     *notification.Service
 	Enqueuer                tasks_shared.Enqueuer
 	StorageChecker          storage.Checker
@@ -72,6 +73,7 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.Ctx = input.Context
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.StoreKey, input.DB)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformTwitchKey, input.PlatformTwitch)
+	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.PlatformsKey, input.Platforms)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.NotificationServiceKey, input.NotificationService)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, input.LiveService)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.EnqueuerKey, input.Enqueuer)

@@ -392,11 +392,13 @@ const ChatPlayer = ({ video, playerRef }: Params) => {
 
   // Initialize chat data
   useEffect(() => {
-    if (!chatEmotes?.length || !chatBadges?.length) return;
     if (emotesError || badgesError) {
       // Query failures are surfaced through the derived chat error below.
       return;
     }
+    // Wait until both have loaded; either may legitimately be empty
+    // (e.g. a Kick chat without badges or emotes).
+    if (!chatEmotes || !chatBadges) return;
 
     try {
       // Process emotes

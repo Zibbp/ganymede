@@ -41,7 +41,7 @@ func clipsDeferralAnchor(lastChecked, startedAt time.Time) (time.Time, bool) {
 // CheckWatchedChannelClips checks watched channels for clips to arhive
 func (s *Service) CheckWatchedChannelClips(ctx context.Context, logger zerolog.Logger) error {
 	// Get channels from DB
-	channels, err := s.Store.Client.Live.Query().Where(live.WatchClips(true)).WithChannel().All(context.Background())
+	channels, err := s.Store.Client.Live.Query().Where(live.WatchClips(true), live.HasChannelWith(channel.PlatformEQ(utils.PlatformTwitch))).WithChannel().All(context.Background())
 	if err != nil {
 		return err
 	}
