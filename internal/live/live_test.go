@@ -38,8 +38,8 @@ var (
 )
 
 const (
-	liveCaptureMinimumDuration = 15 * time.Second
-	liveCaptureTimeout         = 90 * time.Second
+	liveCaptureMinimumDuration  = 15 * time.Second
+	liveCaptureStartupAllowance = 75 * time.Second
 )
 
 // configuredLiveCaptureDuration uses a short capture by default. TESTS_LIVE_CAPTURE_SECONDS overrides it.
@@ -50,6 +50,10 @@ func configuredLiveCaptureDuration() time.Duration {
 		}
 	}
 	return liveCaptureMinimumDuration
+}
+
+func configuredLiveCaptureTimeout() time.Duration {
+	return configuredLiveCaptureDuration() + liveCaptureStartupAllowance
 }
 
 // waitForWatchedChannelToStartArchiving waits for the watched channel to start archiving.
@@ -196,7 +200,7 @@ func assertVodAndQueue(t *testing.T, app *server.Application, liveChannel platfo
 			q.ID,
 			vod.TmpVideoDownloadPath,
 			configuredLiveCaptureDuration(),
-			liveCaptureTimeout,
+			configuredLiveCaptureTimeout(),
 		)
 
 		assert.FileExists(t, vod.TmpVideoDownloadPath, "Live HLS playlist should exist while archiving")
@@ -320,7 +324,7 @@ func assertAudioOnlyVodAndQueue(t *testing.T, app *server.Application, liveChann
 		q.ID,
 		vod.TmpVideoDownloadPath,
 		configuredLiveCaptureDuration(),
-		liveCaptureTimeout,
+		configuredLiveCaptureTimeout(),
 	)
 
 	assert.NoError(t, app.QueueService.StopQueueItem(t.Context(), q.ID), "Failed to stop live archive")
@@ -690,7 +694,7 @@ func TestTwitchWatchedChannelLiveCategoryRestrictionStrict(t *testing.T) {
 		q.ID,
 		vod.TmpVideoDownloadPath,
 		configuredLiveCaptureDuration(),
-		liveCaptureTimeout,
+		configuredLiveCaptureTimeout(),
 	)
 
 	// Change category to "TestCategory" causing the live archive to stop
