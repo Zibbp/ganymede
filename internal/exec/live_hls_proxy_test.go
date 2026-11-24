@@ -898,3 +898,48 @@ func TestParseHLSProgramDateTime(t *testing.T) {
 		t.Fatal("expected error for invalid value")
 	}
 }
+
+func TestLiveHLSProxyKeepsProgramTimeOfOutstandingSegment(t *testing.T) {
+	t.Parallel()
+	p := testLiveHLSProxy(t)
+	got := make(chan time.Time, 1)
+	p.setFirstMediaHook(func(programTime time.Time) { got <- programTime })
+
+	requested := make(chan struct{})
+	release := make(chan struct{})
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(requested)
+		<-release
+		_, _ = io.WriteString(w, "media")
+	}))
+	defer upstream.Close()
+	base, err := url.Parse(upstream.URL + "/live.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rewrite := func(programTime, segment string) {
+		t.Helper()
+		body := "#EXTM3U\n#EXT-X-PROGRAM-DATE-TIME:" + programTime + "\n#EXTINF:2.000,\n" + segment + "\n"
+		if _, err := p.rewritePlaylist([]byte(body), base); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	rewrite("2026-11-22T20:00:00Z", "a.ts")
+	response := getLiveHLSResource(t.Context(), proxyResourceURL(t, p, base.String(), "a.ts", "media"))
+	<-requested
+	rewrite("2026-11-22T20:00:02Z", "b.ts")
+	close(release)
+	if res := awaitLiveHLSResponse(t, response); res.err != nil || res.status != http.StatusOK {
+		t.Fatalf("segment: status=%d err=%v", res.status, res.err)
+	}
+
+	select {
+	case programTime := <-got:
+		if want := time.Date(2026, 11, 22, 20, 0, 0, 0, time.UTC); !programTime.Equal(want) {
+			t.Fatalf("program time = %s, want %s", programTime, want)
+		}
+	default:
+		t.Fatal("outstanding segment lost its program time")
+	}
+}

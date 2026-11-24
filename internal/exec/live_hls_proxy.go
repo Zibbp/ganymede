@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
@@ -221,7 +222,12 @@ func (p *liveHLSProxy) rewritePlaylist(body []byte, base *url.URL) ([]byte, erro
 	if segmentTimes != nil {
 		p.mu.Lock()
 		if !p.firstMediaSeen {
-			p.segmentTimes = segmentTimes
+			// Keep earlier entries: a refresh may drop a segment that FFmpeg is
+			// still downloading.
+			if p.segmentTimes == nil {
+				p.segmentTimes = make(map[string]time.Time, len(segmentTimes))
+			}
+			maps.Copy(p.segmentTimes, segmentTimes)
 		}
 		p.mu.Unlock()
 	}
