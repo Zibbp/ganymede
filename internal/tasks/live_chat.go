@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -280,7 +279,7 @@ func (w ConvertLiveChatWorker) Work(ctx context.Context, job *river.Job[ConvertL
 // anchors to the capture start (the Twitch fallback when no VOD is found).
 func convertKickLiveChat(ctx context.Context, store *database.Database, dbItems *GetDatabaseItemsResponse) error {
 	kickChannelID, err := platform.ParseKickChannelExtID(dbItems.Channel.ExtID)
-	if err != nil || kickChannelID < 0 || kickChannelID > math.MaxInt32 {
+	if err != nil {
 		kickChannelID = 0
 	}
 	videoDurationSec, err := resolveLiveChatVideoDurationSec(ctx, store, dbItems)
@@ -295,7 +294,7 @@ func convertKickLiveChat(ctx context.Context, store *database.Database, dbItems 
 	if err != nil {
 		return err
 	}
-	if err := utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, int(kickChannelID), videoStartTime, "", videoDurationSec); err != nil {
+	if err := utils.ConvertTwitchLiveChatToTDLChat(dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Channel.Name, dbItems.Video.ID.String(), dbItems.Video.ExtID, kickChannelID, videoStartTime, "", videoDurationSec); err != nil {
 		return err
 	}
 	if err := exec.EmbedKickChatAssets(ctx, dbItems.Video.TmpLiveChatDownloadPath, dbItems.Video.TmpLiveChatConvertPath, dbItems.Video.TmpChatDownloadPath); err != nil {

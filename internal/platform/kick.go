@@ -49,8 +49,8 @@ func KickChannelExtID(id int64) string {
 }
 
 // ParseKickChannelExtID returns the numeric Kick channel ID from an ext_id.
-func ParseKickChannelExtID(extID string) (int64, error) {
-	return strconv.ParseInt(strings.TrimPrefix(extID, kickExtIDPrefix), 10, 64)
+func ParseKickChannelExtID(extID string) (int, error) {
+	return strconv.Atoi(strings.TrimPrefix(extID, kickExtIDPrefix))
 }
 
 // ChannelLogin returns the login used for platform API calls. Channels whose
