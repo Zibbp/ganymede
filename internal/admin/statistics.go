@@ -11,6 +11,7 @@ import (
 	entqueue "github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/config"
+	"github.com/zibbp/ganymede/internal/storage"
 	"github.com/zibbp/ganymede/internal/utils"
 )
 
@@ -37,6 +38,9 @@ type GetSystemOverviewResponse struct {
 	VideosDirectoryFreeSpace  int64         `json:"videos_directory_free_space"`  // Free space in bytes
 	VideosDirectoryUsedSpace  int64         `json:"videos_directory_used_space"`  // Tracked VOD storage in bytes
 	VideosDirectoryTotalSpace int64         `json:"videos_directory_total_space"` // Filesystem capacity in bytes
+	TempDirectoryFreeSpace    int64         `json:"temp_directory_free_space"`    // Temp directory free space in bytes
+	TempDirectoryTotalSpace   int64         `json:"temp_directory_total_space"`   // Temp directory filesystem capacity in bytes
+	StorageState              string        `json:"storage_state"`                // Temp directory archive gate state: ok, warning, critical, disabled, unknown
 	CPUCores                  int           `json:"cpu_cores"`                    // Number of CPU cores
 	MemoryTotal               int64         `json:"memory_total"`                 // Total memory in bytes
 	Queue                     QueueOverview `json:"queue"`
@@ -144,6 +148,19 @@ func (s *Service) GetSystemOverview(ctx context.Context) (GetSystemOverviewRespo
 		return resp, fmt.Errorf("error getting data directory total space: %w", err)
 	}
 	resp.VideosDirectoryTotalSpace = totalSpace
+
+	// Temp directory space and the storage state; "unknown" if it can't be read.
+	if s.StorageChecker != nil {
+		if status, _ := s.StorageChecker.Check(ctx); status.Err == nil {
+			resp.TempDirectoryFreeSpace = status.FreeBytes
+			resp.TempDirectoryTotalSpace = status.TotalBytes
+			resp.StorageState = string(status.State)
+		} else {
+			resp.StorageState = string(storage.StateUnknown)
+		}
+	} else {
+		resp.StorageState = string(storage.StateUnknown)
+	}
 
 	// Get data directory used space by querying all vods and summing their storage sizes
 	// Could check the directory size directly, but this information is already stored in the database

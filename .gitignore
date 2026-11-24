@@ -52,3 +52,12 @@ __debug*
 # typescript
 /frontend/*.tsbuildinfo
 /frontend/next-env.d.ts
+
+# mise and compose personal overrides (untracked by design)
+mise.local.toml
+mise.*.local.toml
+.mise.local.toml
+compose.local.yml
+compose.local.yaml
+compose.*.local.yml
+compose.*.local.yaml

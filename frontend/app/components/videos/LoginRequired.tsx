@@ -1,7 +1,6 @@
 import { Video } from "@/app/hooks/useVideos";
 import classes from "./LoginRequired.module.css"
-import { env } from "next-runtime-env";
-import { escapeURL } from "@/app/util/util";
+import { mediaSrc } from "@/app/util/util";
 import { Center } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -16,9 +15,7 @@ const VideoLoginRequired = ({ video }: Params) => {
     <div className={classes.container}>
       <div
         style={{
-          backgroundImage: `url(${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-            video.web_thumbnail_path
-          )})`
+          backgroundImage: `url(${mediaSrc(video.web_thumbnail_path)})`
         }}
         className={classes.thumbnail}
       ></div>

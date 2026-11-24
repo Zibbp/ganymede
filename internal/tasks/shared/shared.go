@@ -16,6 +16,7 @@ const PlatformsKey contextKey = "platforms"
 const LiveServiceKey contextKey = "live_service"
 const NotificationServiceKey contextKey = "notification_service"
 const EnqueuerKey contextKey = "enqueuer"
+const StorageCheckerKey contextKey = "storage_checker"
 
 type Enqueuer interface {
 	Insert(context.Context, river.JobArgs, *river.InsertOpts) (*rivertype.JobInsertResult, error)

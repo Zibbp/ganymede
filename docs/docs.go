@@ -485,6 +485,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
+                    },
+                    "507": {
+                        "description": "Insufficient Storage",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -5007,6 +5013,18 @@ const docTemplate = `{
                 "queue": {
                     "$ref": "#/definitions/admin.QueueOverview"
                 },
+                "storage_state": {
+                    "description": "Temp directory archive gate state: ok, warning, critical, disabled, unknown",
+                    "type": "string"
+                },
+                "temp_directory_free_space": {
+                    "description": "Temp directory free space in bytes",
+                    "type": "integer"
+                },
+                "temp_directory_total_space": {
+                    "description": "Temp directory filesystem capacity in bytes",
+                    "type": "integer"
+                },
                 "user_count": {
                     "type": "integer"
                 },
@@ -5419,6 +5437,18 @@ const docTemplate = `{
                         "save_as_hls": {
                             "description": "Save as HLS rather than MP4.",
                             "type": "boolean"
+                        },
+                        "storage_check_enabled": {
+                            "description": "Pause new archives when the temp directory is low on space.",
+                            "type": "boolean"
+                        },
+                        "temp_dir_critical_threshold_gb": {
+                            "description": "Hard stop threshold in GB.",
+                            "type": "integer"
+                        },
+                        "temp_dir_warning_threshold_gb": {
+                            "description": "New archives are paused at or below the warning threshold so\nin-flight work can drain. Live captures are stopped at or below\nthe critical threshold to avoid corrupting them on a full disk.",
+                            "type": "integer"
                         }
                     }
                 },
@@ -7244,6 +7274,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "system_warning_template": {
+                    "type": "string"
+                },
                 "trigger_error": {
                     "type": "boolean"
                 },
@@ -7251,6 +7284,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "trigger_live_success": {
+                    "type": "boolean"
+                },
+                "trigger_system_warning": {
                     "type": "boolean"
                 },
                 "trigger_video_success": {
@@ -7310,6 +7346,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "system_warning_template": {
+                    "type": "string"
+                },
                 "trigger_error": {
                     "type": "boolean"
                 },
@@ -7317,6 +7356,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "trigger_live_success": {
+                    "type": "boolean"
+                },
+                "trigger_system_warning": {
                     "type": "boolean"
                 },
                 "trigger_video_success": {
@@ -7519,7 +7561,8 @@ const docTemplate = `{
                         "video_success",
                         "live_success",
                         "error",
-                        "is_live"
+                        "is_live",
+                        "system_warning"
                     ]
                 }
             }

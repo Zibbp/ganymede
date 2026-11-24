@@ -3,7 +3,7 @@ import ArchiveStatusBadge from "@/app/components/videos/ArchiveStatusBadge";
 import { ActionIcon, Container, Group, TextInput, Title, Box, Drawer, Modal, Tooltip, Text, Button } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import sortBy from "lodash/sortBy";
 import GanymedeLoadingText from "@/app/components/utils/GanymedeLoadingText";
 import { IconEye, IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
@@ -29,9 +29,8 @@ const AdminQueuePage = () => {
   const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
-  const [records, setRecords] = useState<Queue[]>([]);
-  const [initialRecords, setInitialRecords] = useState(false);
+  // Per-page preference is owned by the persisted settings store.
+  const perPage = settingsAdminItemsPerPage;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Queue>>({
     columnAccessor: "name",
     direction: "asc",
@@ -49,12 +48,9 @@ const AdminQueuePage = () => {
   const axiosPrivate = useAxiosPrivate()
   const { data: queues, isPending, isError } = useGetQueueItems(axiosPrivate, false)
 
-  useEffect(() => {
-    setPerPage(settingsAdminItemsPerPage);
-  }, [settingsAdminItemsPerPage]);
-
-  useEffect(() => {
-    if (!queues) return;
+  // Records are derived from the query data and table controls.
+  const records = useMemo(() => {
+    if (!queues) return [];
 
     let filteredData = [...queues] as Queue[];
 
@@ -74,12 +70,8 @@ const AdminQueuePage = () => {
     // Apply pagination
     const from = (page - 1) * perPage;
     const to = from + perPage;
-    setRecords(filteredData.slice(from, to));
-
-    if (!initialRecords) {
-      setInitialRecords(true);
-    }
-  }, [queues, page, perPage, sortStatus, debouncedQuery, initialRecords]);
+    return filteredData.slice(from, to);
+  }, [queues, page, perPage, sortStatus, debouncedQuery]);
 
   const openDrawer = (queue: Queue) => {
     setActiveQueue(queue);
@@ -241,7 +233,6 @@ const AdminQueuePage = () => {
             onPageChange={(p) => setPage(p)}
             recordsPerPageOptions={[20, 40, 100]}
             onRecordsPerPageChange={(value) => {
-              setPerPage(value);
               setSettingsAdminItemsPerPage(value);
               setPage(1);
             }}

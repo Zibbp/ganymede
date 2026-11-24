@@ -1,7 +1,7 @@
 import { useAddVideoToPlaylist, useGetPlaylists } from "@/app/hooks/usePlaylist";
 import GanymedeLoadingText from "../utils/GanymedeLoadingText";
 import { Button, Select } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { showNotification } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,7 +20,6 @@ interface FormattedPlaylist {
 
 const PlaylistBulkAddModalContent = ({ videos, handleClose }: Params) => {
   const t = useTranslations('PlaylistComponents')
-  const [playlistsFormatted, setPlaylistsFormatted] = useState<FormattedPlaylist[]>([]);
   const [selectedPlaylistValue, setSelectedPlaylistValue] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false)
   const queryClient = useQueryClient()
@@ -31,20 +30,11 @@ const PlaylistBulkAddModalContent = ({ videos, handleClose }: Params) => {
 
   const { data: playlists, isPending: isPlaylistsPending, isError: isPlaylistsError } = useGetPlaylists()
 
-  useEffect(() => {
-    setPlaylistsFormatted([])
-    if (!playlists) return
-    playlists.forEach((playlist) => {
-      setPlaylistsFormatted(prevPlaylists => {
-        const currentPlaylists = prevPlaylists || [];
-        return [...currentPlaylists, {
-          label: playlist.name,
-          value: playlist.id
-        }];
-      });
-    })
-  }, [playlists])
-
+  // Derived from the playlist query; no effect needed.
+  const playlistsFormatted: FormattedPlaylist[] = (playlists ?? []).map((playlist) => ({
+    label: playlist.name,
+    value: playlist.id,
+  }))
 
   const addVideoToPlayist = async () => {
     if (!selectedPlaylistValue) return;

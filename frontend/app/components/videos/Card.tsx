@@ -4,13 +4,12 @@ import { Video } from "@/app/hooks/useVideos";
 import { Badge, Card, Image, Progress, Tooltip, Text, Title, Group, Center, Avatar, Flex, ThemeIcon, LoadingOverlay, Loader, Box, Checkbox, Skeleton } from "@mantine/core";
 import PlatformBadge from "@/app/components/platform/PlatformBadge";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import classes from "./Card.module.css"
-import { env } from "next-runtime-env";
-import { durationToTime, escapeURL, prettyNumber } from "@/app/util/util";
+import { durationToTime, mediaSrc, prettyNumber } from "@/app/util/util";
 import { PlaybackStatus, useFetchPlaybackForVideo } from "@/app/hooks/usePlayback";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import useAuthStore from "@/app/store/useAuthStore";
@@ -50,6 +49,7 @@ const VideoCard = ({
   const { isLoggedIn, hasPermission } = useAuthStore()
   const [thumbnailError, setThumbnailError] = useState(false);
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
+  const [prevThumbnailPath, setPrevThumbnailPath] = useState(video.web_thumbnail_path);
 
   // Handle thumbnail loading error
   const handleThumbnailError = () => {
@@ -69,9 +69,11 @@ const VideoCard = ({
   const playbackProgress = playbackData ? (playbackData.time / video.duration) * 100 : 0;
   const playbackIsWatched = playbackData?.status === PlaybackStatus.Finished;
 
-  useEffect(() => {
+  // Reset the thumbnail skeleton when a new thumbnail path arrives.
+  if (video.web_thumbnail_path !== prevThumbnailPath) {
+    setPrevThumbnailPath(video.web_thumbnail_path);
     setThumbnailLoaded(false);
-  }, [video.web_thumbnail_path])
+  }
 
   return (
     <Card radius="md" padding={5} className={classes.card}>
@@ -91,9 +93,7 @@ const VideoCard = ({
             <Skeleton visible={!thumbnailLoaded} animate radius={0} height="100%">
               <Image
                 className={classes.videoImage}
-                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-                  video.web_thumbnail_path
-                )}`}
+                src={mediaSrc(video.web_thumbnail_path)}
                 onLoad={() => setThumbnailLoaded(true)}
                 onError={handleThumbnailError}
                 width={thumbnailError ? "100%" : "100%"}
@@ -178,9 +178,7 @@ const VideoCard = ({
           <Center>
             <PlatformBadge platform={video.edges.channel.platform} size={11} offset={-2} style={{ marginRight: "var(--mantine-spacing-xs)" }}>
               <Avatar
-                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-                  video.edges.channel.image_path
-                )}`}
+                src={mediaSrc(video.edges.channel.image_path)}
                 size={24}
                 radius="xl"
               />

@@ -289,56 +289,66 @@ func init() {
 	notificationDescTriggerIsLive := notificationFields[8].Descriptor()
 	// notification.DefaultTriggerIsLive holds the default value on creation for the trigger_is_live field.
 	notification.DefaultTriggerIsLive = notificationDescTriggerIsLive.Default.(bool)
+	// notificationDescTriggerSystemWarning is the schema descriptor for trigger_system_warning field.
+	notificationDescTriggerSystemWarning := notificationFields[9].Descriptor()
+	// notification.DefaultTriggerSystemWarning holds the default value on creation for the trigger_system_warning field.
+	notification.DefaultTriggerSystemWarning = notificationDescTriggerSystemWarning.Default.(bool)
 	// notificationDescVideoSuccessTemplate is the schema descriptor for video_success_template field.
-	notificationDescVideoSuccessTemplate := notificationFields[9].Descriptor()
+	notificationDescVideoSuccessTemplate := notificationFields[10].Descriptor()
 	// notification.DefaultVideoSuccessTemplate holds the default value on creation for the video_success_template field.
 	notification.DefaultVideoSuccessTemplate = notificationDescVideoSuccessTemplate.Default.(string)
 	// notification.VideoSuccessTemplateValidator is a validator for the "video_success_template" field. It is called by the builders before save.
 	notification.VideoSuccessTemplateValidator = notificationDescVideoSuccessTemplate.Validators[0].(func(string) error)
 	// notificationDescLiveSuccessTemplate is the schema descriptor for live_success_template field.
-	notificationDescLiveSuccessTemplate := notificationFields[10].Descriptor()
+	notificationDescLiveSuccessTemplate := notificationFields[11].Descriptor()
 	// notification.DefaultLiveSuccessTemplate holds the default value on creation for the live_success_template field.
 	notification.DefaultLiveSuccessTemplate = notificationDescLiveSuccessTemplate.Default.(string)
 	// notification.LiveSuccessTemplateValidator is a validator for the "live_success_template" field. It is called by the builders before save.
 	notification.LiveSuccessTemplateValidator = notificationDescLiveSuccessTemplate.Validators[0].(func(string) error)
 	// notificationDescErrorTemplate is the schema descriptor for error_template field.
-	notificationDescErrorTemplate := notificationFields[11].Descriptor()
+	notificationDescErrorTemplate := notificationFields[12].Descriptor()
 	// notification.DefaultErrorTemplate holds the default value on creation for the error_template field.
 	notification.DefaultErrorTemplate = notificationDescErrorTemplate.Default.(string)
 	// notification.ErrorTemplateValidator is a validator for the "error_template" field. It is called by the builders before save.
 	notification.ErrorTemplateValidator = notificationDescErrorTemplate.Validators[0].(func(string) error)
 	// notificationDescIsLiveTemplate is the schema descriptor for is_live_template field.
-	notificationDescIsLiveTemplate := notificationFields[12].Descriptor()
+	notificationDescIsLiveTemplate := notificationFields[13].Descriptor()
 	// notification.DefaultIsLiveTemplate holds the default value on creation for the is_live_template field.
 	notification.DefaultIsLiveTemplate = notificationDescIsLiveTemplate.Default.(string)
 	// notification.IsLiveTemplateValidator is a validator for the "is_live_template" field. It is called by the builders before save.
 	notification.IsLiveTemplateValidator = notificationDescIsLiveTemplate.Validators[0].(func(string) error)
+	// notificationDescSystemWarningTemplate is the schema descriptor for system_warning_template field.
+	notificationDescSystemWarningTemplate := notificationFields[14].Descriptor()
+	// notification.DefaultSystemWarningTemplate holds the default value on creation for the system_warning_template field.
+	notification.DefaultSystemWarningTemplate = notificationDescSystemWarningTemplate.Default.(string)
+	// notification.SystemWarningTemplateValidator is a validator for the "system_warning_template" field. It is called by the builders before save.
+	notification.SystemWarningTemplateValidator = notificationDescSystemWarningTemplate.Validators[0].(func(string) error)
 	// notificationDescAppriseUrls is the schema descriptor for apprise_urls field.
-	notificationDescAppriseUrls := notificationFields[13].Descriptor()
+	notificationDescAppriseUrls := notificationFields[15].Descriptor()
 	// notification.DefaultAppriseUrls holds the default value on creation for the apprise_urls field.
 	notification.DefaultAppriseUrls = notificationDescAppriseUrls.Default.(string)
 	// notification.AppriseUrlsValidator is a validator for the "apprise_urls" field. It is called by the builders before save.
 	notification.AppriseUrlsValidator = notificationDescAppriseUrls.Validators[0].(func(string) error)
 	// notificationDescAppriseTitle is the schema descriptor for apprise_title field.
-	notificationDescAppriseTitle := notificationFields[14].Descriptor()
+	notificationDescAppriseTitle := notificationFields[16].Descriptor()
 	// notification.DefaultAppriseTitle holds the default value on creation for the apprise_title field.
 	notification.DefaultAppriseTitle = notificationDescAppriseTitle.Default.(string)
 	// notification.AppriseTitleValidator is a validator for the "apprise_title" field. It is called by the builders before save.
 	notification.AppriseTitleValidator = notificationDescAppriseTitle.Validators[0].(func(string) error)
 	// notificationDescAppriseTag is the schema descriptor for apprise_tag field.
-	notificationDescAppriseTag := notificationFields[16].Descriptor()
+	notificationDescAppriseTag := notificationFields[18].Descriptor()
 	// notification.DefaultAppriseTag holds the default value on creation for the apprise_tag field.
 	notification.DefaultAppriseTag = notificationDescAppriseTag.Default.(string)
 	// notification.AppriseTagValidator is a validator for the "apprise_tag" field. It is called by the builders before save.
 	notification.AppriseTagValidator = notificationDescAppriseTag.Validators[0].(func(string) error)
 	// notificationDescUpdatedAt is the schema descriptor for updated_at field.
-	notificationDescUpdatedAt := notificationFields[18].Descriptor()
+	notificationDescUpdatedAt := notificationFields[20].Descriptor()
 	// notification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	notification.DefaultUpdatedAt = notificationDescUpdatedAt.Default.(func() time.Time)
 	// notification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	notification.UpdateDefaultUpdatedAt = notificationDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// notificationDescCreatedAt is the schema descriptor for created_at field.
-	notificationDescCreatedAt := notificationFields[19].Descriptor()
+	notificationDescCreatedAt := notificationFields[21].Descriptor()
 	// notification.DefaultCreatedAt holds the default value on creation for the created_at field.
 	notification.DefaultCreatedAt = notificationDescCreatedAt.Default.(func() time.Time)
 	// notificationDescID is the schema descriptor for id field.

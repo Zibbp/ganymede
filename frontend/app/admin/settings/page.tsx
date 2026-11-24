@@ -5,7 +5,7 @@ import { Config, ProxyListItem, ProxyType, useEditConfig, useGetConfig } from "@
 import { ActionIcon, Button, Card, Checkbox, Code, Collapse, Container, MultiSelect, NumberInput, Select, Text, Textarea, TextInput, Title } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { useDisclosure } from "@mantine/hooks"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import classes from "./AdminSettingsPage.module.css"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { Channel, useFetchChannels } from "@/app/hooks/useChannels"
@@ -22,7 +22,6 @@ const AdminSettingsPage = () => {
   const t = useTranslations('AdminSettingsPage');
   usePageTitle(t('title'))
   const [storageTemplateOpened, { toggle: toggleStorageTemplate }] = useDisclosure(false);
-  const [channelSelect, setChannelSelect] = useState<SelectOption[]>([]);
   const axiosPrivate = useAxiosPrivate()
 
   const editConfigMutate = useEditConfig()
@@ -50,7 +49,10 @@ const AdminSettingsPage = () => {
       archive: {
         save_as_hls: data?.archive.save_as_hls ?? false,
         generate_sprite_thumbnails: data?.archive.generate_sprite_thumbnails ?? true,
-        generate_nfo_files: data?.archive.generate_nfo_files ?? true
+        generate_nfo_files: data?.archive.generate_nfo_files ?? true,
+        storage_check_enabled: data?.archive.storage_check_enabled ?? true,
+        temp_dir_warning_threshold_gb: data?.archive.temp_dir_warning_threshold_gb ?? 50,
+        temp_dir_critical_threshold_gb: data?.archive.temp_dir_critical_threshold_gb ?? 5
       },
       storage_templates: {
         folder_template: data?.storage_templates.folder_template || "",
@@ -62,6 +64,29 @@ const AdminSettingsPage = () => {
         proxy_enabled: data?.livestream.proxy_enabled ?? true,
         proxy_whitelist: data?.livestream.proxy_whitelist || [],
       }
+    },
+    validate: (values) => {
+      const errors: Record<string, string> = {};
+      // The backend rejects fractional or empty values with a 400.
+      const warning = values.archive.temp_dir_warning_threshold_gb as number | "";
+      const critical = values.archive.temp_dir_critical_threshold_gb as number | "";
+      if (warning === "" || Number.isNaN(Number(warning))) {
+        errors["archive.temp_dir_warning_threshold_gb"] = t('archiveSettings.tempDirThresholdRequired');
+      } else if (!Number.isInteger(warning)) {
+        errors["archive.temp_dir_warning_threshold_gb"] = t('archiveSettings.tempDirThresholdWholeNumber');
+      } else if (warning < 1) {
+        errors["archive.temp_dir_warning_threshold_gb"] = t('archiveSettings.tempDirThresholdMin', { min: 1 });
+      }
+      if (critical === "" || Number.isNaN(Number(critical))) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdRequired');
+      } else if (!Number.isInteger(critical)) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdWholeNumber');
+      } else if (critical < 0) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirThresholdMin', { min: 0 });
+      } else if (warning !== "" && critical > warning) {
+        errors["archive.temp_dir_critical_threshold_gb"] = t('archiveSettings.tempDirCriticalBelowWarning');
+      }
+      return errors;
     }
   })
 
@@ -88,16 +113,11 @@ const AdminSettingsPage = () => {
 
   const { data: channels } = useFetchChannels();
 
-  useEffect(() => {
-    if (!channels) return;
-
-    const transformedChannels: SelectOption[] = channels.map((channel: Channel) => ({
-      label: channel.name,
-      value: channel.name,
-    }));
-
-    setChannelSelect(transformedChannels);
-  }, [channels]);
+  // Derived from the channel query; no effect needed.
+  const channelSelect: SelectOption[] = (channels ?? []).map((channel: Channel) => ({
+    label: channel.name,
+    value: channel.name,
+  }));
 
   const handleSubmitForm = async () => {
     try {
@@ -189,6 +209,35 @@ const AdminSettingsPage = () => {
               key={form.key('archive.generate_nfo_files')}
               {...form.getInputProps('archive.generate_nfo_files', { type: "checkbox" })}
               mr={15}
+            />
+
+            <Checkbox
+              mt={15}
+              label={t('archiveSettings.storageCheckEnabledLabel')}
+              description={t('archiveSettings.storageCheckEnabledDescription')}
+              key={form.key('archive.storage_check_enabled')}
+              {...form.getInputProps('archive.storage_check_enabled', { type: "checkbox" })}
+              mr={15}
+            />
+
+            <NumberInput
+              mt={10}
+              label={t('archiveSettings.tempDirWarningThresholdLabel')}
+              description={t('archiveSettings.tempDirWarningThresholdDescription')}
+              placeholder="50"
+              key={form.key('archive.temp_dir_warning_threshold_gb')}
+              {...form.getInputProps('archive.temp_dir_warning_threshold_gb')}
+              min={1}
+            />
+
+            <NumberInput
+              mt={10}
+              label={t('archiveSettings.tempDirCriticalThresholdLabel')}
+              description={t('archiveSettings.tempDirCriticalThresholdDescription')}
+              placeholder="5"
+              key={form.key('archive.temp_dir_critical_threshold_gb')}
+              {...form.getInputProps('archive.temp_dir_critical_threshold_gb')}
+              min={0}
             />
 
             <Button

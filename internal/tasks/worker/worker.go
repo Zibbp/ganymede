@@ -18,6 +18,7 @@ import (
 	"github.com/zibbp/ganymede/internal/live"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
+	"github.com/zibbp/ganymede/internal/storage"
 	"github.com/zibbp/ganymede/internal/tasks"
 	tasks_periodic "github.com/zibbp/ganymede/internal/tasks/periodic"
 	"github.com/zibbp/ganymede/internal/tasks/registry"
@@ -34,6 +35,7 @@ type RiverWorkerInput struct {
 	Platforms               platform.Registry
 	NotificationService     *notification.Service
 	Enqueuer                tasks_shared.Enqueuer
+	StorageChecker          storage.Checker
 	VideoDownloadWorkers    int
 	VideoPostProcessWorkers int
 	ChatDownloadWorkers     int
@@ -75,6 +77,9 @@ func NewRiverWorker(input RiverWorkerInput) (*RiverWorkerClient, error) {
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.NotificationServiceKey, input.NotificationService)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.LiveServiceKey, input.LiveService)
 	rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.EnqueuerKey, input.Enqueuer)
+	if input.StorageChecker != nil {
+		rc.Ctx = context.WithValue(rc.Ctx, tasks_shared.StorageCheckerKey, input.StorageChecker)
+	}
 
 	periodicTasks, err := getPeriodicTasks()
 	if err != nil {
@@ -181,6 +186,13 @@ func getPeriodicTasks() ([]periodicTask, error) {
 		newPeriodicTask(tasks.TaskArchiveWatchdog, river.PeriodicInterval(time.Minute), "1m", true,
 			func() (river.JobArgs, *river.InsertOpts) {
 				return tasks.WatchdogArgs{}, periodicInsertOpts(time.Minute)
+			},
+		),
+
+		// Watch temp-directory free space; warn when it gets low.
+		newPeriodicTask(tasks.TaskStorageWatchdog, river.PeriodicInterval(time.Minute), "1m", true,
+			func() (river.JobArgs, *river.InsertOpts) {
+				return tasks.StorageWatchdogArgs{}, periodicInsertOpts(time.Minute)
 			},
 		),
 

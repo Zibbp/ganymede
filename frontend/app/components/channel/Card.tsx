@@ -3,8 +3,8 @@
 import { Channel } from "@/app/hooks/useChannels";
 import { AspectRatio, Card, Center, Title, Image, Skeleton } from "@mantine/core";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { env } from "next-runtime-env";
+import { useState } from "react";
+import { mediaSrc } from "@/app/util/util";
 import classes from "./Card.module.css"
 import PlatformBadge from "@/app/components/platform/PlatformBadge";
 
@@ -14,10 +14,12 @@ type Props = {
 
 const ChannelCard = ({ channel }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
+  const [prevImagePath, setPrevImagePath] = useState(channel.image_path);
+  // Reset the loading skeleton when a new channel image arrives.
+  if (channel.image_path !== prevImagePath) {
+    setPrevImagePath(channel.image_path);
     setImageLoaded(false);
-  }, [channel.image_path]);
+  }
 
   return (
     <div>
@@ -27,7 +29,7 @@ const ChannelCard = ({ channel }: Props) => {
           <AspectRatio ratio={300 / 300}>
             <Skeleton visible={!imageLoaded} animate radius="md">
               <Image
-                src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${channel.image_path}`}
+                src={mediaSrc(channel.image_path)}
                 alt={`${channel.name}`}
                 fallbackSrc="/images/ganymede_default_channel_image.webp"
                 onLoad={() => setImageLoaded(true)}

@@ -34,6 +34,8 @@ type Notification struct {
 	TriggerError bool `json:"trigger_error,omitempty"`
 	// Fire when a channel goes live.
 	TriggerIsLive bool `json:"trigger_is_live,omitempty"`
+	// Fire on system warnings such as low storage.
+	TriggerSystemWarning bool `json:"trigger_system_warning,omitempty"`
 	// Template for video archive success body.
 	VideoSuccessTemplate string `json:"video_success_template,omitempty"`
 	// Template for live archive success body.
@@ -42,6 +44,8 @@ type Notification struct {
 	ErrorTemplate string `json:"error_template,omitempty"`
 	// Template for is-live body.
 	IsLiveTemplate string `json:"is_live_template,omitempty"`
+	// Template for system warning body.
+	SystemWarningTemplate string `json:"system_warning_template,omitempty"`
 	// Stateless Apprise URLs parameter.
 	AppriseUrls string `json:"apprise_urls,omitempty"`
 	// Apprise notification title template.
@@ -64,9 +68,9 @@ func (*Notification) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case notification.FieldEnabled, notification.FieldTriggerVideoSuccess, notification.FieldTriggerLiveSuccess, notification.FieldTriggerError, notification.FieldTriggerIsLive:
+		case notification.FieldEnabled, notification.FieldTriggerVideoSuccess, notification.FieldTriggerLiveSuccess, notification.FieldTriggerError, notification.FieldTriggerIsLive, notification.FieldTriggerSystemWarning:
 			values[i] = new(sql.NullBool)
-		case notification.FieldName, notification.FieldType, notification.FieldURL, notification.FieldVideoSuccessTemplate, notification.FieldLiveSuccessTemplate, notification.FieldErrorTemplate, notification.FieldIsLiveTemplate, notification.FieldAppriseUrls, notification.FieldAppriseTitle, notification.FieldAppriseType, notification.FieldAppriseTag, notification.FieldAppriseFormat:
+		case notification.FieldName, notification.FieldType, notification.FieldURL, notification.FieldVideoSuccessTemplate, notification.FieldLiveSuccessTemplate, notification.FieldErrorTemplate, notification.FieldIsLiveTemplate, notification.FieldSystemWarningTemplate, notification.FieldAppriseUrls, notification.FieldAppriseTitle, notification.FieldAppriseType, notification.FieldAppriseTag, notification.FieldAppriseFormat:
 			values[i] = new(sql.NullString)
 		case notification.FieldUpdatedAt, notification.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -141,6 +145,12 @@ func (_m *Notification) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.TriggerIsLive = value.Bool
 			}
+		case notification.FieldTriggerSystemWarning:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field trigger_system_warning", values[i])
+			} else if value.Valid {
+				_m.TriggerSystemWarning = value.Bool
+			}
 		case notification.FieldVideoSuccessTemplate:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field video_success_template", values[i])
@@ -164,6 +174,12 @@ func (_m *Notification) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_live_template", values[i])
 			} else if value.Valid {
 				_m.IsLiveTemplate = value.String
+			}
+		case notification.FieldSystemWarningTemplate:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field system_warning_template", values[i])
+			} else if value.Valid {
+				_m.SystemWarningTemplate = value.String
 			}
 		case notification.FieldAppriseUrls:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -267,6 +283,9 @@ func (_m *Notification) String() string {
 	builder.WriteString("trigger_is_live=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TriggerIsLive))
 	builder.WriteString(", ")
+	builder.WriteString("trigger_system_warning=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TriggerSystemWarning))
+	builder.WriteString(", ")
 	builder.WriteString("video_success_template=")
 	builder.WriteString(_m.VideoSuccessTemplate)
 	builder.WriteString(", ")
@@ -278,6 +297,9 @@ func (_m *Notification) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_live_template=")
 	builder.WriteString(_m.IsLiveTemplate)
+	builder.WriteString(", ")
+	builder.WriteString("system_warning_template=")
+	builder.WriteString(_m.SystemWarningTemplate)
 	builder.WriteString(", ")
 	builder.WriteString("apprise_urls=")
 	builder.WriteString(_m.AppriseUrls)

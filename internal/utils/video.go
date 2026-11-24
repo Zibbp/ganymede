@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -138,8 +139,13 @@ func pickHighestQuality(options []string) string {
 		parsed = append(parsed, parseQuality(o))
 	}
 
-	// Sort by resolution DESC, FPS DESC
-	sort.Slice(parsed, func(i, j int) bool {
+	// Sort audio-only options last, then by resolution DESC, FPS DESC.
+	// Audio-only and named formats like "Source" share resolution 0, so the
+	// audio check keeps a video option from losing a tie to audio.
+	sort.SliceStable(parsed, func(i, j int) bool {
+		if audioI, audioJ := isAudioOnly(parsed[i].Original), isAudioOnly(parsed[j].Original); audioI != audioJ {
+			return audioJ
+		}
 		if parsed[i].Resolution == parsed[j].Resolution {
 			return parsed[i].FPS > parsed[j].FPS
 		}
@@ -147,4 +153,13 @@ func pickHighestQuality(options []string) string {
 	})
 
 	return parsed[0].Original
+}
+
+// isAudioOnly reports whether a quality name refers to an audio-only format.
+func isAudioOnly(q string) bool {
+	switch strings.ToLower(q) {
+	case "audio", "audio_only":
+		return true
+	}
+	return false
 }

@@ -28,6 +28,7 @@ import (
 	"github.com/zibbp/ganymede/internal/playback"
 	"github.com/zibbp/ganymede/internal/playlist"
 	"github.com/zibbp/ganymede/internal/queue"
+	"github.com/zibbp/ganymede/internal/storage"
 	"github.com/zibbp/ganymede/internal/task"
 	tasks_client "github.com/zibbp/ganymede/internal/tasks/client"
 	transportHttp "github.com/zibbp/ganymede/internal/transport/http"
@@ -42,6 +43,7 @@ type Application struct {
 	Database            *database.Database
 	Store               *database.Database
 	ArchiveService      *archive.Service
+	StorageChecker      storage.Checker
 	PlatformTwitch      platform.Platform
 	AdminService        *admin.Service
 	AuthService         *auth.Service
@@ -151,6 +153,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 	queueService := queue.NewService(db, vodService, channelService, riverClient)
 	blockedVodService := blocked.NewService(db)
 	notificationService := notification.NewService(db)
+	storageChecker := storage.NewService()
 
 	// Migrate legacy config.json notifications to database (idempotent)
 	if legacyNotif := config.ReadLegacyNotifications(); legacyNotif != nil {
@@ -159,9 +162,9 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		}
 	}
 
-	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch)
+	archiveService := archive.NewService(db, channelService, vodService, queueService, blockedVodService, riverClient, platformTwitch, storageChecker)
 	archiveService.Platforms = platforms
-	adminService := admin.NewService(db)
+	adminService := admin.NewService(db, storageChecker)
 	userService := user.NewService(db)
 	chapterService := chapter.NewService(db)
 	liveService := live.NewService(db, archiveService, platformTwitch, chapterService, queueService, notificationService)
@@ -188,6 +191,7 @@ func SetupApplication(ctx context.Context) (*Application, error) {
 		QueueService:        queueService,
 		BlockedVodService:   blockedVodService,
 		ArchiveService:      archiveService,
+		StorageChecker:      storageChecker,
 		AdminService:        adminService,
 		UserService:         userService,
 		LiveService:         liveService,

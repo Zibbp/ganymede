@@ -17,6 +17,9 @@ export interface Config {
     save_as_hls: boolean;
     generate_sprite_thumbnails: boolean;
     generate_nfo_files: boolean;
+    storage_check_enabled: boolean;
+    temp_dir_warning_threshold_gb: number;
+    temp_dir_critical_threshold_gb: number;
   };
   storage_templates: StorageTemplate;
   livestream: {

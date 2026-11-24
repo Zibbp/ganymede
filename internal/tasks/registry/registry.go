@@ -15,6 +15,7 @@ func New() (*river.Workers, error) {
 	workers := river.NewWorkers()
 	registrations := []func() error{
 		func() error { return river.AddWorkerSafely(workers, &tasks.WatchdogWorker{}) },
+		func() error { return river.AddWorkerSafely(workers, &tasks.StorageWatchdogWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks.CreateDirectoryWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks.SaveVideoInfoWorker{}) },
 		func() error { return river.AddWorkerSafely(workers, &tasks.DownloadTumbnailsWorker{}) },

@@ -1,9 +1,8 @@
 import { useRecordingStopping } from "@/app/store/useRecordingStopStore";
 import { Video } from "@/app/hooks/useVideos";
-import { escapeURL } from "@/app/util/util";
+import { mediaSrc } from "@/app/util/util";
 import { BackgroundImage, Overlay, Stack, Text, Title } from "@mantine/core";
 import { useTranslations } from "next-intl";
-import { env } from "next-runtime-env";
 import classes from "./RecordingNotice.module.css";
 
 export default function RecordingNotice({ video }: { video: Video }) {
@@ -12,7 +11,7 @@ export default function RecordingNotice({ video }: { video: Video }) {
 
   return (
     <BackgroundImage
-      src={`${env("NEXT_PUBLIC_CDN_URL") ?? ""}${escapeURL(video.web_thumbnail_path)}`}
+      src={mediaSrc(video.web_thumbnail_path)}
       className={classes.container}
     >
       <Overlay color="#000" backgroundOpacity={0.75} zIndex={0} />

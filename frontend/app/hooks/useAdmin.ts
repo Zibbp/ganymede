@@ -39,6 +39,9 @@ export interface GanymedeSystemOverview {
   videos_directory_free_space: number; // Free space in bytes
   videos_directory_used_space: number; // Tracked VOD storage in bytes
   videos_directory_total_space: number; // Filesystem capacity in bytes
+  temp_directory_free_space: number; // Temp directory free space in bytes
+  temp_directory_total_space: number; // Temp directory filesystem capacity in bytes
+  storage_state: "ok" | "warning" | "critical" | "disabled" | "unknown"; // Temp directory archive gate state
   cpu_cores: number; // Number of CPU cores
   memory_total: number; // Total memory in bytes
   queue: GanymedeQueueOverview;

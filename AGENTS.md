@@ -31,6 +31,8 @@ The long-term direction is platform-generic. New domain code should use platform
 - `tests/shared/`: integration polling, archive completion, media, and River assertion helpers.
 - `docs/`: generated Swag API artifacts.
 - `Dockerfile`, `entrypoint.sh`, `supervisord.conf`: combined production image and process lifecycle.
+- `mise.toml`, `compose.dev.yml`, `.env.dev.example`: host-native development toolchain and dev services (PostgreSQL, pinned media image).
+- `.devcontainer/`: optional all-in-one devcontainer path for VS Code/Codespaces.
 
 Treat `dev/`, `.env`, generated binaries, `tmp/`, archive media, logs, and test working directories as local/runtime data. Do not commit or rewrite them as part of an unrelated change.
 
@@ -191,9 +193,34 @@ The full CI suite builds the `tests` target from `Dockerfile`, creates the `gany
 
 Before handing off a change, report exactly which checks ran and which were skipped. For integration failures, distinguish code failures from missing Docker, unavailable live streams, rate limits, absent credentials, or missing external binaries.
 
+## Development environment (mise + Docker Compose)
+
+The primary development path is host-native: toolchains come from `mise.toml`, while PostgreSQL and the pinned media binaries run in Docker Compose. Run `mise trust && mise install` once per clone, then use mise tasks:
+
+| Task | What it does |
+| --- | --- |
+| `mise run setup` | First-time setup: seed `.env` from `.env.dev.example`, start the dev database, `npm install` the frontend |
+| `mise run db` | Start dev PostgreSQL 18 on 127.0.0.1:5432 |
+| `mise run server` | API server with live reload (air), native on the host |
+| `mise run web` | Next.js dev server |
+| `mise run worker` | Worker with live reload (air), inside the pinned media image |
+| `mise run media -- <cmd>` | One-off command inside the media image |
+| `mise run lint` / `mise run test` | golangci-lint / the CI `tests` Docker stage |
+| `mise run ent` / `mise run swagger` | Codegen (go.mod-pinned versions) |
+| `mise run db:tui` | River queue TUI against the dev database |
+
+Important for agents:
+
+- **Media processing runs in the pinned media image, not on the host.** `ffmpeg`/`ffprobe` are installed by mise for the host-native API's metadata endpoints, but use `mise run media -- <cmd>` (such as `mise run media -- ffmpeg -version`) for processing and for the exact container versions. `yt-dlp` and `TwitchDownloaderCLI` are image-only; never `apt install` them.
+- Tools resolve through mise shims scoped to the repo directory. If `go` is missing, the harness was launched without the shim directory on `PATH`; use `mise exec -- go ...`. Non-interactive contexts need `mise trust` or `MISE_TRUSTED_CONFIG_PATHS=<repo>`.
+- A single `.env` is shared by host and container runs. The `*_DIR` values in `.env.dev.example` are repo-relative (`dev/videos`, ...) so the host server and the compose worker (repo bind-mounted at `/workspace`) resolve stored paths identically; `DB_HOST` differs per context and is overridden by the mise/compose environment. Do not commit `.env`.
+- The worker container runs as root. Files it creates under the bind-mounted `dev/` and `tmp/` paths are root-owned; reclaim them with `mise run dev:chown` after stopping the worker if host-side writes or cleanup fail.
+- Personal overrides belong in untracked `mise.local.toml` and `compose.local.yml` (gitignored). Do not edit `mise.toml` or `compose.dev.yml` for machine-specific settings. The mise tasks read `COMPOSE_FILE`, so a `mise.local.toml` with `COMPOSE_FILE = "compose.dev.yml:compose.local.yml"` merges the local Compose override.
+- `.devcontainer/` remains the zero-install path for VS Code/Codespaces. Do not edit it for local tooling changes; add the tool to `mise.toml` instead.
+
 ## Development and deployment notes
 
-- `make dev_setup` installs Air/godotenv tooling and frontend dependencies; `make dev_server`, `make dev_worker`, and `make dev_web` run the three development processes.
+- Toolchains are managed by mise (`mise.toml`). The Makefile `dev_*` targets remain for the devcontainer, where `make dev_setup` installs Air/godotenv tooling and frontend dependencies.
 - Server/worker builds inject commit, tag, and build time into `internal/utils`; preserve these ldflags in release paths.
 - The production image combines API, worker, standalone Next.js, FFmpeg/ffprobe, yt-dlp, TwitchDownloaderCLI, and fonts. Supervisor runs all three application processes and exits if one becomes fatally unhealthy.
 - Data mounts and `VIDEOS_DIR`, `TEMP_DIR`, `LOGS_DIR`, and `CONFIG_DIR` must agree. `entrypoint.sh` changes ownership unless `SKIP_CHOWN=true`; network-storage compatibility matters.

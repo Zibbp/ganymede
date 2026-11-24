@@ -1,21 +1,104 @@
 "use client"
 import Head from "next/head";
-import React, { ReactNode, useEffect, useState } from "react";
-import { escapeURL } from "../../../util/util";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import { mediaSrc } from "../../../util/util";
 import classes from "./PlaylistMultistream.module.css"
 import { ActionIcon, Drawer, Text } from "@mantine/core";
 import { IconChevronUp } from "@tabler/icons-react";
 import { useDisclosure, useInterval } from "@mantine/hooks";
-import { useGetPlaylist, useUpdateMultistreamVideoOffset } from "@/app/hooks/usePlaylist";
+import { useGetPlaylist, useUpdateMultistreamVideoOffset, Playlist } from "@/app/hooks/usePlaylist";
 import GanymedeLoader from "@/app/components/utils/GanymedeLoader";
 import { MultistreamTimeline } from "@/app/components/videos/multistream/MultistreamTimeline";
 import SyncedVideoPlayer from "@/app/components/videos/multistream/SyncedVideoPlayer";
-import { env } from "next-runtime-env";
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Video } from "@/app/hooks/useVideos";
 
 interface Params {
   id: string;
+}
+
+type MultistreamLayout = {
+  streamers: Record<string, {
+    name: string
+    vods: Video[],
+    imagePath: string
+  }>;
+  startDateMs: number | null;
+  endDateMs: number | null;
+  gridWidth: number;
+  gridHeight: number;
+  defaultViewState: Record<string, { tileX: number; tileY: number; tileWidth: number; tileHeight: number }>;
+  vodPlaybackOffsets: Record<string, number>;
+};
+
+// Pure derivation of the multistream layout (timeline bounds, tiles, default
+// view and saved offsets) from the playlist data.
+function computeMultistreamLayout(playlist: Playlist): MultistreamLayout {
+  let _startDateMs: number | null = null;
+  let _endDateMs: number | null = null;
+  const _streamers: Record<string, {
+    name: string
+    vods: Video[],
+    imagePath: string
+  }> = {};
+  for (let i = 0; i < playlist.edges.vods.length; i++) {
+    const vod = playlist.edges.vods[i];
+    const vodStartDateMs = +new Date(getVodStartDate(vod))
+    if (_startDateMs == null || vodStartDateMs < _startDateMs) {
+      _startDateMs = vodStartDateMs;
+    }
+    const vodEndDateMs = vodStartDateMs + vod.duration * 1000;
+    if (_endDateMs == null || _endDateMs < vodEndDateMs) {
+      _endDateMs = vodEndDateMs;
+    }
+
+    if (!_streamers[vod.edges.channel.id]) {
+      _streamers[vod.edges.channel.id] = {
+        name: vod.edges.channel.name,
+        vods: [],
+        imagePath: vod.edges.channel.image_path,
+      }
+    }
+
+    _streamers[vod.edges.channel.id].vods.push(vod)
+  }
+
+  // Compute default view
+  const streamersCount = Object.keys(_streamers).length;
+  let rows = 1;
+  if (streamersCount > 3) {
+    rows = 2;
+  }
+  const columns = Math.ceil(streamersCount / rows);
+  let i = 0;
+  const defaultViewState: Record<string, { tileX: number; tileY: number; tileWidth: number; tileHeight: number }> = {}
+  for (const streamerId in _streamers) {
+    defaultViewState[streamerId] = {
+      tileX: i % columns,
+      tileY: Math.floor(i / columns),
+      tileWidth: 1,
+      tileHeight: 1,
+    }
+    i++;
+  }
+
+  const vodPlaybackOffsets: Record<string, number> = {};
+  if (playlist.edges.multistream_info) {
+    for (let i = 0; i < playlist.edges.multistream_info.length; i++) {
+      const multistreamInfo = playlist.edges.multistream_info[i];
+      vodPlaybackOffsets[multistreamInfo.edges.vod.id] = multistreamInfo.delay_ms;
+    }
+  }
+
+  return {
+    streamers: _streamers,
+    startDateMs: _startDateMs,
+    endDateMs: _endDateMs,
+    gridWidth: columns,
+    gridHeight: rows,
+    defaultViewState,
+    vodPlaybackOffsets,
+  };
 }
 
 const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
@@ -41,17 +124,12 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
   const [playStartAtDate, setPlayStartAtDate] = useState<number>(0);
   const [globalTime, setGlobalTime] = useState<number>(0);
   const [globalTimeUpdate, setGlobalTimeUpdate] = useState<number>(0);
-  const [startDateMs, setStartDateMs] = useState<number | null>(null);
-  const [endDateMs, setEndDateMs] = useState<number | null>(null);
-  const [streamers, setStreamers] = useState<Record<string, {
-    name: string
-    vods: Video[],
-    imagePath: string
-  }>>({});
-  const [gridWidth, setGridWidth] = useState<number>(2);
-  const [gridHeight, setGridHeight] = useState<number>(1);
   const [dragOverTile, setDragOverTile] = useState<[number, number] | null>(null);
   const [dropEnabled, setDropEnabled] = useState<boolean>(false);
+  // Grid size defaults to the layout computed from the data but can be
+  // overridden from the timeline drawer.
+  const [gridWidth, setGridWidth] = useState<number>(2);
+  const [gridHeight, setGridHeight] = useState<number>(1);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [enterEvents, setEnterEvents] = useState<number>(0);
   const [resizeMode, setResizeMode] = useState<false | 'resize' | 'move'>(false);
@@ -63,77 +141,26 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
     setGlobalTimeUpdate((playing ? (Date.now() - playStartAtDate) : 0) + globalTime)
   }, 1000)
 
-  // Update start and end of the timeline
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
-    let _startDateMs: number | null = null;
-    let _endDateMs: number | null = null;
-    const _streamers: Record<string, {
-      name: string
-      vods: Video[],
-      imagePath: string
-    }> = {};
-    for (let i = 0; i < data.edges.vods.length; i++) {
-      const vod = data.edges.vods[i];
-      const vodStartDateMs = +new Date(getVodStartDate(vod))
-      if (_startDateMs == null || vodStartDateMs < _startDateMs) {
-        _startDateMs = vodStartDateMs;
-      }
-      const vodEndDateMs = vodStartDateMs + vod.duration * 1000;
-      if (_endDateMs == null || _endDateMs < vodEndDateMs) {
-        _endDateMs = vodEndDateMs;
-      }
+  // Layout is derived from the playlist data; recomputed only when it changes.
+  const layout = useMemo(() => (data ? computeMultistreamLayout(data) : null), [data]);
+  const streamers = layout?.streamers ?? {};
+  const startDateMs = layout?.startDateMs ?? null;
+  const endDateMs = layout?.endDateMs ?? null;
 
-      if (!_streamers[vod.edges.channel.id]) {
-        _streamers[vod.edges.channel.id] = {
-          name: vod.edges.channel.name,
-          vods: [],
-          imagePath: vod.edges.channel.image_path,
-        }
-      }
-
-      _streamers[vod.edges.channel.id].vods.push(vod)
-    }
-
-    // COmpute default view
-    const streamersCount = Object.keys(_streamers).length;
-    let rows = 1;
-    if (streamersCount > 3) {
-      rows = 2;
-    }
-    const columns = Math.ceil(streamersCount / rows);
-    setGridWidth(columns);
-    setGridHeight(rows);
-    let i = 0;
-    const defaultViewState: Record<string, { tileX: number; tileY: number; tileWidth: number; tileHeight: number } | null> = {}
-    for (const streamerId in _streamers) {
-      defaultViewState[streamerId] = {
-        tileX: i % columns,
-        tileY: Math.floor(i / columns),
-        tileWidth: 1,
-        tileHeight: 1,
-      }
-      i++;
-    }
-    setStreamerViewState(defaultViewState);
-
-    setStartDateMs(_startDateMs)
-    setEndDateMs(_endDateMs)
-    setStreamers(_streamers)
-
-    setVodPlaybackOffsets((prevState) => {
-      const newState = { ...prevState };
-      if (data.edges.multistream_info) {
-        for (let i = 0; i < data.edges.multistream_info.length; i++) {
-          const multistreamInfo = data.edges.multistream_info[i];
-          newState[multistreamInfo.edges.vod.id] = multistreamInfo.delay_ms;
-        }
-      }
-      return newState;
-    })
-  }, [data])
+  // Tile view state, playback offsets and grid size are user-mutated; reset
+  // them when the playlist data arrives or changes. The marker starts
+  // undefined so a first render with cached query data also initializes.
+  const [prevPlaylist, setPrevPlaylist] = useState<Playlist | undefined>(undefined);
+  if (data !== prevPlaylist) {
+    setPrevPlaylist(data);
+    setStreamerViewState(layout?.defaultViewState ?? {});
+    setVodPlaybackOffsets((prevState) => ({
+      ...prevState,
+      ...(layout?.vodPlaybackOffsets ?? {}),
+    }));
+    setGridWidth(layout?.gridWidth ?? 2);
+    setGridHeight(layout?.gridHeight ?? 1);
+  }
 
   useEffect(() => {
     videoCheckInterval.stop()
@@ -148,12 +175,17 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
   if (isLoading) return <GanymedeLoader />;
   if (!data || data.edges.vods.length === 0) return <div>Empty playlist, unable to start multistream.</div>;
 
+  // Multistream wall-clock synchronization: seek records the wall-clock
+  // anchor for live progress, and the scheduled-start clamp below calls it
+  // during render (guarded, so it only fires once before the state lands).
   const seek = (newGlobalTime: number) => {
+    // eslint-disable-next-line react-hooks/purity
     setPlayStartAtDate(Date.now());
     setGlobalTime(newGlobalTime);
     setGlobalTimeUpdate(newGlobalTime);
   }
 
+  // Clamp the timeline to the playlist's scheduled start.
   if (startDateMs != null && globalTime < startDateMs) {
     seek(startDateMs);
   }
@@ -262,6 +294,9 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
       </ResizableTile>
     }
     const playbackOffset = (vodPlaybackOffsets[playingVod.id] || 0) / 1000;
+    // Live wall-clock progress: the rendered position is the current time,
+    // so the clock must be read during render for frame-accurate sync.
+    // eslint-disable-next-line react-hooks/purity
     const currentGlobalTime = (playing ? (Date.now() - playStartAtDate) : 0) + globalTime
     const vodTime = (currentGlobalTime - (+new Date(getVodStartDate(playingVod)))) / 1000 + playbackOffset;
     return (
@@ -280,10 +315,10 @@ const PlaylistMultistream = ({ params }: { params: Promise<Params> }) => {
         }}
       >
         <SyncedVideoPlayer
-          src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(playingVod.video_path)}`}
+          src={mediaSrc(playingVod.video_path)}
           vodId={playingVod.id}
           title={playingVod.title}
-          poster={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(playingVod.web_thumbnail_path)}`}
+          poster={mediaSrc(playingVod.web_thumbnail_path)}
           time={vodTime}
           playing={playing}
           muted={true}

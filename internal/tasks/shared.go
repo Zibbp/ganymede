@@ -27,6 +27,7 @@ import (
 	"github.com/zibbp/ganymede/internal/hls"
 	"github.com/zibbp/ganymede/internal/notification"
 	"github.com/zibbp/ganymede/internal/platform"
+	"golang.org/x/sys/unix"
 
 	tasks_shared "github.com/zibbp/ganymede/internal/tasks/shared"
 	"github.com/zibbp/ganymede/internal/utils"
@@ -468,6 +469,53 @@ func (*CustomErrorHandler) HandleError(ctx context.Context, job *rivertype.JobRo
 		}
 	}
 
+	// Cancel full-disk failures instead of retrying into a full disk. Still
+	// send the error notification: the disk may not be the watched temp
+	// directory, and cancelling keeps the volume to one per job.
+	if utils.Contains(job.Tags, archive_tag) && !utils.Contains(job.Tags, allow_fail_tag) && isNoSpaceError(err) {
+		var args RiverJobArgs
+		if err := json.Unmarshal(job.EncodedArgs, &args); err != nil {
+			return nil
+		}
+		store, storeErr := StoreFromContext(ctx)
+		if storeErr != nil {
+			return nil
+		}
+		log.Warn().Int64("job_id", job.ID).Str("kind", job.Kind).Str("queue_id", args.Input.QueueId.String()).Msg("archive task failed because the disk is full; cancelling instead of retrying")
+		if err := setQueueStatus(ctx, store.Client, QueueStatusInput{
+			Status:  utils.Failed,
+			QueueId: args.Input.QueueId,
+			Task:    utils.GetTaskName(job.Kind),
+		}); err != nil {
+			return nil
+		}
+		if err := checkIfTasksAreDone(ctx, store.Client, args.Input); err != nil {
+			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to finalize archive status")
+		}
+		// Bounded so a stalled query cannot delay the job cancellation.
+		lookupCtx, cancelLookup := context.WithTimeout(ctx, 30*time.Second)
+		dbItems, err := getDatabaseItems(lookupCtx, store.Client, args.Input.QueueId)
+		cancelLookup()
+		if err != nil {
+			// Still cancel; a failed lookup must not restore retries.
+			log.Error().Err(err).Str("queue_id", args.Input.QueueId.String()).Msg("failed to get archive items for full-disk notification")
+			return &river.ErrorHandlerResult{SetCancelled: true}
+		}
+		if notifSvc, err := NotificationServiceFromContext(ctx); err == nil {
+			go func() {
+				notifCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+				defer cancel()
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().Interface("panic", r).Msg("panic in notification")
+					}
+				}()
+				notifSvc.SendError(notifCtx, &dbItems.Channel, &dbItems.Video, &dbItems.Queue, job.Kind)
+			}()
+		}
+		return &river.ErrorHandlerResult{SetCancelled: true}
+	}
+
 	// River invokes the error handler after every failed attempt. Keep queue
 	// failure state and notifications for terminal errors only. A remote cancel
 	// of a live capture is terminal in River, but the worker deliberately
@@ -614,6 +662,18 @@ func attemptedBy(job *rivertype.JobRow) string {
 		return ""
 	}
 	return job.AttemptedBy[index]
+}
+
+// isNoSpaceError reports whether a task failed because the disk is full.
+// FFmpeg and yt-dlp report this as text, so check the error and its message.
+func isNoSpaceError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, unix.ENOSPC) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "no space left on device")
 }
 
 func shouldFinalizeArchiveError(ctx context.Context, job *rivertype.JobRow, err error) bool {

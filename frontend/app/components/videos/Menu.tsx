@@ -21,7 +21,7 @@ import PlaylistManageDrawerContent from '../playlist/ManageDrawerContent';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
 import { useDeletePlayback, useMarkVideoAsWatched } from '@/app/hooks/usePlayback';
 import { showNotification } from '@mantine/notifications';
-import { useEffect, useRef } from 'react';
+import { useState } from 'react';
 import videoEventBusInstance from '@/app/util/VideoEventBus';
 import DeleteVideoModalContent from '../admin/video/DeleteModalContent';
 import useAuthStore from '@/app/store/useAuthStore';
@@ -43,14 +43,14 @@ const VideoMenu = ({ video }: Props) => {
   const [stopModalOpened, { open: openStopModal, close: closeStopModal }] = useDisclosure(false);
   const stopRecordingMutate = useStopRecording();
   const axiosPrivate = useAxiosPrivate()
-  const isLocked = useRef(false);
+  const [isLocked, setIsLocked] = useState(Boolean(video.locked));
+  const [prevVideoLocked, setPrevVideoLocked] = useState(video.locked);
+  // Adjust state when the incoming video changes (e.g. after query invalidation).
+  if (video.locked !== prevVideoLocked) {
+    setPrevVideoLocked(video.locked);
+    setIsLocked(Boolean(video.locked));
+  }
   const { hasPermission } = useAuthStore()
-
-  useEffect(() => {
-    if (video.locked) {
-      isLocked.current = true;
-    }
-  }, [video]);
 
   const markAsWatchedMutate = useMarkVideoAsWatched()
   const deletePlaybackMutate = useDeletePlayback()
@@ -107,9 +107,9 @@ const VideoMenu = ({ video }: Props) => {
         message: `${t('videoLockedNotification', { status: lock ? t('locked') : t('unlocked') })}}`
       })
       if (lock == true) {
-        isLocked.current = true;
+        setIsLocked(true);
       } else {
-        isLocked.current = false;
+        setIsLocked(false);
       }
     } catch (error) {
       console.error(error)
@@ -200,7 +200,7 @@ const VideoMenu = ({ video }: Props) => {
           <Menu.Item leftSection={<IconHourglassEmpty style={{ width: rem(14), height: rem(14) }} />} onClick={handleMarkAsUnWatched}>
             {t('menu.markAsUnwatched')}
           </Menu.Item>
-          {isLocked.current ? (
+          {isLocked ? (
             <Menu.Item leftSection={<IconLockOpen style={{ width: rem(14), height: rem(14) }} />} onClick={() => handleLockVideo(false)}>
               {t('menu.unlock')}
             </Menu.Item>
