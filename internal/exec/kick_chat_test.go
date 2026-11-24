@@ -140,6 +140,8 @@ func TestFetchKickAssets(t *testing.T) {
 		switch r.URL.Path {
 		case "/ok":
 			_, _ = w.Write(png)
+		case "/huge":
+			_, _ = w.Write(make([]byte, kickAssetMaxBytes+1))
 		case "/gone":
 			w.WriteHeader(http.StatusNotFound)
 		case "/flaky":
@@ -154,11 +156,12 @@ func TestFetchKickAssets(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	assets, err := fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/gone", srv.URL + "/flaky"})
+	assets, err := fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/gone", srv.URL + "/huge", srv.URL + "/flaky"})
 	require.NoError(t, err)
 	assert.Contains(t, assets, srv.URL+"/ok")
 	assert.Contains(t, assets, srv.URL+"/flaky", "transient failure should be retried")
 	assert.NotContains(t, assets, srv.URL+"/gone")
+	assert.NotContains(t, assets, srv.URL+"/huge")
 
 	_, err = fetchKickAssets(context.Background(), []string{srv.URL + "/ok", srv.URL + "/down"})
 	assert.Error(t, err, "persistent transient failure must fail the embed")

@@ -37,7 +37,7 @@ func TestKickChatAnchorProgramTimeWinsInEitherOrder(t *testing.T) {
 		if !ok || !got.Equal(now) {
 			t.Fatalf("fallback = %s, %v", got, ok)
 		}
-		got, ok = a.segmentCaptured(program, now)
+		got, ok = a.segmentCaptured(kickSegmentTime{program: program, observed: now})
 		if !ok || !got.Equal(program) {
 			t.Fatalf("program time = %s, %v", got, ok)
 		}
@@ -45,7 +45,7 @@ func TestKickChatAnchorProgramTimeWinsInEitherOrder(t *testing.T) {
 
 	t.Run("segment first", func(t *testing.T) {
 		var a kickChatAnchor
-		got, ok := a.segmentCaptured(program, now)
+		got, ok := a.segmentCaptured(kickSegmentTime{program: program, observed: now})
 		if !ok || !got.Equal(program) {
 			t.Fatalf("program time = %s, %v", got, ok)
 		}
@@ -56,7 +56,7 @@ func TestKickChatAnchorProgramTimeWinsInEitherOrder(t *testing.T) {
 
 	t.Run("implausible segment keeps fallback", func(t *testing.T) {
 		var a kickChatAnchor
-		if _, ok := a.segmentCaptured(now.Add(-time.Hour), now); ok {
+		if _, ok := a.segmentCaptured(kickSegmentTime{program: now.Add(-time.Hour), observed: now}); ok {
 			t.Fatal("accepted implausible program time")
 		}
 		if _, ok := a.captureStarted(now); !ok {

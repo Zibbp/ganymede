@@ -271,9 +271,12 @@ func fetchKickAsset(ctx context.Context, client *http.Client, u string) (kickAss
 	if resp.StatusCode != http.StatusOK {
 		return kickAsset{}, fmt.Errorf("status %d", resp.StatusCode)
 	}
-	data, err := io.ReadAll(io.LimitReader(resp.Body, kickAssetMaxBytes))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, kickAssetMaxBytes+1))
 	if err != nil {
 		return kickAsset{}, err
+	}
+	if len(data) > kickAssetMaxBytes {
+		return kickAsset{}, fmt.Errorf("larger than %d bytes: %w", kickAssetMaxBytes, errKickAssetGone)
 	}
 	a := kickAsset{data: base64.StdEncoding.EncodeToString(data), width: kickDefaultEmoteSize, height: kickDefaultEmoteSize}
 	if cfg, _, err := image.DecodeConfig(bytes.NewReader(data)); err == nil && cfg.Width > 0 {

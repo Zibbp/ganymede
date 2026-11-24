@@ -374,7 +374,6 @@ func (s *Service) Check(ctx context.Context) error {
 	}
 
 	kickStreams, kickLookupFailed := s.checkKickLiveStreams(ctx, liveWatchedChannels)
-	streams = append(streams, kickStreams...)
 
 	// check if live stream is online
 OUTER:
@@ -388,7 +387,12 @@ OUTER:
 			channelPlatform = utils.PlatformTwitch
 		}
 		// Check if LWC is in twitchStreams.Data
-		stream := channelInLiveStreamInfo(lwc.Edges.Channel.ExtID, streams)
+		// Logins and IDs are only unique within a platform.
+		platformStreams := streams
+		if channelPlatform == utils.PlatformKick {
+			platformStreams = kickStreams
+		}
+		stream := channelInLiveStreamInfo(lwc.Edges.Channel.ExtID, platformStreams)
 		if len(stream.ID) > 0 {
 			// Build map of channel watched categories
 			watchedChannelCategories := make(map[string]struct{}, len(lwc.Edges.Categories))
