@@ -5,7 +5,6 @@ import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { Card, Container, Flex, Title, Text, Code } from "@mantine/core";
 import Link from "next/link";
 import classes from "./AdminInformationPage.module.css"
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { usePageTitle } from "@/app/util/util";
 

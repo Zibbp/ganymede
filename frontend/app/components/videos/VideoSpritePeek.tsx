@@ -1,12 +1,10 @@
 import { Video } from "@/app/hooks/useVideos";
 import classes from "./VideoSpritePeek.module.css";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Flex, Popover, Progress } from "@mantine/core";
-import { env } from "next-runtime-env";
-import { durationToTime, escapeURL } from "@/app/util/util";
+import { durationToTime, mediaSrc } from "@/app/util/util";
 import clsx from "clsx";
 import {
-  useDebouncedCallback,
   useElementSize,
   useMergedRef,
   useThrottledCallback,
@@ -28,11 +26,12 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
   const [opened, setOpened] = useState<boolean>(false);
   const [hoveredTimeElement, setHoveredTimeElement] =
     useState<HoveredTimeElement | null>(null);
-  const spritePeekContainerElementRef = useRef<HTMLDivElement | null>(null);
+  const [spritePeekContainerElement, setSpritePeekContainerElement] =
+    useState<HTMLDivElement | null>(null);
   const { ref: spritePeekContainerRef, width: spritePeekContainerWidth } =
     useElementSize<HTMLDivElement>();
   const mergedSpritePeekContainerRef = useMergedRef(
-    spritePeekContainerElementRef,
+    setSpritePeekContainerElement,
     spritePeekContainerRef
   );
 
@@ -79,7 +78,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
       position="top"
       offset={{
         crossAxis:
-          hoveredTimeElement && spritePeekContainerElementRef.current
+          hoveredTimeElement && spritePeekContainerElement
             ? 0.5 *
               (hoveredTimeElement.time / video.duration - 0.5) *
               spritePeekContainerWidth
@@ -123,11 +122,7 @@ const VideoSpritePeek = ({ video, progressDisplayed }: Props) => {
                 "--sprite-x": `${hoveredTimeElement ? hoveredTimeElement.spriteX : 0}`,
                 "--sprite-y": `${hoveredTimeElement ? hoveredTimeElement.spriteY : 0}`,
                 "--sprite-image": `url(${
-                  hoveredTimeElement
-                    ? `${env("NEXT_PUBLIC_CDN_URL") ?? ""}${escapeURL(
-                        hoveredTimeElement.imageSrc
-                      )}`
-                    : ""
+                  hoveredTimeElement ? mediaSrc(hoveredTimeElement.imageSrc) : ""
                 })`,
               } as React.CSSProperties
             }

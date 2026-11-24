@@ -19,7 +19,7 @@ export default function ForceLogin({ children }: { children: React.ReactNode }) 
     if (isForceLoginEnabled == "true" && !isLoading && !isLoggedIn && !isAuthPage) {
       router.replace("/login");
     }
-  }, [isLoggedIn, isLoading, isAuthPage, router]);
+  }, [isLoggedIn, isLoading, isAuthPage, isForceLoginEnabled, router]);
 
   if (isForceLoginEnabled == "true" && !isAuthPage) {
     if (isLoading) return <div></div>;

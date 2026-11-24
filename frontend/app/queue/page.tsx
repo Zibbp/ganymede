@@ -1,6 +1,6 @@
 "use client"
 import ArchiveStatusBadge from "@/app/components/videos/ArchiveStatusBadge";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiResponse, useAxiosPrivate } from "../hooks/useAxios";
 import { Queue, useGetQueueItems, useStopQueueItem } from "../hooks/useQueue";
 import GanymedeLoadingText from "../components/utils/GanymedeLoadingText";
@@ -35,9 +35,8 @@ const QueuePage = () => {
   const setSettingsAdminItemsPerPage = useSettingsStore((state) => state.setAdminItemsPerPage)
 
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(settingsAdminItemsPerPage);
-  const [records, setRecords] = useState<Queue[]>([]);
-  const [initialRecords, setInitialRecords] = useState(false);
+  // Per-page preference is owned by the persisted settings store.
+  const perPage = settingsAdminItemsPerPage;
   const [activeQueue, setActiveQueue] = useState<Queue | null>(null);
 
   // delete state
@@ -71,21 +70,13 @@ const QueuePage = () => {
     };
   }, []);
 
-  useEffect(() => {
-    setPerPage(settingsAdminItemsPerPage);
-  }, [settingsAdminItemsPerPage]);
-
-  useEffect(() => {
-    if (queueItems && !initialRecords) {
-      setRecords(queueItems.slice(0, perPage));
-      setInitialRecords(true);
-    }
-    if (queueItems) {
-      const from = (page - 1) * perPage;
-      const to = from + perPage;
-      setRecords(queueItems.slice(from, to));
-    }
-  }, [queueItems, page, perPage, initialRecords]);
+  // Records are derived from the query data and table controls.
+  const records = useMemo(() => {
+    if (!queueItems) return [];
+    const from = (page - 1) * perPage;
+    const to = from + perPage;
+    return queueItems.slice(from, to);
+  }, [queueItems, page, perPage]);
 
   const cancelQueueItem = async () => {
     try {
@@ -332,7 +323,6 @@ const QueuePage = () => {
           onPageChange={(p) => setPage(p)}
           recordsPerPageOptions={[10, 20, 50]}
           onRecordsPerPageChange={(value) => {
-            setPerPage(value);
             setSettingsAdminItemsPerPage(value);
             setPage(1);
           }}

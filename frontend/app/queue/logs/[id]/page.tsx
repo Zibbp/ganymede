@@ -17,7 +17,7 @@ const QueueLogsPage = ({ params }: { params: Promise<Params> }) => {
   const t = useTranslations("QueueLogsPage");
   useEffect(() => {
     document.title = `${t('title')} - ${id}`;
-  }, [id]);
+  }, [id, t]);
 
   const searchParams = useSearchParams()
   const logEndRef = useRef<HTMLDivElement>(null);

@@ -7,6 +7,7 @@ import type { CSSProperties } from "react";
 import classes from "./SyncedVideoPlayer.module.css"
 import { env } from "next-runtime-env";
 import { useLocale } from 'next-intl';
+import { useMounted } from "@/app/hooks/useMounted";
 
 export type SyncedVideoPlayerProps = {
   src: string;
@@ -22,11 +23,7 @@ const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: 
   const locale = useLocale();
   const videoEl = useRef<HTMLVideoElement>(null)
   const [canPlay, setCanPlay] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted()
 
   useEffect(() => {
     const current = videoEl.current
@@ -53,7 +50,10 @@ const SyncedVideoPlayer = ({ src, vodId, title, poster, time, playing, muted }: 
         }
       }
     })();
-  }, [playing, canPlay /* `time` should not be part of dependencies, it already has its own effect */])
+    // `time` is intentionally excluded: it is applied by its own dedicated
+    // effect, and re-running play/pause on every tick would stutter playback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, canPlay])
 
   useEffect(() => {
     if (!videoEl.current) return;

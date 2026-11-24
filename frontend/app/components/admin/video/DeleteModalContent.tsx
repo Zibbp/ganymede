@@ -1,11 +1,10 @@
 import { useAxiosPrivate } from "@/app/hooks/useAxios";
 import { useBlockVideo } from "@/app/hooks/useBlockedVideos";
 import { useDeleteVideo, Video } from "@/app/hooks/useVideos";
-import { escapeURL } from "@/app/util/util";
+import { mediaSrc } from "@/app/util/util";
 import { Button, Code, Text, Image, Flex, Checkbox } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
-import { env } from "next-runtime-env";
 import { useState } from "react";
 
 type Props = {
@@ -60,9 +59,7 @@ const DeleteVideoModalContent = ({ video, handleClose }: Props) => {
         <pre>Channel: {video.edges.channel.name}</pre>
       </Code>
       <Image
-        src={`${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(
-          video.web_thumbnail_path
-        )}`}
+        src={mediaSrc(video.web_thumbnail_path)}
         fallbackSrc="/images/ganymede-thumbnail.webp"
         alt={video.title}
       />

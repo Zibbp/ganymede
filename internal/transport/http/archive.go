@@ -101,6 +101,7 @@ func (h *Handler) ArchiveChannel(c echo.Context) error {
 //	@Failure		400	{object}	utils.ErrorResponse
 //	@Failure		409	{object}	utils.ErrorResponse
 //	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		507	{object}	utils.ErrorResponse
 //	@Router			/archive/video [post]
 //	@Security		ApiKeyAuth
 func (h *Handler) ArchiveVideo(c echo.Context) error {
@@ -139,6 +140,9 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 		if errors.Is(err, archive.ErrActiveLiveArchive) {
 			return ErrorResponse(c, http.StatusConflict, archive.ErrActiveLiveArchive.Error())
 		}
+		if errors.Is(err, archive.ErrTempDirLowSpace) {
+			return ErrorResponse(c, http.StatusInsufficientStorage, err.Error())
+		}
 		if err != nil {
 			return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
@@ -153,6 +157,9 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 				ArchiveChat: body.ArchiveChat,
 				RenderChat:  body.RenderChat,
 			})
+			if errors.Is(err, archive.ErrTempDirLowSpace) {
+				return ErrorResponse(c, http.StatusInsufficientStorage, err.Error())
+			}
 			if err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			}
@@ -164,6 +171,9 @@ func (h *Handler) ArchiveVideo(c echo.Context) error {
 				ArchiveChat: body.ArchiveChat,
 				RenderChat:  body.RenderChat,
 			})
+			if errors.Is(err, archive.ErrTempDirLowSpace) {
+				return ErrorResponse(c, http.StatusInsufficientStorage, err.Error())
+			}
 			if err != nil {
 				return ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			}

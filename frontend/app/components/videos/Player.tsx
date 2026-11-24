@@ -9,12 +9,13 @@ import { Video as VideoType, VideoType as GanymedeVideoType } from '@/app/hooks/
 import classes from "./Player.module.css"
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMounted } from '@/app/hooks/useMounted';
 import { env } from 'next-runtime-env';
 import dayjs from 'dayjs';
 import { useLocale, useTranslations } from 'next-intl';
 import { ActionIcon, FloatingWindow } from '@mantine/core';
 import { IconPin, IconPinnedOff } from '@tabler/icons-react';
-import { escapeURL } from '@/app/util/util';
+import { mediaSrc } from '@/app/util/util';
 import { extractVideoNoteTimestamps } from '@/app/util/videoNotes';
 import { PlaybackStatus, useFetchPlaybackForVideo, useSetPlaybackProgressForVideo, useStartPlaybackForVideo, useUpdatePlaybackProgressForVideo } from '@/app/hooks/usePlayback';
 import { useAxiosPrivate } from '@/app/hooks/useAxios';
@@ -135,11 +136,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const hasStartedPlayback = useRef(false);
   const hasInitializedPlaybackTime = useRef(false);
   const pendingResumeTime = useRef<number | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const updatePlaybackProgressMutation = useUpdatePlaybackProgressForVideo()
   const setPlaybackProgressMutation = useSetPlaybackProgressForVideo()
@@ -178,14 +175,14 @@ const VideoPlayer = ({ video, ref }: Params) => {
   const videoSrc = useMemo(() => {
     // Allow for processing videos to be played via HLS from the temp directory if enabled
     if (isArchiveActive(video.status)) {
-      return `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.tmp_video_hls_path)}/${video.ext_stream_id || video.ext_id}-video.m3u8`;
+      return `${mediaSrc(video.tmp_video_hls_path)}/${video.ext_stream_id || video.ext_id}-video.m3u8`;
     }
-    return `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.video_path)}`;
+    return mediaSrc(video.video_path);
   }, [video.status, video.tmp_video_hls_path, video.ext_stream_id, video.ext_id, video.video_path]);
 
   const videoPoster = useMemo(() => {
     if (video.thumbnail_path) {
-      return `${(env('NEXT_PUBLIC_CDN_URL') ?? '')}${escapeURL(video.thumbnail_path)}`;
+      return mediaSrc(video.thumbnail_path);
     }
     return "";
   }, [video.thumbnail_path]);

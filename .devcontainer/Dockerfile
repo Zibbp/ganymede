@@ -56,5 +56,20 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp && \
   chmod +x /usr/local/bin/yt-dlp
 
+# Plain `docker compose build` (compose.dev.yml worker) does not apply
+# devcontainer Features, so everything `air -c .worker.air.toml` needs must be
+# in the image: make for the air build command, air itself, and godotenv for
+# the air run command. Harmless duplicates when opened as a devcontainer.
+# Kept last so the heavy media layers above stay cache-hit.
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y install --no-install-recommends make \
+  && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:$PATH
+RUN go install github.com/air-verse/air@v1.67.4 \
+  && go install github.com/joho/godotenv/cmd/godotenv@v1.5.1
+
 WORKDIR /workspace
+
 

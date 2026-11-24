@@ -1,6 +1,5 @@
 import { Queue } from "@/app/hooks/useQueue";
-import { escapeURL } from "@/app/util/util";
-import { env } from "next-runtime-env";
+import { mediaSrc } from "@/app/util/util";
 import { Container, Divider, Flex, Image, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
 import classes from "./Header.module.css"
@@ -18,10 +17,7 @@ const QueueHeader = ({ queue }: Params) => {
         <div className={classes.queueHeaderContents}>
           <div>
             <Image
-              src={
-                (env('NEXT_PUBLIC_CDN_URL') ?? '') +
-                escapeURL(queue.edges.vod.web_thumbnail_path)
-              }
+              src={mediaSrc(queue.edges.vod.web_thumbnail_path)}
               w={160}
               alt={queue.edges.vod.title}
             />
