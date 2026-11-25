@@ -21,6 +21,7 @@ import (
 
 const (
 	liveChatPendingFileSuffix = ".pending.ndjson"
+	liveChatMergeLockSuffix   = ".merge.lock"
 	liveChatSyncInterval      = 2 * time.Second
 	liveChatMainFlushInterval = 5 * time.Second
 )
@@ -382,19 +383,30 @@ func mergePendingNDJSONIntoJSONArray(filename, pendingPath string) (mergedCount,
 	}
 	defer pf.Close() //nolint:errcheck
 
+	// Lock a separate file. The chat file itself is replaced by the rename
+	// below, so a lock on it would not cover the next merge.
+	lockFile, err := os.OpenFile(filename+liveChatMergeLockSuffix, os.O_CREATE|os.O_RDWR, 0o644)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to open merge lock file: %w", err)
+	}
+	defer lockFile.Close() //nolint:errcheck
+
+	if err := syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX); err != nil {
+		return 0, 0, fmt.Errorf("failed to lock merge lock file: %w", err)
+	}
+	defer func() {
+		_ = syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN)
+	}()
+
 	// Open (or create) the destination JSON file for read/write.
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer f.Close() //nolint:errcheck
-
-	// Acquire an exclusive advisory lock so only one finalizer mutates file state.
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
-		return 0, 0, fmt.Errorf("failed to lock file: %w", err)
-	}
 	defer func() {
-		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		if f != nil {
+			_ = f.Close()
+		}
 	}()
 
 	info, err := f.Stat()
@@ -482,12 +494,23 @@ func mergePendingNDJSONIntoJSONArray(filename, pendingPath string) (mergedCount,
 	if _, err := tmp.Write([]byte("\n]\n")); err != nil {
 		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to write closing bracket: %w", err)
 	}
+	// CreateTemp uses 0600; keep the chat file readable.
+	if err := tmp.Chmod(0o644); err != nil {
+		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to set temp file permissions: %w", err)
+	}
 	if err := tmp.Sync(); err != nil {
 		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to sync temp file: %w", err)
 	}
 	if err := tmp.Close(); err != nil {
 		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to close temp file: %w", err)
 	}
+
+	// Close the chat file before replacing it. SMB mounts refuse to replace
+	// a file that is still open.
+	if err := f.Close(); err != nil {
+		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to close file before replace: %w", err)
+	}
+	f = nil
 
 	if err := os.Rename(tmpName, filename); err != nil {
 		return mergedCount, skippedInvalidCount, fmt.Errorf("failed to atomically replace file: %w", err)
