@@ -854,13 +854,23 @@ func EnsureLiveHlsPlaylist(ctx context.Context, tmpHlsPath, extID string) (strin
 		defer func() {
 			_ = os.RemoveAll(probeDir)
 		}()
-		initPath := filepath.Join(tmpHlsPath, extID+"_init.mp4")
+		initPath, err := filepath.Abs(filepath.Join(tmpHlsPath, extID+"_init.mp4"))
+		if err != nil {
+			return "", fmt.Errorf("resolve live HLS init segment path: %w", err)
+		}
 		probe := func(ctx context.Context, path string) (float64, error) {
+			// The probe playlist lives outside the capture directory, and
+			// ffprobe resolves relative URIs against the playlist. Absolute
+			// URIs keep recovery working when TEMP_DIR is relative.
+			absPath, err := filepath.Abs(path)
+			if err != nil {
+				return 0, fmt.Errorf("resolve live HLS segment path: %w", err)
+			}
 			// fmp4 segments need the init file, so probe via a mini playlist.
 			mini := "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:60\n" +
 				"#EXT-X-MEDIA-SEQUENCE:0\n" +
 				fmt.Sprintf("#EXT-X-MAP:URI=%q\n", hls.URI(initPath)) +
-				"#EXTINF:60.0,\n" + hls.URI(path) + "\n#EXT-X-ENDLIST\n"
+				"#EXTINF:60.0,\n" + hls.URI(absPath) + "\n#EXT-X-ENDLIST\n"
 			miniPath := filepath.Join(probeDir, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+".m3u8")
 			if err := os.WriteFile(miniPath, []byte(mini), 0o644); err != nil {
 				return 0, err

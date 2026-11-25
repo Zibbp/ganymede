@@ -1051,6 +1051,45 @@ func TestEnsureLiveHlsPlaylistAfterStreamVideoIDUpdate(t *testing.T) {
 	}
 }
 
+// The dev setup stores TEMP_DIR as a relative path. Rebuild probes write their
+// mini playlist outside the capture directory, so relative segment URIs would
+// resolve against the wrong directory.
+func TestEnsureLiveHlsPlaylistRebuildWithRelativeDir(t *testing.T) {
+	t.Chdir(t.TempDir())
+
+	const captureID = "capture"
+	dir := filepath.Join("relative", "capture")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("create capture directory: %v", err)
+	}
+	playlistPath := filepath.Join(dir, captureID+"-video.m3u8")
+	generate := osExec.CommandContext(t.Context(), "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+		"-f", "lavfi", "-i", "testsrc=size=160x120:rate=10:duration=4",
+		"-c:v", "libx264", "-preset", "ultrafast", "-g", "20",
+		"-hls_time", "2", "-hls_list_size", "0", "-hls_segment_type", "fmp4",
+		"-hls_fmp4_init_filename", captureID+"_init.mp4",
+		"-hls_segment_filename", filepath.Join(dir, captureID+"_segment%06d.m4s"),
+		"-f", "hls", playlistPath)
+	if out, err := generate.CombinedOutput(); err != nil {
+		t.Fatalf("generate capture: %v\n%s", err, out)
+	}
+	if err := os.Remove(playlistPath); err != nil {
+		t.Fatalf("remove capture playlist: %v", err)
+	}
+
+	rebuilt, err := EnsureLiveHlsPlaylist(t.Context(), dir, captureID)
+	if err != nil {
+		t.Fatalf("EnsureLiveHlsPlaylist with relative dir: %v", err)
+	}
+	body, err := os.ReadFile(rebuilt)
+	if err != nil {
+		t.Fatalf("read rebuilt playlist: %v", err)
+	}
+	if !strings.Contains(string(body), "#EXT-X-ENDLIST") {
+		t.Fatalf("rebuilt playlist is not finalized:\n%s", body)
+	}
+}
+
 func TestParseAdvancingFFmpegOutTime(t *testing.T) {
 	t.Parallel()
 
