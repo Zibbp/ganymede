@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
 
+import { SeekIndicator } from '@/components/videojs/ui/seek-indicator';
 import { StatusAnnouncer } from '@/components/videojs/ui/status-announcer';
 import { PlaybackStatusIndicator, StatusIndicator } from '@/components/videojs/ui/status-indicator';
 import { VolumeIndicator } from '@/components/videojs/ui/volume-indicator';
@@ -14,6 +15,8 @@ export function LiveVideoStatusIndicators({ className, ...props }: LiveVideoStat
       <div className={cn('video-status-indicators', className)} {...props}>
         <VolumeIndicator />
         <StatusIndicator />
+        {/* Seek feedback. */}
+        <SeekIndicator />
         <PlaybackStatusIndicator />
       </div>
     </>

@@ -9,7 +9,10 @@ export function LiveVideoGestures({ disabled = false }: LiveVideoGesturesProps =
     <>
       <Gesture disabled={disabled} type="tap" action="togglePaused" pointer="mouse" region="center" />
       <Gesture disabled={disabled} type="tap" action="toggleControls" pointer="touch" />
+      {/* Double tap to seek, as in the VOD player. */}
+      <Gesture disabled={disabled} type="doubletap" action="seekStep" region="left" />
       <Gesture disabled={disabled} type="doubletap" action="toggleFullscreen" region="center" />
+      <Gesture disabled={disabled} type="doubletap" action="seekStep" region="right" />
     </>
   );
 }
