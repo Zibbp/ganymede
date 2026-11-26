@@ -120,8 +120,8 @@ const LiveAbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) =>
   return <AbsoluteTimePopup startedAt={startedAt} currentTime={currentSecond} />;
 };
 
-// Return to 1x at the live edge so faster playback does not stall.
-const LiveCatchUpSpeedReset = ({ player }: { player: GanymedePlayerRef }) => {
+// Return to 1x at the live edge so playback does not fall behind.
+const LiveCatchUpSpeedReset = () => {
   const caughtUpWhileFast = useLivePlayer((s) => {
     const { currentTime, liveEdgeStart, playbackRate, seekable } = s as unknown as {
       currentTime: number;
@@ -129,19 +129,20 @@ const LiveCatchUpSpeedReset = ({ player }: { player: GanymedePlayerRef }) => {
       playbackRate: number;
       seekable?: ReadonlyArray<readonly [number, number]>;
     };
-    if (!(playbackRate > 1)) return false;
+    if (!Number.isFinite(playbackRate) || playbackRate <= 0 || playbackRate === 1) return false;
     if (Number.isFinite(liveEdgeStart)) return currentTime >= liveEdgeStart;
     // Fall back to the last 10 seconds.
     const lastRange = seekable && seekable.length > 0 ? seekable[seekable.length - 1] : undefined;
     const recordingEnd = lastRange ? lastRange[1] : Number.NaN;
     return Number.isFinite(recordingEnd) && currentTime >= recordingEnd - 10;
   });
+  const setPlaybackRate = useLivePlayer(
+    (s) => (s as unknown as { setPlaybackRate: (rate: number) => void }).setPlaybackRate,
+  );
 
   useEffect(() => {
-    if (!caughtUpWhileFast) return;
-    const el = player.current;
-    if (el) el.playbackRate = 1;
-  }, [caughtUpWhileFast, player]);
+    if (caughtUpWhileFast) setPlaybackRate(1);
+  }, [caughtUpWhileFast, setPlaybackRate]);
 
   return null;
 };
@@ -431,7 +432,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
               <HlsJsVideo {...mediaProps} />
             </LiveVideoSkin>
             {showAbsoluteTime && <LiveAbsoluteTimeDisplay startedAt={startedAt} />}
-            <LiveCatchUpSpeedReset player={player} />
+            <LiveCatchUpSpeedReset />
           </I18nProvider>
         </LiveVideoJsPlayer>
       ) : (
