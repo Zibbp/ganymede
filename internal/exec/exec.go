@@ -750,9 +750,59 @@ func ConvertVideoToHLS(ctx context.Context, video ent.Vod) error {
 	return nil
 }
 
+// userPinsTimescales reports whether config arguments pin both the movie and
+// video timescales to one value. Such a config owns the timescale policy —
+// for example an export that re-encodes audio to another sample rate and
+// matches the pins to it — so the built-in Firefox-safe pins must not
+// override it.
+func userPinsTimescales(configArgs []string) bool {
+	movieTimescale, videoTimescale := "", ""
+	for i := 0; i < len(configArgs)-1; i++ {
+		switch configArgs[i] {
+		case "-movie_timescale":
+			movieTimescale = configArgs[i+1]
+		case "-video_track_timescale":
+			videoTimescale = configArgs[i+1]
+		}
+	}
+	return movieTimescale != "" && movieTimescale == videoTimescale
+}
+
+// firefoxSafeTimescaleArgs pins the MP4 movie and video timescales to the
+// sample rate of the latest-starting audio track (48 kHz when absent or
+// unknown). FFmpeg writes empty-edit durations (used when one stream starts
+// later than another) in the movie timescale, but Firefox reads them in the
+// track timescale (Mozilla bug 2082877), turning small start gaps into
+// seconds of A/V desync; equal timescales make both readings identical. A
+// delayed audio track is the one whose empty edit is at risk, so its rate
+// wins over earlier audio streams. Two delayed audio tracks with different
+// rates cannot share one movie timescale; their residual error stays a
+// small fraction of the start gap, and stream copy is never affected.
+// FFmpeg keeps the last option occurrence, so these must follow any
+// user-supplied config arguments unless the config pins both timescales
+// itself (userPinsTimescales).
+func firefoxSafeTimescaleArgs(starts []mediaStreamStart) []string {
+	timescale := 0
+	var latestStart float64
+	for _, start := range starts {
+		if start.SampleRate > 0 && (timescale == 0 || start.Time > latestStart) {
+			timescale = start.SampleRate
+			latestStart = start.Time
+		}
+	}
+	if timescale == 0 {
+		timescale = 48000
+	}
+	return []string{"-movie_timescale", strconv.Itoa(timescale), "-video_track_timescale", strconv.Itoa(timescale)}
+}
+
 func buildHlsToMp4FFmpegArgs(video ent.Vod, playlistPath, exportPath, configFfmpegArgs string, normalizeTimestamps bool, starts []mediaStreamStart) []string {
 	args := []string{"-y", "-hide_banner", "-i", playlistPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative", "-movflags", "+faststart", "-metadata", "title=" + video.Title}
-	args = append(args, strings.Fields(configFfmpegArgs)...)
+	configArgs := strings.Fields(configFfmpegArgs)
+	args = append(args, configArgs...)
+	if !userPinsTimescales(configArgs) {
+		args = append(args, firefoxSafeTimescaleArgs(starts)...)
+	}
 	args = appendMediaTimestampArgs(args, starts, normalizeTimestamps)
 	return append(args, exportPath)
 }
@@ -1109,9 +1159,11 @@ func buildPostProcessVideoFFmpegArgs(video ent.Vod, configFfmpegArgs string, nor
 	ffmpegArgs := []string{"-y", "-hide_banner", "-fflags", "+genpts", "-i", video.TmpVideoDownloadPath, "-map", "0", "-dn", "-ignore_unknown", "-c", "copy", "-f", "mp4", "-avoid_negative_ts", "make_non_negative"}
 	ffmpegArgs = append(ffmpegArgs, "-bsf:a", "aac_adtstoasc")
 	ffmpegArgs = append(ffmpegArgs, "-movflags", "+faststart")
-
 	ffmpegArgs = append(ffmpegArgs, "-metadata", "title="+video.Title)
 	ffmpegArgs = append(ffmpegArgs, arr...)
+	if !userPinsTimescales(arr) {
+		ffmpegArgs = append(ffmpegArgs, firefoxSafeTimescaleArgs(starts)...)
+	}
 	ffmpegArgs = appendMediaTimestampArgs(ffmpegArgs, starts, normalizeTimestamps)
 	ffmpegArgs = append(ffmpegArgs, video.TmpVideoConvertPath)
 

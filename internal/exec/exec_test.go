@@ -474,6 +474,238 @@ func TestPostProcessVideoPreservesOffsetsWithMultipleAudioStreams(t *testing.T) 
 	}
 }
 
+func TestMp4ExportPinsTimescalesAfterConfigArgs(t *testing.T) {
+	t.Parallel()
+
+	video := ent.Vod{
+		Title:                "timescale pin",
+		TmpVideoDownloadPath: "/tmp/input.ts",
+		TmpVideoConvertPath:  "/tmp/output.mp4",
+	}
+	// A user overriding the muxer timescales must not be able to reintroduce a
+	// movie/track mismatch: FFmpeg applies the last option occurrence, so the
+	// built-in pins have to follow the config arguments. A config that pins
+	// both timescales to one value owns the policy (e.g. an export that
+	// re-encodes audio to another rate) and is left untouched.
+	overrideArgs := "-movie_timescale 1000 -video_track_timescale 60"
+	ownershipArgs := "-c:a aac -ar 44100 -movie_timescale 44100 -video_track_timescale 44100"
+	lastOptionValue := func(args []string, option string) string {
+		value := ""
+		for i := 0; i < len(args)-1; i++ {
+			if args[i] == option {
+				value = args[i+1]
+			}
+		}
+		return value
+	}
+	optionCount := func(args []string, option string) int {
+		count := 0
+		for i := 0; i < len(args)-1; i++ {
+			if args[i] == option {
+				count++
+			}
+		}
+		return count
+	}
+	starts44k := []mediaStreamStart{
+		{Specifier: "v:0", Time: 0, Anchor: "STARTPTS"},
+		{Specifier: "a:0", Time: 0.25, Anchor: "STARTPTS", SampleRate: 44100},
+	}
+	// The delayed 48 kHz track's rate must win over the earlier 44.1 kHz one.
+	startsMixed := []mediaStreamStart{
+		{Specifier: "v:0", Time: 0, Anchor: "STARTPTS"},
+		{Specifier: "a:0", Time: 0, Anchor: "STARTPTS", SampleRate: 44100},
+		{Specifier: "a:1", Time: 0.25, Anchor: "STARTPTS", SampleRate: 48000},
+	}
+	for _, tc := range []struct {
+		name        string
+		configArgs  string
+		starts      []mediaStreamStart
+		want        string
+		wantAppends int // pins appended by the builders per option
+	}{
+		{name: "44.1 kHz audio", configArgs: overrideArgs, starts: starts44k, want: "44100", wantAppends: 1},
+		{name: "mixed-rate delayed audio", configArgs: overrideArgs, starts: startsMixed, want: "48000", wantAppends: 1},
+		{name: "default without audio rate", configArgs: overrideArgs, starts: nil, want: "48000", wantAppends: 1},
+		{name: "user owns equal pins", configArgs: ownershipArgs, starts: starts44k, want: "44100", wantAppends: 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			userPins := optionCount(strings.Fields(tc.configArgs), "-movie_timescale")
+			for _, args := range [][]string{
+				postProcessVideoFFmpegArgs(video, tc.configArgs, tc.starts),
+				buildHlsToMp4FFmpegArgs(video, "/tmp/input.m3u8", video.TmpVideoConvertPath, tc.configArgs, false, tc.starts),
+			} {
+				if got := lastOptionValue(args, "-movie_timescale"); got != tc.want {
+					t.Fatalf("last -movie_timescale = %q, want %q: %v", got, tc.want, args)
+				}
+				if got := lastOptionValue(args, "-video_track_timescale"); got != tc.want {
+					t.Fatalf("last -video_track_timescale = %q, want %q: %v", got, tc.want, args)
+				}
+				if got := optionCount(args, "-movie_timescale") - userPins; got != tc.wantAppends {
+					t.Fatalf("appended -movie_timescale pins = %d, want %d: %v", got, tc.wantAppends, args)
+				}
+				if got := optionCount(args, "-video_track_timescale") - userPins; got != tc.wantAppends {
+					t.Fatalf("appended -video_track_timescale pins = %d, want %d: %v", got, tc.wantAppends, args)
+				}
+			}
+		})
+	}
+}
+
+// TestPostProcessVideoWritesFirefoxSafeEditLists covers the Mozilla bug 2082877
+// workaround: FFmpeg expresses a later stream start as an edit-list empty edit
+// whose duration Firefox reads in the track timescale instead of the movie
+// timescale, so exported files must keep those timescales equal.
+func TestPostProcessVideoWritesFirefoxSafeEditLists(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		videoOffset string
+		audioOffset string
+		audioRate   string
+	}{
+		{name: "late video", videoOffset: "0.25", audioOffset: "0", audioRate: "48000"},
+		{name: "late audio", videoOffset: "0", audioOffset: "0.25", audioRate: "48000"},
+		// Non-48 kHz audio (e.g. 44.1 kHz ad segments woven into a capture)
+		// must pin the timescales to its own rate.
+		{name: "late video 44.1 kHz", videoOffset: "0.25", audioOffset: "0", audioRate: "44100"},
+		{name: "late audio 44.1 kHz", videoOffset: "0", audioOffset: "0.25", audioRate: "44100"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			inputPath := filepath.Join(dir, "input.mp4")
+			cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
+				"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
+				"-f", "lavfi", "-i", fmt.Sprintf("sine=frequency=1000:sample_rate=%s:duration=3", tc.audioRate),
+				"-filter_complex", fmt.Sprintf("[0:v]setpts=PTS+%s/TB[v];[1:a]asetpts=PTS+%s/TB[a]", tc.videoOffset, tc.audioOffset),
+				"-map", "[v]", "-map", "[a]",
+				"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+				"-c:a", "aac",
+				// Preserve the initial gap instead of filling it with duplicate frames.
+				"-fps_mode", "passthrough",
+				// Mirror captured live video tracks (90 kHz) so the input itself
+				// contains an empty edit whose movie and track timescales differ.
+				"-video_track_timescale", "90000",
+				"-f", "mp4", inputPath)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("create gap media: %v\n%s", err, out)
+			}
+
+			// The input must reproduce the Firefox bug's preconditions.
+			inputMovieTimescale, inputTracks := probeMp4EditLists(t, inputPath)
+			hasEmptyEdit := false
+			videoTimescale := int64(-1)
+			for _, track := range inputTracks {
+				hasEmptyEdit = hasEmptyEdit || len(track.EmptyEdits) > 0
+				if track.Handler == "vide" {
+					videoTimescale = track.TrackTimescale
+				}
+			}
+			if !hasEmptyEdit {
+				t.Fatalf("fixture %s has no empty edit to exercise Mozilla bug 2082877", inputPath)
+			}
+			if videoTimescale != 90000 || videoTimescale == inputMovieTimescale {
+				t.Fatalf("fixture video timescale = %d, movie timescale = %d, want differing values", videoTimescale, inputMovieTimescale)
+			}
+
+			inputOffset := mediaAVStartOffset(t, inputPath)
+			if math.Abs(inputOffset) < 0.1 {
+				t.Fatalf("fixture A/V offset = %f, want a real start gap", inputOffset)
+			}
+			outputPath := filepath.Join(dir, "output.mp4")
+			if err := postProcessVideo(t.Context(), ent.Vod{
+				Title:                "firefox edit lists",
+				TmpVideoDownloadPath: inputPath,
+				TmpVideoConvertPath:  outputPath,
+			}, "", io.Discard); err != nil {
+				t.Fatalf("post-process media: %v", err)
+			}
+
+			assertFirefoxSafeEditLists(t, outputPath)
+			if got := mediaAVStartOffset(t, outputPath); math.Abs(got-inputOffset) > 0.05 {
+				t.Fatalf("exported A/V offset = %f, want %f", got, inputOffset)
+			}
+			decode := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
+			if out, err := decode.CombinedOutput(); err != nil {
+				t.Fatalf("decode exported output: %v\n%s", err, out)
+			}
+		})
+	}
+}
+
+// TestPostProcessVideoHandlesMixedRateDelayedAudio covers inputs whose audio
+// streams use different sample rates (e.g. 44.1 kHz ad audio alongside 48 kHz
+// content) with the non-matching track starting later: the delayed track is
+// the one whose empty edit Firefox reads, so the pinned movie timescale must
+// follow its rate rather than the first audio stream's.
+func TestPostProcessVideoHandlesMixedRateDelayedAudio(t *testing.T) {
+	dir := t.TempDir()
+	inputPath := filepath.Join(dir, "input.mp4")
+	cmd := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100:duration=3",
+		"-f", "lavfi", "-i", "sine=frequency=880:sample_rate=48000:duration=3",
+		"-filter_complex", "[2:a]asetpts=PTS+0.25/TB[a2]",
+		"-map", "0:v", "-map", "1:a", "-map", "[a2]",
+		"-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-c:a", "aac",
+		// Preserve the initial gap instead of filling it with duplicate frames.
+		"-fps_mode", "passthrough",
+		// Mirror captured live video tracks (90 kHz).
+		"-video_track_timescale", "90000",
+		"-f", "mp4", inputPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("create mixed-rate media: %v\n%s", err, out)
+	}
+
+	// The input must contain a delayed 48 kHz audio track with an empty edit.
+	_, inputTracks := probeMp4EditLists(t, inputPath)
+	delayedAudioEdit := false
+	for _, track := range inputTracks {
+		if track.Handler == "soun" && track.TrackTimescale == 48000 && len(track.EmptyEdits) > 0 {
+			delayedAudioEdit = true
+		}
+	}
+	if !delayedAudioEdit {
+		t.Fatalf("fixture %s has no delayed 48 kHz audio empty edit", inputPath)
+	}
+
+	inputStarts, err := probeMediaStreamStarts(t.Context(), inputPath)
+	if err != nil {
+		t.Fatalf("probe input streams: %v", err)
+	}
+	if len(inputStarts) != 3 {
+		t.Fatalf("expected three input streams, got %+v", inputStarts)
+	}
+
+	outputPath := filepath.Join(dir, "output.mp4")
+	if err := postProcessVideo(t.Context(), ent.Vod{
+		Title:                "mixed-rate delayed audio",
+		TmpVideoDownloadPath: inputPath,
+		TmpVideoConvertPath:  outputPath,
+	}, "", io.Discard); err != nil {
+		t.Fatalf("post-process media: %v", err)
+	}
+
+	assertFirefoxSafeEditLists(t, outputPath)
+	outputStarts, err := probeMediaStreamStarts(t.Context(), outputPath)
+	if err != nil {
+		t.Fatalf("probe output streams: %v", err)
+	}
+	if len(outputStarts) != len(inputStarts) {
+		t.Fatalf("export lost streams: %+v", outputStarts)
+	}
+	for i, start := range inputStarts {
+		want := start.Time - inputStarts[0].Time
+		got := outputStarts[i].Time - outputStarts[0].Time
+		if start.Specifier != outputStarts[i].Specifier || math.Abs(got-want) > 0.05 {
+			t.Fatalf("stream %s offset = %f, want %f", start.Specifier, got, want)
+		}
+	}
+	decode := osExec.CommandContext(t.Context(), "ffmpeg", "-v", "error", "-i", outputPath, "-f", "null", "-")
+	if out, err := decode.CombinedOutput(); err != nil {
+		t.Fatalf("decode exported output: %v\n%s", err, out)
+	}
+}
+
 func TestVodArchiveProcessGroupExitsAfterWorkerHardCrash(t *testing.T) {
 	tempDir := t.TempDir()
 	ytDlpPIDPath := filepath.Join(tempDir, "yt-dlp.pid")
