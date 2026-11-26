@@ -1,6 +1,6 @@
 import { ArchiveStatus, isArchiveActive } from "@/app/util/archiveStatus";
 import { Video, VideoPlayer as VideoJsPlayer, usePlayer as useVodPlayer } from '@videojs/react/video';
-import { LiveVideoPlayer as LiveVideoJsPlayer, usePlayer as useLivePlayer } from '@videojs/react/live-video';
+import { GanymedeLivePlayer as LiveVideoJsPlayer, useGanymedeLivePlayer as useLivePlayer } from './livePlayer';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { I18nProvider } from '@videojs/react/i18n';
 import { VideoSkin } from '@/components/videojs/video/skin';
@@ -104,16 +104,46 @@ const AbsoluteTimePopup = ({ startedAt, currentTime }: { startedAt: string | Dat
 
 // Preset `usePlayer` hooks are typed, but TS resolves the selector state as
 // `unknown` under the repo toolchain; narrow at the selection site.
+// Absolute time only needs whole seconds, so render once per second.
+const selectWholeSecond = (state: unknown): number => {
+  const currentTime = (state as { currentTime?: number }).currentTime;
+  return typeof currentTime === 'number' && Number.isFinite(currentTime) ? Math.floor(currentTime) : 0;
+};
+
 const AbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) => {
-  const currentTime = useVodPlayer((s) => (s as unknown as { currentTime: number }).currentTime);
-  const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  return <AbsoluteTimePopup startedAt={startedAt} currentTime={safeCurrentTime} />;
+  const currentSecond = useVodPlayer(selectWholeSecond);
+  return <AbsoluteTimePopup startedAt={startedAt} currentTime={currentSecond} />;
 };
 
 const LiveAbsoluteTimeDisplay = ({ startedAt }: { startedAt: string | Date }) => {
-  const currentTime = useLivePlayer((s) => (s as unknown as { currentTime: number }).currentTime);
-  const safeCurrentTime = typeof currentTime === 'number' && Number.isFinite(currentTime) ? currentTime : 0;
-  return <AbsoluteTimePopup startedAt={startedAt} currentTime={safeCurrentTime} />;
+  const currentSecond = useLivePlayer(selectWholeSecond);
+  return <AbsoluteTimePopup startedAt={startedAt} currentTime={currentSecond} />;
+};
+
+// Return to 1x at the live edge so faster playback does not stall.
+const LiveCatchUpSpeedReset = ({ player }: { player: GanymedePlayerRef }) => {
+  const caughtUpWhileFast = useLivePlayer((s) => {
+    const { currentTime, liveEdgeStart, playbackRate, seekable } = s as unknown as {
+      currentTime: number;
+      liveEdgeStart: number;
+      playbackRate: number;
+      seekable?: ReadonlyArray<readonly [number, number]>;
+    };
+    if (!(playbackRate > 1)) return false;
+    if (Number.isFinite(liveEdgeStart)) return currentTime >= liveEdgeStart;
+    // Fall back to the last 10 seconds.
+    const lastRange = seekable && seekable.length > 0 ? seekable[seekable.length - 1] : undefined;
+    const recordingEnd = lastRange ? lastRange[1] : Number.NaN;
+    return Number.isFinite(recordingEnd) && currentTime >= recordingEnd - 10;
+  });
+
+  useEffect(() => {
+    if (!caughtUpWhileFast) return;
+    const el = player.current;
+    if (el) el.playbackRate = 1;
+  }, [caughtUpWhileFast, player]);
+
+  return null;
 };
 
 const PlayerCustomControls = ({ showChatControl }: { showChatControl: boolean }) => {
@@ -336,6 +366,22 @@ const VideoPlayer = ({ video, ref }: Params) => {
     };
   }, [player, video.clip_vod_offset, video.type]);
 
+  // Pause on link clicks so player updates do not delay navigation.
+  useEffect(() => {
+    const pauseWhenLeavingPage = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if ((anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return;
+      player.current?.pause();
+    };
+    document.addEventListener('click', pauseWhenLeavingPage, true);
+    return () => document.removeEventListener('click', pauseWhenLeavingPage, true);
+  }, [player]);
+
   const skinStyle = {
     '--media-accent-color': 'var(--mantine-color-violet-6)',
     '--media-object-fit': 'contain',
@@ -385,6 +431,7 @@ const VideoPlayer = ({ video, ref }: Params) => {
               <HlsJsVideo {...mediaProps} />
             </LiveVideoSkin>
             {showAbsoluteTime && <LiveAbsoluteTimeDisplay startedAt={startedAt} />}
+            <LiveCatchUpSpeedReset player={player} />
           </I18nProvider>
         </LiveVideoJsPlayer>
       ) : (

@@ -19,15 +19,23 @@ export interface TimeSliderProps extends Omit<TimeSliderPrimitive.RootProps, 'ch
   renderThumbnail?: SliderPrimitive.Thumbnail.ImageProps['render'];
 }
 
+// Match the player's 10-second seek step; Shift/Page keys jump 1 minute.
+const SEEK_BAR_STEP_SECONDS = 10;
+const SEEK_BAR_LARGE_STEP_SECONDS = 60;
+
 export function TimeSlider({
   className,
   previewOverflow = 'visible',
   renderThumbnail,
+  step = SEEK_BAR_STEP_SECONDS,
+  largeStep = SEEK_BAR_LARGE_STEP_SECONDS,
   ...props
 }: TimeSliderProps = {}) {
   return (
     <TimeSliderPrimitive.Root
       className={(state) => cn('media-slider', 'media-time-slider', resolveClassName(className, state))}
+      step={step}
+      largeStep={largeStep}
       {...props}
     >
       <TimeSliderPrimitive.Chapters

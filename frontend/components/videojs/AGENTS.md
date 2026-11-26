@@ -45,6 +45,18 @@ An upstream refresh must retain or deliberately reimplement all of these:
    - `PlayerTheaterModeIcon.tsx`, `PlayerAbsoluteTimeIcon.tsx`, and
      `PlayerHideChatIcon.tsx` use the local `Button` and `ButtonTooltip`
      primitives. Keep their accessible labels and `aria-pressed` state.
+4. Seek bar keyboard steps:
+   - `ui/time-slider.tsx` defaults `step` to 10 seconds and `largeStep` to
+     60 seconds.
+5. Live archive timeline, seeking and speed (DVR):
+   - `live-video/layout/controls.tsx` renders the current time, `TimeSlider`,
+     center seek buttons, and the settings menu.
+   - `live-video/behaviors/live-playback-hotkeys.tsx` and
+     `live-video/behaviors/gestures.tsx` add seeking and speed input.
+   - `live-video/display/status-indicators.tsx` renders the `SeekIndicator`.
+   - `live-video/skin.css` contains the timeline and center seek styles.
+   - `frontend/app/components/videos/livePlayer.ts` adds
+     `playbackRateFeature`; `Player.tsx` resets playback to 1x at the live edge.
 
 Do not restore the entire pre-update directory after refreshing it. Doing so
 would silently discard upstream fixes. Merge the small customizations above

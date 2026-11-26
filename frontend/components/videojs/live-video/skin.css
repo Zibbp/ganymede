@@ -307,8 +307,172 @@
       }
     }
 
-    .video-controls-spacer {
+    /* Live timeline, adapted from the VOD skin. */
+    .video-time-slider-group {
+      align-items: center;
+      gap: calc(var(--media-spacing) * 2.5);
+      padding-inline: calc(var(--media-spacing) * 2);
       flex: 1;
+      min-width: 0;
+      display: flex;
+    }
+
+    .video-time-slider-group:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *) {
+      flex-direction: row-reverse;
+    }
+
+    @container media-root (width >= 32rem) {
+      .video-time-slider-group {
+        padding-inline: calc(var(--media-spacing) * 3);
+      }
+    }
+
+    .video-controls-time-slider {
+      min-width: 0 !important;
+    }
+
+    @container media-root (width < 17.5rem) {
+      .video-controls-current-time-value {
+        display: none !important;
+      }
+    }
+
+    @container media-root (width < 12.5rem) {
+      .video-controls-time-slider {
+        display: none;
+      }
+    }
+
+    .media-time-value {
+      font-variant-numeric: tabular-nums;
+    }
+
+    @container media-root (width < 15rem) {
+      .video-controls-settings-button {
+        display: none;
+      }
+    }
+
+    @container media-root (width >= 32rem) {
+      .video-controls-settings-button {
+        margin-inline-start: 1px;
+      }
+    }
+
+    /* Center seek buttons for touch devices. */
+    .video-controls-center-seek {
+      backdrop-filter: var(--media-backdrop-filter-indicator);
+      background-color: var(--media-backdrop) !important;
+      color: var(--media-controls-foreground) !important;
+      border-radius: 9999px !important;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .video-controls-center-seek {
+        background-color: color-mix(in oklab, var(--media-backdrop) 35%, transparent) !important;
+      }
+    }
+
+    @scope (.video-controls-center) {
+      &:not([data-started]) .video-controls-center-seek {
+        display: none !important;
+      }
+    }
+
+    @media (pointer: fine) {
+      .video-controls-center-seek {
+        display: none !important;
+      }
+    }
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+      .video-controls-center-seek {
+        background-color: var(--media-background) !important;
+      }
+    }
+
+    @container media-root (width < 17.5rem) {
+      .video-controls-center-seek {
+        display: none !important;
+      }
+    }
+
+    .video-controls-secondary {
+      top: calc(var(--media-spacing) * 2);
+      right: calc(var(--media-spacing) * 2);
+      z-index: 30;
+      transform-origin: top;
+      border-radius: var(--media-controls-radius);
+      padding: calc(var(--media-spacing) * 0.5);
+      transition-property: filter, opacity, scale, translate;
+      transition-duration: 0.15s;
+      transition-duration: calc(var(--media-duration-controls) / 2);
+      align-items: center;
+      gap: 1px;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      display: flex;
+      position: absolute;
+    }
+
+    .video-controls-secondary:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *) {
+      flex-direction: row-reverse;
+    }
+
+    @container media-root (width >= 32rem) {
+      .video-controls-secondary {
+        padding: 0;
+        position: static;
+      }
+    }
+
+    @container media-root (width < 32rem) {
+      .video-controls-secondary {
+        background-color: var(--media-popover);
+        color: var(--media-popover-foreground);
+        box-shadow:
+          0 0 0 1px var(--media-surface-border, var(--media-border)),
+          var(--media-shadow-surface);
+        backdrop-filter: var(--media-backdrop-filter-surface);
+      }
+
+      @scope (.video-controls-content) {
+        &:not([data-visible]) .video-controls-secondary {
+          pointer-events: none;
+          translate: 0 calc(var(--media-hidden-offset) * -1);
+          scale: var(--media-hidden-scale) var(--media-hidden-scale);
+          opacity: 0;
+          transition-duration: var(--media-duration-controls);
+        }
+      }
+
+      .video-controls-secondary:after {
+        content: "";
+        z-index: 10;
+        pointer-events: none;
+        border-radius: inherit;
+        box-shadow: var(--media-shadow-surface-inset);
+        position: absolute;
+        inset: 0;
+      }
+
+      @media (pointer: fine) {
+        @scope (.video-controls-content) {
+          &:not([data-visible]) .video-controls-secondary {
+            filter: blur(var(--media-hidden-blur));
+          }
+        }
+      }
+    }
+
+    @container media-root (width < 12.5rem) {
+      .video-controls-compact-primary {
+        right: auto !important;
+      }
+
+      .video-controls-time-slider,
+      .video-controls-top-controls {
+        display: none;
+      }
     }
   }
 
