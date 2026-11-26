@@ -17,6 +17,7 @@ import (
 	twitchIRC "github.com/gempir/go-twitch-irc/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/zibbp/ganymede/internal/utils"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -442,10 +443,16 @@ func mergePendingNDJSONIntoJSONArray(filename, pendingPath string) (mergedCount,
 	}
 
 	if copyPrefixUntil > copyFrom {
-		// Wrap the files so Go uses a buffered copy instead of copy_file_range.
-		// Some CIFS/SMB servers report copy_file_range success but write zeroes.
-		if _, err := io.CopyN(struct{ io.Writer }{tmp}, struct{ io.Reader }{f}, copyPrefixUntil-copyFrom); err != nil {
-			return 0, 0, fmt.Errorf("failed to copy existing JSON prefix: %w", err)
+		var copyErr error
+		if isCIFSMount(dir) {
+			// Wrap the files so Go uses a buffered copy instead of copy_file_range.
+			// Some CIFS/SMB servers report copy_file_range success but write zeroes.
+			_, copyErr = io.CopyN(struct{ io.Writer }{tmp}, struct{ io.Reader }{f}, copyPrefixUntil-copyFrom)
+		} else {
+			_, copyErr = io.CopyN(tmp, f, copyPrefixUntil-copyFrom)
+		}
+		if copyErr != nil {
+			return 0, 0, fmt.Errorf("failed to copy existing JSON prefix: %w", copyErr)
 		}
 	}
 
@@ -525,6 +532,21 @@ func mergePendingNDJSONIntoJSONArray(filename, pendingPath string) (mergedCount,
 	}
 
 	return mergedCount, skippedInvalidCount, nil
+}
+
+func isCIFSMount(path string) bool {
+	var stat unix.Statfs_t
+	if err := unix.Statfs(path, &stat); err != nil {
+		// Fall back to the buffered copy when the filesystem cannot be identified.
+		return true
+	}
+
+	switch stat.Type {
+	case unix.CIFS_SUPER_MAGIC, unix.SMB2_SUPER_MAGIC, unix.SMB_SUPER_MAGIC:
+		return true
+	default:
+		return false
+	}
 }
 
 // inspectJSONArrayPrefix inspects the existing file and returns:
