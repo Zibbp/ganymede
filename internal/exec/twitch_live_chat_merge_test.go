@@ -100,6 +100,7 @@ func TestMergePendingNDJSONIntoJSONArray(t *testing.T) {
 		// mounts, where the mount options control the reported mode.
 		control := filepath.Join(dir, "control.file")
 		require.NoError(t, os.WriteFile(control, []byte("control"), 0o644))
+		require.NoError(t, os.Chmod(control, 0o644))
 		controlInfo, err := os.Stat(control)
 		require.NoError(t, err)
 		require.Equal(t, controlInfo.Mode().Perm(), info.Mode().Perm())
