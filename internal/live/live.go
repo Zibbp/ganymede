@@ -16,7 +16,6 @@ import (
 	"github.com/zibbp/ganymede/ent/live"
 	"github.com/zibbp/ganymede/ent/livecategory"
 	"github.com/zibbp/ganymede/ent/livetitleregex"
-	entQueue "github.com/zibbp/ganymede/ent/queue"
 	entVod "github.com/zibbp/ganymede/ent/vod"
 	"github.com/zibbp/ganymede/internal/archive"
 	"github.com/zibbp/ganymede/internal/chapter"
@@ -459,20 +458,15 @@ OUTER:
 					}
 				}
 
-				// Only queued or running captures prevent a new recording; finalization may overlap.
-				queueItems, err := s.Store.Client.Queue.Query().Where(entQueue.HasVodWith(
-					entVod.HasChannelWith(channel.ID(lwc.Edges.Channel.ID)),
-					entVod.PlatformEQ(utils.PlatformTwitch),
-					entVod.StatusIn(utils.ArchiveQueued, utils.ArchiveRunning),
-				)).WithVod().All(ctx)
+				// Skip if this stream already has an unfinished archive.
+				// Manual starts can still split a live stream.
+				alreadyArchiving, err := s.activeStreamArchiveExists(ctx, lwc.Edges.Channel.ID, utils.PlatformTwitch, stream.ID)
 				if err != nil {
-					log.Error().Err(err).Msg("error getting queue items")
+					log.Error().Err(err).Msg("error checking for active stream archive")
 				}
-				for _, queueItem := range queueItems {
-					if queueItem.Edges.Vod.ExtStreamID == stream.ID {
-						log.Debug().Msgf("%s is already being archived", lwc.Edges.Channel.Name)
-						continue OUTER
-					}
+				if alreadyArchiving {
+					log.Debug().Msgf("%s is already being archived", lwc.Edges.Channel.Name)
+					continue OUTER
 				}
 
 				// Check if the stream is really live or if the API is just slow to update (GH#760)
@@ -572,6 +566,20 @@ func channelInLiveStreamInfo(a string, list []platform.LiveStreamInfo) platform.
 		}
 	}
 	return platform.LiveStreamInfo{}
+}
+
+// activeStreamArchiveExists reports whether the stream has an unfinished archive.
+// Finalizing counts because Twitch can report a just-ended stream as live.
+func (s *Service) activeStreamArchiveExists(ctx context.Context, channelID uuid.UUID, videoPlatform utils.VideoPlatform, streamID string) (bool, error) {
+	if streamID == "" {
+		return false, nil
+	}
+	return s.Store.Client.Vod.Query().Where(
+		entVod.HasChannelWith(channel.ID(channelID)),
+		entVod.PlatformEQ(videoPlatform),
+		entVod.ExtStreamID(streamID),
+		entVod.StatusIn(utils.ActiveArchiveStatuses()...),
+	).Exist(ctx)
 }
 
 // updateLiveStreamArchiveChapter updates the last chapter of a live stream archive if the category has changed.
