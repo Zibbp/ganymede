@@ -442,7 +442,9 @@ func mergePendingNDJSONIntoJSONArray(filename, pendingPath string) (mergedCount,
 	}
 
 	if copyPrefixUntil > copyFrom {
-		if _, err := io.CopyN(tmp, f, copyPrefixUntil-copyFrom); err != nil {
+		// Wrap the files so Go uses a buffered copy instead of copy_file_range.
+		// Some CIFS/SMB servers report copy_file_range success but write zeroes.
+		if _, err := io.CopyN(struct{ io.Writer }{tmp}, struct{ io.Reader }{f}, copyPrefixUntil-copyFrom); err != nil {
 			return 0, 0, fmt.Errorf("failed to copy existing JSON prefix: %w", err)
 		}
 	}

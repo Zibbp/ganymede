@@ -96,7 +96,13 @@ func TestMergePendingNDJSONIntoJSONArray(t *testing.T) {
 
 		info, err := os.Stat(main)
 		require.NoError(t, err)
-		require.Equal(t, os.FileMode(0o644), info.Mode().Perm())
+		// Compare against a freshly written file so this also works on SMB
+		// mounts, where the mount options control the reported mode.
+		control := filepath.Join(dir, "control.file")
+		require.NoError(t, os.WriteFile(control, []byte("control"), 0o644))
+		controlInfo, err := os.Stat(control)
+		require.NoError(t, err)
+		require.Equal(t, controlInfo.Mode().Perm(), info.Mode().Perm())
 
 		matches, err := filepath.Glob(main + ".tmp-*")
 		require.NoError(t, err)
